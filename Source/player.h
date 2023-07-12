@@ -226,6 +226,9 @@ struct SpellCastInfo {
 };
 
 struct Player {
+
+	std::pair<int, int> GetDamage();
+
 	Player() = default;
 	Player(Player &&) noexcept = default;
 	Player &operator=(Player &&) noexcept = default;

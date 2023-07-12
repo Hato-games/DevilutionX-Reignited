@@ -3030,7 +3030,36 @@ void ProcessPlayers()
 				SyncPlrKill(player, DeathReason::Unknown);
 			}
 
-			if (&player == MyPlayer) {
+			if (&player == MyPlayer)
+			{
+				static int regenTick = 0;
+				regenTick++;
+				regenTick = regenTick % 5;//game tick is 40, so 10 is every 1/4 second
+				if (regenTick == 0)
+				{
+					int manaRefill = player._pMaxMana / (2000 + player._pLevel * 40); // 1.0% per second, 0.5% at lvl 50
+					if (manaRefill < 5) {
+						manaRefill = 5;
+					}
+					player._pMana += manaRefill;
+					if (player._pMana > player._pMaxMana) {
+						player._pMana = player._pMaxMana;
+					}
+					RedrawComponent(PanelDrawComponent::Mana);
+
+					int hpRefill = player._pMaxHP / (2000 + player._pLevel * 40); // 1.0% per second, 0.5% at lvl 50
+					if (hpRefill < 5) {
+						hpRefill = 5;
+					}
+					player._pHitPoints += hpRefill;
+					if (player._pHitPoints > player._pMaxHP) {
+						player._pHitPoints = player._pMaxHP;
+					}
+					RedrawComponent(PanelDrawComponent::Health);
+					RedrawComponent(PanelDrawComponent::Mana);
+				}
+
+
 				if (HasAnyOf(player._pIFlags, ItemSpecialEffect::DrainLife) && leveltype != DTYPE_TOWN) {
 					ApplyPlrDamage(DamageType::Physical, player, 0, 0, 4);
 				}
@@ -3503,4 +3532,17 @@ bool TestPlayerDoGotHit(Player &player)
 }
 #endif
 
+std::pair<int, int> Player::GetDamage()
+{
+	int damageMod = _pDamageMod;
+	if (InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow && _pClass != HeroClass::Rogue)
+	{
+		damageMod /= 2;
+	}
+
+	damageMod += _pIBonusDamMod;
+	int mindam = _pIMinDam + _pIBonusDam * _pIMinDam / 100 + damageMod;
+	int maxdam = _pIMaxDam + _pIBonusDam * _pIMaxDam / 100 + damageMod;
+	return { mindam, maxdam };
+}
 } // namespace devilution
