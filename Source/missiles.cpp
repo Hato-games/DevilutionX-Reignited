@@ -242,14 +242,12 @@ bool MonsterMHit(int pnum, int monsterId, int mindam, int maxdam, int dist, Miss
 		dam = mindam + GenerateRnd(maxdam - mindam + 1);
 	}
 
-	if (missileData.isArrow() && damageType == DamageType::Physical) {
-		dam = player._pIBonusDamMod + dam * player._pIBonusDam / 100 + dam;
-		if (player._pClass == HeroClass::Rogue)
-			dam += player._pDamageMod;
-		else
-			dam += player._pDamageMod / 2;
+	if (missileData.isArrow() && damageType == DamageType::Physical)
+	{
 		if (monster.data().monsterClass == MonsterClass::Demon && HasAnyOf(player._pIFlags, ItemSpecialEffect::TripleDemonDamage))
+		{
 			dam *= 3;
+		}
 	}
 	bool resist = monster.isResistant(t, damageType);
 	if (!shift)
@@ -355,8 +353,7 @@ bool Plr2PlrMHit(const Player &player, int p, int mindam, int maxdam, int dist, 
 		dam = target._pHitPoints / 3;
 	} else {
 		dam = mindam + GenerateRnd(maxdam - mindam + 1);
-		if (missileData.isArrow() && damageType == DamageType::Physical)
-			dam += player._pIBonusDamMod + player._pDamageMod + dam * player._pIBonusDam / 100;
+
 		if (!shift)
 			dam <<= 6;
 	}
@@ -2847,8 +2844,9 @@ void ProcessArrow(Missile &missile)
 	case MissileSource::Player: {
 		// BUGFIX: damage of missile should be encoded in missile struct; player can be dead/have left the game before missile arrives.
 		const Player &player = *missile.sourcePlayer();
-		mind = player._pIMinDam;
-		maxd = player._pIMaxDam;
+		std::pair<int, int> damage = player.GetDamage();
+		mind = damage.first;
+		maxd = damage.second;
 	} break;
 	case MissileSource::Monster: {
 		// BUGFIX: damage of missile should be encoded in missile struct; monster can be dead before missile arrives.

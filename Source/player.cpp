@@ -3502,38 +3502,45 @@ void PlayDungMsgs()
 		sfxdelay = 40;
 		sfxdnum = PS_DIABLVLINT;
 		myPlayer.pDungMsgs |= DungMsgDiablo;
-	} else if (!setlevel && currlevel == 17 && !myPlayer._pLvlVisited[17] && (myPlayer.pDungMsgs2 & 1) == 0) {
-		sfxdelay = 10;
-		sfxdnum = USFX_DEFILER1;
-		Quests[Q_DEFILER]._qactive = QUEST_ACTIVE;
-		Quests[Q_DEFILER]._qlog = true;
-		Quests[Q_DEFILER]._qmsg = TEXT_DEFILER1;
-		NetSendCmdQuest(true, Quests[Q_DEFILER]);
-		myPlayer.pDungMsgs2 |= 1;
-	} else if (!setlevel && currlevel == 19 && !myPlayer._pLvlVisited[19] && (myPlayer.pDungMsgs2 & 4) == 0) {
-		sfxdelay = 10;
-		sfxdnum = USFX_DEFILER3;
-		myPlayer.pDungMsgs2 |= 4;
-	} else if (!setlevel && currlevel == 21 && !myPlayer._pLvlVisited[21] && (myPlayer.pDungMsgs & 32) == 0) {
-		myPlayer.Say(HeroSpeech::ThisIsAPlaceOfGreatPower, 30);
-		myPlayer.pDungMsgs |= 32;
-	} else if (setlevel && setlvlnum == SL_SKELKING && !gbIsSpawn && !myPlayer._pSLvlVisited[SL_SKELKING] && Quests[Q_SKELKING]._qactive == QUEST_ACTIVE) {
-		sfxdelay = 10;
-		sfxdnum = USFX_SKING1;
-	} else {
-		sfxdelay = 0;
+	}
+ else if (!setlevel && currlevel == 17 && !myPlayer._pLvlVisited[17] && (myPlayer.pDungMsgs2 & 1) == 0) {
+	 sfxdelay = 10;
+	 sfxdnum = USFX_DEFILER1;
+	 Quests[Q_DEFILER]._qactive = QUEST_ACTIVE;
+	 Quests[Q_DEFILER]._qlog = true;
+	 Quests[Q_DEFILER]._qmsg = TEXT_DEFILER1;
+	 NetSendCmdQuest(true, Quests[Q_DEFILER]);
+	 myPlayer.pDungMsgs2 |= 1;
+	}
+ else if (!setlevel && currlevel == 19 && !myPlayer._pLvlVisited[19] && (myPlayer.pDungMsgs2 & 4) == 0) {
+	 sfxdelay = 10;
+	 sfxdnum = USFX_DEFILER3;
+	 myPlayer.pDungMsgs2 |= 4;
+	}
+ else if (!setlevel && currlevel == 21 && !myPlayer._pLvlVisited[21] && (myPlayer.pDungMsgs & 32) == 0) {
+	 myPlayer.Say(HeroSpeech::ThisIsAPlaceOfGreatPower, 30);
+	 myPlayer.pDungMsgs |= 32;
+	}
+ else if (setlevel && setlvlnum == SL_SKELKING && !gbIsSpawn && !myPlayer._pSLvlVisited[SL_SKELKING] && Quests[Q_SKELKING]._qactive == QUEST_ACTIVE) {
+	 sfxdelay = 10;
+	 sfxdnum = USFX_SKING1;
+	}
+ else {
+	 sfxdelay = 0;
 	}
 }
 
 #ifdef BUILD_TESTING
-bool TestPlayerDoGotHit(Player &player)
+bool TestPlayerDoGotHit(Player& player)
 {
 	return DoGotHit(player);
 }
 #endif
 
-std::pair<int, int> Player::GetDamage()
+std::pair<int, int> Player::GetDamage() const
 {
+	/*
+	* Vanila
 	int damageMod = _pDamageMod;
 	if (InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow && _pClass != HeroClass::Rogue)
 	{
@@ -3544,5 +3551,126 @@ std::pair<int, int> Player::GetDamage()
 	int mindam = _pIMinDam + _pIBonusDam * _pIMinDam / 100 + damageMod;
 	int maxdam = _pIMaxDam + _pIBonusDam * _pIMaxDam / 100 + damageMod;
 	return { mindam, maxdam };
+	*/
+	int weapMin = _pIMinDam + _pIBonusDam * _pIMinDam / 100 + _pIBonusDamMod;
+	int weapMax = _pIMaxDam + _pIBonusDam * _pIMaxDam / 100 + _pIBonusDamMod;
+
+	int scaling = 10 + _pDamageMod / 2;
+	weapMin = weapMin * scaling;
+	weapMax = weapMax * scaling;
+
+	int mindam = _pDamageMod + weapMin / 10;
+	int maxdam = _pDamageMod + weapMax / 10;
+	return { mindam, maxdam };
 }
+
+void Player::CalculateBaseDamage()
+{
+	switch (this->_pClass)
+	{
+		case HeroClass::Warrior:
+		{
+			/*
+			* Vanila
+			this->_pDamageMod = this->_pLevel * this->_pStrength / 100;
+			*/
+
+			int value = (_pStrength/2 + _pDexterity / 4) * 10;
+			if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Mace || this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Axe || this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Sword
+		        || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Mace || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Axe || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Sword)
+			{
+				value += _pStrength / 2 * 10; // Doubles str bonus when mace/axe/sword is equipped
+			}
+			int levelScale = 100 - _pLevel;
+			value = value / levelScale;
+			_pDamageMod = value;
+
+		}
+		break;
+		case HeroClass::Rogue:
+		{
+			/*
+			* Vanila
+			this->_pDamageMod = this->_pLevel * (this->_pStrength + this->_pDexterity) / 200;
+			*/
+
+			int value = (_pStrength / 4 + _pDexterity/2) * 10;
+		    if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Bow)
+			{
+				value += _pDexterity/2 * 10;//Doubles dex bonus when bow is equipped
+		    }
+
+			int levelScale = 100 - _pLevel;
+			value = value / levelScale;
+			_pDamageMod = value;
+		}
+		break;
+		case HeroClass::Sorcerer:
+		{
+			/*
+			* Vanila
+			this->_pDamageMod = this->_pLevel * this->_pStrength / 100;
+			*/
+
+			int value = (_pStrength / 4 + _pDexterity / 4) * 10;
+		    if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Staff || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Staff)
+			{
+				value += _pMagic;//Give some magic and love to Sorc melee with staff
+			}
+
+		    int levelScale = 100 - _pLevel;
+		    value = value / levelScale;
+		    _pDamageMod = value;
+	    }
+			break;
+	    case HeroClass::Monk:
+		{
+		    this->_pDamageMod = this->_pLevel * (this->_pStrength + this->_pDexterity) / 150;
+			if ((!this->InvBody[INVLOC_HAND_LEFT].isEmpty() && this->InvBody[INVLOC_HAND_LEFT]._itype != ItemType::Staff) || (!this->InvBody[INVLOC_HAND_RIGHT].isEmpty() && this->InvBody[INVLOC_HAND_RIGHT]._itype != ItemType::Staff))
+			{
+				this->_pDamageMod /= 2; // Monks get half the normal damage bonus if they're holding a non-staff weapon
+			}
+		}
+		    break;
+	    case HeroClass::Bard:
+		{
+		    if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Sword || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Sword)
+			    this->_pDamageMod = this->_pLevel * (this->_pStrength + this->_pDexterity) / 150;
+		    else if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Bow) {
+			    this->_pDamageMod = this->_pLevel * (this->_pStrength + this->_pDexterity) / 250;
+		    } else {
+			    this->_pDamageMod = this->_pLevel * this->_pStrength / 100;
+		    }
+		}
+		    break;
+	    case HeroClass::Barbarian:
+		{
+		    if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Axe || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Axe) {
+			    this->_pDamageMod = this->_pLevel * this->_pStrength / 75;
+		    } else if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Mace || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Mace) {
+			    this->_pDamageMod = this->_pLevel * this->_pStrength / 75;
+		    } else if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Bow) {
+			    this->_pDamageMod = this->_pLevel * this->_pStrength / 300;
+		    } else {
+			    this->_pDamageMod = this->_pLevel * this->_pStrength / 100;
+		    }
+
+		    if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Shield || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Shield) {
+			    if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Shield)
+				this->_pIAC -= this->InvBody[INVLOC_HAND_LEFT]._iAC / 2;
+			    else if (this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Shield)
+				this->_pIAC -= this->InvBody[INVLOC_HAND_RIGHT]._iAC / 2;
+		    } else if (IsNoneOf(this->InvBody[INVLOC_HAND_LEFT]._itype, ItemType::Staff, ItemType::Bow) && IsNoneOf(this->InvBody[INVLOC_HAND_RIGHT]._itype, ItemType::Staff, ItemType::Bow)) {
+			    this->_pDamageMod += this->_pLevel * this->_pVitality / 100;
+		    }
+		    this->_pIAC += this->_pLevel / 4;
+		}
+			break;
+	    default:
+		    this->_pDamageMod = this->_pLevel * this->_pStrength / 100;
+		    break;
+	}
+
+}
+
 } // namespace devilution
