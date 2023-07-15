@@ -629,16 +629,16 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 	switch (monster.data().monsterClass) {
 	case MonsterClass::Undead:
 		if (phanditype == ItemType::Sword) {
-			dam -= dam / 2;
+			dam -= dam / 5;
 		} else if (phanditype == ItemType::Mace) {
-			dam += dam / 2;
+			dam += dam / 4;
 		}
 		break;
 	case MonsterClass::Animal:
 		if (phanditype == ItemType::Mace) {
-			dam -= dam / 2;
+			dam -= dam / 5;
 		} else if (phanditype == ItemType::Sword) {
-			dam += dam / 2;
+			dam += dam / 4;
 		}
 		break;
 	case MonsterClass::Demon:
