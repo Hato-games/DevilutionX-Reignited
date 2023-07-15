@@ -2735,6 +2735,14 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 
 	player._pInfraFlag = false;
 
+	int cr = player._pDexterity / (10 - player._pLevel/10) + btohit / 4;
+	if (player.InvBody[INVLOC_HAND_LEFT]._itype != ItemType::None && (player.InvBody[INVLOC_HAND_LEFT]._iLoc == item_equip_type::ILOC_TWOHAND || player.InvBody[INVLOC_HAND_RIGHT]._iLoc == item_equip_type::ILOC_TWOHAND))
+	{
+		cr += btohit / 8;
+	}
+	cr = clamp(cr, 1, 100);
+	player._pCriticalChance = cr;
+
 	player._pBlockFlag = false;
 	if (player._pClass == HeroClass::Monk) {
 		if (player.InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Staff && player.InvBody[INVLOC_HAND_LEFT]._iStatFlag) {

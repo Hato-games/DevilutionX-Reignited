@@ -288,7 +288,7 @@ struct Player {
 	int destParam3;
 	int destParam4;
 	int _pGold;
-
+	int _pCriticalChance;
 	/**
 	 * @brief Contains Information for current Animation
 	 */

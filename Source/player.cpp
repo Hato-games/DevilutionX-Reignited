@@ -612,11 +612,12 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 	dam += player._pIBonusDamMod;
 	int dam2 = dam << 6;
 	dam += player._pDamageMod;
-	if (player._pClass == HeroClass::Warrior || player._pClass == HeroClass::Barbarian) {
-		if (GenerateRnd(100) < player._pLevel) {
-			dam *= 2;
-		}
+
+	if (GenerateRnd(100) < player._pCriticalChance)
+	{
+		dam *= 2;
 	}
+	
 
 	ItemType phanditype = ItemType::None;
 	if (player.InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Sword || player.InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Sword) {

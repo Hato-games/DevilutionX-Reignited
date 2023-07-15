@@ -255,6 +255,11 @@ bool MonsterMHit(int pnum, int monsterId, int mindam, int maxdam, int dist, Miss
 	if (resist)
 		dam >>= 2;
 
+	if(GenerateRnd(100) < player._pCriticalChance)
+	{
+		dam *= 2;
+	}
+
 	if (&player == MyPlayer)
 		ApplyMonsterDamage(damageType, monster, dam);
 
@@ -360,6 +365,8 @@ bool Plr2PlrMHit(const Player &player, int p, int mindam, int maxdam, int dist, 
 		if (!shift)
 			dam <<= 6;
 	}
+
+
 	if (!missileData.isArrow())
 		dam /= 2;
 	if (resper > 0) {

@@ -69,6 +69,24 @@ UiFlags GetValueColor(int value, bool flip = false)
 	return style;
 }
 
+UiFlags GetValueColorCapped(int value, int maxValue, bool flip = false)
+{
+	UiFlags style = UiFlags::ColorWhite;
+	if (maxValue != 0 && value >= maxValue)
+	{
+		style = UiFlags::ColorWhitegold;
+	}
+	else if (value > 0)
+	{
+		style = (flip ? UiFlags::ColorRed : UiFlags::ColorBlue);
+	}
+	else if (value < 0)
+	{
+		style = (flip ? UiFlags::ColorBlue : UiFlags::ColorRed);
+	}
+	return style;
+}
+
 UiFlags GetMaxManaColor()
 {
 	return InspectPlayer->_pMaxMana > InspectPlayer->_pMaxManaBase ? UiFlags::ColorBlue : UiFlags::ColorWhite;
@@ -178,15 +196,16 @@ constexpr unsigned GoldHeaderEntryIndex = 16;
 	        int spacing = ((dmg.first >= 100) ? -1 : 1);
 	        return StyledText { GetValueColor(InspectPlayer->_pIBonusDam), StrCat(dmg.first, "-", dmg.second), spacing };
 	    } },
-
+	{ N_("Critical chance"), { RightColumnLabelX, 219 - 26 }, 57, RightColumnLabelWidth,
+	    []() { return StyledText { GetValueColorCapped(InspectPlayer->_pCriticalChance, 100), StrCat(InspectPlayer->_pCriticalChance, "%") }; } },
 		
-	{ N_("Resist physical"), { RightColumnLabelX, 224-26 }, 57, RightColumnLabelWidth,
+	{ N_("Resist physical"), { RightColumnLabelX, 252-26 }, 57, RightColumnLabelWidth,
 	    []() { return GetResistInfo(InspectPlayer->_pPhyResist); } },
-	{ N_("Resist magic"), { RightColumnLabelX, 224 + 28 - 26 }, 57, RightColumnLabelWidth,
+	{ N_("Resist magic"), { RightColumnLabelX, 252 + 28 - 26 }, 57, RightColumnLabelWidth,
 	    []() { return GetResistInfo(InspectPlayer->_pMagResist); } },
-	{ N_("Resist fire"), { RightColumnLabelX, 224 + 28*2 - 26 }, 57, RightColumnLabelWidth,
+	{ N_("Resist fire"), { RightColumnLabelX, 252 + 28 * 2 - 26 }, 57, RightColumnLabelWidth,
 	    []() { return GetResistInfo(InspectPlayer->_pFireResist); } },
-	{ N_("Resist lightning"), { RightColumnLabelX, 224 + 28 * 3 - 26 }, 57, RightColumnLabelWidth,
+	{ N_("Resist lightning"), { RightColumnLabelX, 252 + 28 * 3 - 26 }, 57, RightColumnLabelWidth,
 	    []() { return GetResistInfo(InspectPlayer->_pLghtResist); } },
 };
 
