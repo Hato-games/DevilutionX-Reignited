@@ -67,6 +67,7 @@ int dropGoldValue;
 bool chrbtnactive;
 UiFlags InfoColor;
 int sbooktab;
+int cpaneltab;
 int8_t initialDropGoldIndex;
 bool talkflag;
 bool sbookflag;
@@ -106,10 +107,10 @@ bool IsRightPanelOpen()
 constexpr Size IncrementAttributeButtonSize { 41, 22 };
 /** Maps from attribute_id to the rectangle on screen used for attribute increment buttons. */
 Rectangle ChrBtnsRect[4] = {
-	{ { 137, 138 }, IncrementAttributeButtonSize },
-	{ { 137, 166 }, IncrementAttributeButtonSize },
-	{ { 137, 195 }, IncrementAttributeButtonSize },
-	{ { 137, 223 }, IncrementAttributeButtonSize }
+	{ { 137, 138 - 26 }, IncrementAttributeButtonSize },
+	{ { 137, 166 - 26 }, IncrementAttributeButtonSize },
+	{ { 137, 195 - 26 }, IncrementAttributeButtonSize },
+	{ { 137, 223 - 26 }, IncrementAttributeButtonSize }
 };
 
 /** Positions of panel buttons. */
@@ -869,6 +870,7 @@ void InitControlPan()
 
 		static const uint16_t CharButtonsFrameWidths[9] { 95, 41, 41, 41, 41, 41, 41, 41, 41 };
 		pChrButtons = LoadCel("data\\charbut", CharButtonsFrameWidths);
+		pChrTabButtons = LoadCel("data\\spellbkb", 76);
 	}
 	ClearPanBtn();
 	if (!IsChatAvailable())
@@ -886,6 +888,7 @@ void InitControlPan()
 	CloseCharPanel();
 	spselflag = false;
 	sbooktab = 0;
+	cpaneltab = 0;
 	sbookflag = false;
 
 	if (!HeadlessMode) {
@@ -1242,6 +1245,19 @@ void DrawLevelUpIcon(const Surface &out)
 
 void CheckChrBtns()
 {
+	/*
+	Rectangle tabArea = { GetPanelPosition(UiPanels::Character, { 7, 320 }), Size { 305, 29 } };
+	if (tabArea.contains(MousePosition)) {
+		int hitColumn = MousePosition.x - tabArea.position.x;
+		// Clicking on the gutter currently activates tab 3. Could make it do nothing by checking for == here and return early.
+		if (!gbIsHellfire && hitColumn > 76 * 2) {
+			// Subtract 1 pixel to account for the gutter between buttons 2/3
+			hitColumn--;
+		}
+		cpaneltab = hitColumn / 76;
+		LoadCharPanel();
+	}
+	*/
 	Player &myPlayer = *MyPlayer;
 
 	if (chrbtnactive || myPlayer._pStatPts == 0)
@@ -1258,6 +1274,7 @@ void CheckChrBtns()
 			chrbtnactive = true;
 		}
 	}
+
 }
 
 void ReleaseChrBtns(bool addAllStatPoints)

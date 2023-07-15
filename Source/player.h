@@ -360,6 +360,7 @@ struct Player {
 	bool _pLvlChanging;
 
 	int8_t _pArmorClass;
+	int8_t _pPhyResist;
 	int8_t _pMagResist;
 	int8_t _pFireResist;
 	int8_t _pLghtResist;
@@ -508,7 +509,7 @@ struct Player {
 	 */
 	int GetArmor() const
 	{
-		return _pIBonusAC + _pIAC + _pDexterity / 5;
+		return _pIBonusAC + _pIAC;
 	}
 
 	/**

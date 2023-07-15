@@ -2541,11 +2541,11 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 {
 	int mind = 0; // min damage
 	int maxd = 0; // max damage
-	int tac = 0;  // accuracy
+	int tac = 0;  // armor class
 
 	int bdam = 0;   // bonus damage
 	int btohit = 0; // bonus chance to hit
-	int bac = 0;    // bonus accuracy
+	int bac = 0;    // bonus armor class
 
 	ItemSpecialEffect iflgs = ItemSpecialEffect::None; // item_special_effect flags
 
@@ -2558,6 +2558,7 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 
 	uint64_t spl = 0; // bitarray for all enabled/active spells
 
+	int pr = 0; // physical resistance
 	int fr = 0; // fire resistance
 	int lr = 0; // lightning resistance
 	int mr = 0; // magic resistance
@@ -2705,6 +2706,8 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 		lr = 0;
 	}
 
+	pr = (tac+bac) / 4 + player._pStrength / 10 + player._pVitality / 5;
+	player._pPhyResist = clamp(pr, 0, MaxResistance);
 	player._pMagResist = clamp(mr, 0, MaxResistance);
 	player._pFireResist = clamp(fr, 0, MaxResistance);
 	player._pLghtResist = clamp(lr, 0, MaxResistance);

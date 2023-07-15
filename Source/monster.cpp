@@ -1196,6 +1196,9 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 	}
 	int dam = (minDam << 6) + GenerateRnd(((maxDam - minDam) << 6) + 1);
 	dam = std::max(dam + (player._pIGetHit << 6), 64);
+
+	dam = dam * (100-player._pPhyResist);
+	dam = dam / 100;
 	if (&player == MyPlayer) {
 		if (player.wReflections > 0) {
 			int reflectedDamage = CheckReflect(monster, player, dam);

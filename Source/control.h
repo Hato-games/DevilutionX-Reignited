@@ -39,6 +39,7 @@ extern int dropGoldValue;
 extern bool chrbtnactive;
 extern UiFlags InfoColor;
 extern int sbooktab;
+extern int cpaneltab;
 extern int8_t initialDropGoldIndex;
 extern bool talkflag;
 extern bool sbookflag;
