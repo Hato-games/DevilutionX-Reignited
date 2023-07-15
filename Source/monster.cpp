@@ -3575,6 +3575,18 @@ void AddDoppelganger(Monster &monster)
 
 void ApplyMonsterDamage(DamageType damageType, Monster &monster, int damage)
 {
+	// Physical resist
+	if (damageType == DamageType::Physical)
+	{
+		int mac = monster.data().armorClass;
+		int mphyres = mac / 4;
+
+		mphyres = clamp(mphyres, 0, 50); // No more than 50%
+
+		damage = damage * (100 - mphyres);
+		damage = damage / 100;
+	}
+
 	AddFloatingNumber(damageType, monster, damage);
 
 	monster.hitPoints -= damage;
