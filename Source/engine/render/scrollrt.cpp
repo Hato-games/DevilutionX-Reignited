@@ -1132,9 +1132,24 @@ void DrawView(const Surface &out, Point startPosition)
 	Displacement offset = {};
 	CalcFirstTilePosition(startPosition, offset);
 	DrawGame(out, startPosition, offset);
-	if (AutomapActive) {
-		DrawAutomap(out.subregionY(0, gnViewportHeight));
+
+	switch (AutomapActive)
+	{
+		default:
+		case 0:
+			break;
+	    case 1:
+		    DrawAutomap(out.subregionY(0, gnViewportHeight));
+			break;
+		case 2:
+		{
+			//TODO:
+		    DrawMinimap(out.subregionY(0, gnViewportHeight));
+		    //DrawMinimap(out.subregion(gnScreenWidth - gnScreenWidth / 4, 0, gnScreenWidth / 4, gnViewportHeight / 4));
+		}
+			break;
 	}
+
 #ifdef _DEBUG
 	bool debugGridTextNeeded = IsDebugGridTextNeeded();
 	if (debugGridTextNeeded || DebugGrid) {

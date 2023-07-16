@@ -2263,7 +2263,7 @@ void LoadGame(bool firstflag)
 	if (gbIsHellfire && !gbIsHellfireSaveGame)
 		SpawnPremium(myPlayer);
 
-	AutomapActive = file.NextBool8();
+	AutomapActive = file.NextLE<uint8_t>();
 	AutoMapScale = file.NextBE<int32_t>();
 	AutomapZoomReset();
 	ResyncQuests();
@@ -2524,7 +2524,7 @@ void SaveGameData(SaveWriter &saveWriter)
 	for (int i = 0; i < giNumberOfSmithPremiumItems; i++)
 		SaveItem(file, premiumitems[i]);
 
-	file.WriteLE<uint8_t>(AutomapActive ? 1 : 0);
+	file.WriteLE<uint8_t>(AutomapActive);
 	file.WriteBE<int32_t>(AutoMapScale);
 
 	SaveAdditionalMissiles(saveWriter);

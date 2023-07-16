@@ -994,10 +994,19 @@ void control_check_btn_press()
 
 void DoAutoMap()
 {
-	if (!AutomapActive)
-		StartAutomap();
-	else
-		AutomapActive = false;
+	AutomapActive++;
+	AutomapActive = AutomapActive % 3;
+	StartAutomap(AutomapActive);
+
+	switch (AutomapActive)
+	{
+	case 1:
+		AutoMapScale = 50;
+		break;
+	case 2:
+		AutoMapScale = 25;
+		break;
+	}
 }
 
 void CheckPanelInfo()

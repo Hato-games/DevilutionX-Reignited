@@ -1465,7 +1465,7 @@ float rightStickLastMove = 0;
 
 bool ContinueSimulatedMouseEvent(const SDL_Event &event, const ControllerButtonEvent &gamepadEvent)
 {
-	if (AutomapActive)
+	if (AutomapActive > 0)
 		return false;
 
 #if !defined(USE_SDL1) && !defined(JOY_AXIS_RIGHTX) && !defined(JOY_AXIS_RIGHTY)
@@ -1681,7 +1681,7 @@ void HandleRightStickMotion()
 		return;
 	}
 
-	if (AutomapActive) { // move map
+	if (AutomapActive > 0) { // move map
 		int dx = 0;
 		int dy = 0;
 		acc.Pool(&dx, &dy, 32);

@@ -534,14 +534,14 @@ void PressKey(SDL_Keycode vkey, uint16_t modState)
 	case SDLK_KP_PLUS:
 	case SDLK_EQUALS:
 	case SDLK_KP_EQUALS:
-		if (AutomapActive) {
+		if (AutomapActive > 0) {
 			AutomapZoomIn();
 		}
 		return;
 	case SDLK_MINUS:
 	case SDLK_KP_MINUS:
 	case SDLK_UNDERSCORE:
-		if (AutomapActive) {
+		if (AutomapActive > 0) {
 			AutomapZoomOut();
 		}
 		return;
@@ -575,7 +575,7 @@ void PressKey(SDL_Keycode vkey, uint16_t modState)
 			HelpScrollUp();
 		} else if (ChatLogFlag) {
 			ChatLogScrollUp();
-		} else if (AutomapActive) {
+		} else if (AutomapActive > 0) {
 			AutomapUp();
 		} else if (IsStashOpen) {
 			Stash.PreviousPage();
@@ -590,7 +590,7 @@ void PressKey(SDL_Keycode vkey, uint16_t modState)
 			HelpScrollDown();
 		} else if (ChatLogFlag) {
 			ChatLogScrollDown();
-		} else if (AutomapActive) {
+		} else if (AutomapActive > 0) {
 			AutomapDown();
 		} else if (IsStashOpen) {
 			Stash.NextPage();
@@ -611,11 +611,11 @@ void PressKey(SDL_Keycode vkey, uint16_t modState)
 		}
 		return;
 	case SDLK_LEFT:
-		if (AutomapActive && !talkflag)
+		if (AutomapActive > 0 && !talkflag)
 			AutomapLeft();
 		return;
 	case SDLK_RIGHT:
-		if (AutomapActive && !talkflag)
+		if (AutomapActive > 0 && !talkflag)
 			AutomapRight();
 		return;
 	default:
@@ -1754,7 +1754,7 @@ void InitKeymapActions()
 			    qtextflag = false;
 			    stream_stop();
 		    }
-		    AutomapActive = false;
+		    AutomapActive = 0;
 		    CancelCurrentDiabloMsg();
 		    gamemenu_off();
 		    doom_close();
@@ -2222,7 +2222,7 @@ void InitPadmapActions()
 			    qtextflag = false;
 			    stream_stop();
 		    }
-		    AutomapActive = false;
+		    AutomapActive = 0;
 		    CancelCurrentDiabloMsg();
 		    gamemenu_off();
 		    doom_close();

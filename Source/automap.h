@@ -29,7 +29,7 @@ enum MapExplorationType : uint8_t {
 };
 
 /** Specifies whether the automap is enabled. */
-extern DVL_API_FOR_TEST bool AutomapActive;
+extern DVL_API_FOR_TEST int AutomapActive;
 /** Tracks the explored areas of the map. */
 extern uint8_t AutomapView[DMAXX][DMAXY];
 /** Specifies the scale of the automap. */
@@ -56,7 +56,7 @@ void InitAutomap();
 /**
  * @brief Displays the automap.
  */
-void StartAutomap();
+void StartAutomap(int mode=1);
 
 /**
  * @brief Scrolls the automap upwards.
@@ -92,6 +92,11 @@ void AutomapZoomOut();
  * @brief Renders the automap to the given buffer.
  */
 void DrawAutomap(const Surface &out);
+
+/**
+ * @brief Renders the minimap to the given buffer.
+ */
+void DrawMinimap(const Surface &out);
 
 /**
  * @brief Updates automap explorer at point if value is higher than existing.

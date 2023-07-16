@@ -649,12 +649,21 @@ void DrawAutomapPlr(const Surface &out, const Displacement &myPlayerOffset, int 
 		((playerOffset.deltaY + myPlayerOffset.deltaY) * AutoMapScale / 100 / 2) + (px + py) * AmLine(8) + (gnScreenHeight - GetMainPanel().size.height) / 2
 	};
 
-	if (CanPanelsCoverView()) {
-		if (IsRightPanelOpen())
-			base.x -= gnScreenWidth / 4;
-		if (IsLeftPanelOpen())
-			base.x += gnScreenWidth / 4;
+	if (AutomapActive == 2)
+	{
+		base.x += gnScreenWidth / 4 + gnScreenWidth / 8;
+		base.y -= gnScreenHeight / 3;
 	}
+	else if (AutomapActive == 1)
+	{
+		if (CanPanelsCoverView()) {
+			if (IsRightPanelOpen())
+				base.x -= gnScreenWidth / 4;
+			if (IsLeftPanelOpen())
+				base.x += gnScreenWidth / 4;
+		}
+	}
+
 	base.y -= AmLine(16);
 
 	switch (player._pdir) {
@@ -803,14 +812,14 @@ std::unique_ptr<AutomapTile[]> LoadAutomapData(size_t &tileCount)
 
 } // namespace
 
-bool AutomapActive;
+int AutomapActive;
 uint8_t AutomapView[DMAXX][DMAXY];
 int AutoMapScale;
 Displacement AutomapOffset;
 
 void InitAutomapOnce()
 {
-	AutomapActive = false;
+	AutomapActive = 0;
 	AutoMapScale = 50;
 }
 
@@ -829,10 +838,10 @@ void InitAutomap()
 			dFlag &= ~DungeonFlag::Explored;
 }
 
-void StartAutomap()
+void StartAutomap(int mode)
 {
 	AutomapOffset = { 0, 0 };
-	AutomapActive = true;
+	AutomapActive = mode;
 }
 
 void AutomapUp()
@@ -861,16 +870,30 @@ void AutomapRight()
 
 void AutomapZoomIn()
 {
-	if (AutoMapScale >= 200)
-		return;
+	if (AutomapActive == 1)
+	{
+		if (AutoMapScale >= 200)
+			return;
+	}
+	else if (AutomapActive == 2)
+	{
+		if (AutoMapScale >= 50)
+			return;
+	}
 
 	AutoMapScale += 5;
 }
 
 void AutomapZoomOut()
 {
-	if (AutoMapScale <= 50)
-		return;
+	if (AutomapActive == 1) {
+		if (AutoMapScale <= 50)
+			return;
+	} else if (AutomapActive == 2) {
+		if (AutoMapScale <= 25)
+			return;
+	}
+
 
 	AutoMapScale -= 5;
 }
@@ -967,6 +990,101 @@ void DrawAutomap(const Surface &out)
 
 	if (AutoMapShowItems)
 		SearchAutomapItem(out, myPlayerOffset, 8, [](Point position) { return dItem[position.x][position.y] != 0; });
+#ifdef _DEBUG
+	if (IsDebugAutomapHighlightNeeded())
+		SearchAutomapItem(out, myPlayerOffset, std::max(MAXDUNX, MAXDUNY), ShouldHighlightDebugAutomapTile);
+#endif
+
+	DrawAutomapText(out);
+}
+
+
+void DrawMinimap(const Surface &out)
+{
+
+	Automap = { (ViewPosition.x - 8) / 2, (ViewPosition.y - 8) / 2 };
+	if (leveltype != DTYPE_TOWN) {
+		Automap += { -4, -4 };
+	}
+	while (Automap.x + AutomapOffset.deltaX < 0)
+		AutomapOffset.deltaX++;
+	while (Automap.x + AutomapOffset.deltaX >= DMAXX)
+		AutomapOffset.deltaX--;
+
+	while (Automap.y + AutomapOffset.deltaY < 0)
+		AutomapOffset.deltaY++;
+	while (Automap.y + AutomapOffset.deltaY >= DMAXY)
+		AutomapOffset.deltaY--;
+
+	Automap += AutomapOffset;
+
+	const Player &myPlayer = *MyPlayer;
+	Displacement myPlayerOffset = {};
+	if (myPlayer.isWalking())
+		myPlayerOffset = GetOffsetForWalking(myPlayer.AnimInfo, myPlayer._pdir, true);
+
+	int d = (AutoMapScale * 64) / 100;
+	int cells = 2 * (gnScreenWidth / 2 / d) + 1;
+	if (((gnScreenWidth / 2) % d) != 0)
+		cells++;
+	if (((gnScreenWidth / 2) % d) >= (AutoMapScale * 32) / 100)
+		cells++;
+	if ((myPlayerOffset.deltaX + myPlayerOffset.deltaY) != 0)
+		cells++;
+
+	Point screen {
+		gnScreenWidth / 2,
+		(gnScreenHeight - GetMainPanel().size.height) / 2
+	};
+	if ((cells & 1) != 0) {
+		screen.x -= AmLine(64) * ((cells - 1) / 2);
+		screen.y -= AmLine(32) * ((cells + 1) / 2);
+	} else {
+		screen.x -= AmLine(64) * (cells / 2) - AmLine(32);
+		screen.y -= AmLine(32) * (cells / 2) + AmLine(16);
+	}
+	if ((ViewPosition.x & 1) != 0) {
+		screen.x -= AmLine(16);
+		screen.y -= AmLine(8);
+	}
+	if ((ViewPosition.y & 1) != 0) {
+		screen.x += AmLine(16);
+		screen.y -= AmLine(8);
+	}
+
+	screen.x += AutoMapScale * myPlayerOffset.deltaX / 100 / 2;
+	screen.y += AutoMapScale * myPlayerOffset.deltaY / 100 / 2;
+
+	screen.x += gnScreenWidth / 4 + gnScreenWidth / 8;
+	screen.y -= gnScreenHeight / 3;
+
+
+	Point map = { Automap.x - cells, Automap.y - 1 };
+
+	for (int i = 0; i <= cells + 1; i++) {
+		Point tile1 = screen;
+		for (int j = 0; j < cells; j++) {
+			DrawAutomapTile(out, tile1, { map.x + j, map.y - j });
+			tile1.x += AmLine(64);
+		}
+		map.y++;
+
+		Point tile2 { screen.x - AmLine(32), screen.y + AmLine(16) };
+		for (int j = 0; j <= cells; j++) {
+			DrawAutomapTile(out, tile2, { map.x + j, map.y - j });
+			tile2.x += AmLine(64);
+		}
+		map.x++;
+		screen.y += AmLine(32);
+	}
+
+	for (size_t playerId = 0; playerId < Players.size(); playerId++) {
+		Player &player = Players[playerId];
+		if (player.isOnActiveLevel() && player.plractive && !player._pLvlChanging && (&player == MyPlayer || player.friendlyMode)) {
+			DrawAutomapPlr(out, myPlayerOffset, playerId);
+		}
+	}
+
 #ifdef _DEBUG
 	if (IsDebugAutomapHighlightNeeded())
 		SearchAutomapItem(out, myPlayerOffset, std::max(MAXDUNX, MAXDUNY), ShouldHighlightDebugAutomapTile);
