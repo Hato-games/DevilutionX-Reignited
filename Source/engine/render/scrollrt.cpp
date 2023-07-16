@@ -1143,11 +1143,14 @@ void DrawView(const Surface &out, Point startPosition)
 			break;
 		case 2:
 		{
-			//TODO:
-		    DrawMinimap(out.subregionY(0, gnViewportHeight));
-		    //DrawMinimap(out.subregion(gnScreenWidth - gnScreenWidth / 4, 0, gnScreenWidth / 4, gnViewportHeight / 4));
+		    DrawMinimap(out.subregion(gnScreenWidth - gnScreenWidth / 4-8, 8, gnScreenWidth / 4, gnViewportHeight / 4));
 		}
 			break;
+	}
+
+	if (AutomapActive > 0)
+	{
+		DrawAutomapText(out.subregionY(0, gnViewportHeight));
 	}
 
 #ifdef _DEBUG

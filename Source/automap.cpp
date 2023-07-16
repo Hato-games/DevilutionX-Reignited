@@ -649,10 +649,12 @@ void DrawAutomapPlr(const Surface &out, const Displacement &myPlayerOffset, int 
 		((playerOffset.deltaY + myPlayerOffset.deltaY) * AutoMapScale / 100 / 2) + (px + py) * AmLine(8) + (gnScreenHeight - GetMainPanel().size.height) / 2
 	};
 
+	int multiply = 1;
 	if (AutomapActive == 2)
 	{
-		base.x += gnScreenWidth / 4 + gnScreenWidth / 8;
-		base.y -= gnScreenHeight / 3;
+		base.x -= (gnScreenWidth / 4 + gnScreenWidth / 8);
+		base.y -= (gnScreenHeight / 4 + gnScreenHeight / 12);
+		multiply = 2;
 	}
 	else if (AutomapActive == 1)
 	{
@@ -666,127 +668,62 @@ void DrawAutomapPlr(const Surface &out, const Displacement &myPlayerOffset, int 
 
 	base.y -= AmLine(16);
 
+
+
 	switch (player._pdir) {
 	case Direction::North: {
 		const Point point { base.x, base.y - AmLine(16) };
-		DrawVerticalLine(out, point, AmLine(16), playerColor);
-		DrawMapLineSteepNE(out, { point.x - AmLine(4), point.y + 2 * AmLine(4) }, AmLine(4), playerColor);
-		DrawMapLineSteepNW(out, { point.x + AmLine(4), point.y + 2 * AmLine(4) }, AmLine(4), playerColor);
+		DrawVerticalLine(out, point, AmLine(16 * multiply), playerColor);
+		DrawMapLineSteepNE(out, { point.x - AmLine(4 * multiply), point.y + 2 * AmLine(4 * multiply) }, AmLine(4 * multiply), playerColor);
+		DrawMapLineSteepNW(out, { point.x + AmLine(4 * multiply), point.y + 2 * AmLine(4 * multiply) }, AmLine(4 * multiply), playerColor);
 	} break;
 	case Direction::NorthEast: {
 		const Point point { base.x + AmLine(16), base.y - AmLine(8) };
-		DrawHorizontalLine(out, { point.x - AmLine(8), point.y }, AmLine(8), playerColor);
-		DrawMapLineNE(out, { point.x - 2 * AmLine(8), point.y + AmLine(8) }, AmLine(8), playerColor);
-		DrawMapLineSteepSW(out, point, AmLine(4), playerColor);
+		DrawHorizontalLine(out, { point.x - AmLine(8 * multiply), point.y }, AmLine(8 * multiply), playerColor);
+		DrawMapLineNE(out, { point.x - 2 * AmLine(8 * multiply), point.y + AmLine(8 * multiply) }, AmLine(8 * multiply), playerColor);
+		DrawMapLineSteepSW(out, point, AmLine(4 * multiply), playerColor);
 	} break;
 	case Direction::East: {
 		const Point point { base.x + AmLine(16), base.y };
-		DrawMapLineNW(out, point, AmLine(4), playerColor);
-		DrawHorizontalLine(out, { point.x - AmLine(16), point.y }, AmLine(16), playerColor);
-		DrawMapLineSW(out, point, AmLine(4), playerColor);
+		DrawMapLineNW(out, point, AmLine(4 * multiply), playerColor);
+		DrawHorizontalLine(out, { point.x - AmLine(16 * multiply), point.y }, AmLine(16 * multiply), playerColor);
+		DrawMapLineSW(out, point, AmLine(4 * multiply), playerColor);
 	} break;
 	case Direction::SouthEast: {
 		const Point point { base.x + AmLine(16), base.y + AmLine(8) };
-		DrawMapLineSteepNW(out, point, AmLine(4), playerColor);
-		DrawMapLineSE(out, { point.x - 2 * AmLine(8), point.y - AmLine(8) }, AmLine(8), playerColor);
-		DrawHorizontalLine(out, { point.x - (AmLine(8) + 1), point.y }, AmLine(8) + 1, playerColor);
+		DrawMapLineSteepNW(out, point, AmLine(4 * multiply), playerColor);
+		DrawMapLineSE(out, { point.x - 2 * AmLine(8 * multiply), point.y - AmLine(8 * multiply) }, AmLine(8 * multiply), playerColor);
+		DrawHorizontalLine(out, { point.x - (AmLine(8 * multiply) + 1), point.y }, AmLine(8) + 1, playerColor);
 	} break;
 	case Direction::South: {
 		const Point point { base.x, base.y + AmLine(16) };
-		DrawVerticalLine(out, { point.x, point.y - AmLine(16) }, AmLine(16), playerColor);
-		DrawMapLineSteepSW(out, { point.x + AmLine(4), point.y - 2 * AmLine(4) }, AmLine(4), playerColor);
-		DrawMapLineSteepSE(out, { point.x - AmLine(4), point.y - 2 * AmLine(4) }, AmLine(4), playerColor);
+		DrawVerticalLine(out, { point.x, point.y - AmLine(16 * multiply) }, AmLine(16 * multiply), playerColor);
+		DrawMapLineSteepSW(out, { point.x + AmLine(4 * multiply), point.y - 2 * AmLine(4 * multiply) }, AmLine(4 * multiply), playerColor);
+		DrawMapLineSteepSE(out, { point.x - AmLine(4 * multiply), point.y - 2 * AmLine(4 * multiply) }, AmLine(4 * multiply), playerColor);
 	} break;
 	case Direction::SouthWest: {
 		const Point point { base.x - AmLine(16), base.y + AmLine(8) };
-		DrawMapLineSteepNE(out, point, AmLine(4), playerColor);
-		DrawMapLineSW(out, { point.x + 2 * AmLine(8), point.y - AmLine(8) }, AmLine(8), playerColor);
-		DrawHorizontalLine(out, point, AmLine(8) + 1, playerColor);
+		DrawMapLineSteepNE(out, point, AmLine(4 * multiply), playerColor);
+		DrawMapLineSW(out, { point.x + 2 * AmLine(8 * multiply), point.y - AmLine(8 * multiply) }, AmLine(8 * multiply), playerColor);
+		DrawHorizontalLine(out, point, AmLine(8 * multiply) + 1, playerColor);
 	} break;
 	case Direction::West: {
 		const Point point { base.x - AmLine(16), base.y };
-		DrawMapLineNE(out, point, AmLine(4), playerColor);
-		DrawHorizontalLine(out, point, AmLine(16) + 1, playerColor);
-		DrawMapLineSE(out, point, AmLine(4), playerColor);
+		DrawMapLineNE(out, point, AmLine(4 * multiply), playerColor);
+		DrawHorizontalLine(out, point, AmLine(16 * multiply) + 1, playerColor);
+		DrawMapLineSE(out, point, AmLine(4 * multiply), playerColor);
 	} break;
 	case Direction::NorthWest: {
 		const Point point { base.x - AmLine(16), base.y - AmLine(8) };
-		DrawMapLineNW(out, { point.x + 2 * AmLine(8), point.y + AmLine(8) }, AmLine(8), playerColor);
-		DrawHorizontalLine(out, point, AmLine(8) + 1, playerColor);
-		DrawMapLineSteepSE(out, point, AmLine(4), playerColor);
+		DrawMapLineNW(out, { point.x + 2 * AmLine(8 * multiply), point.y + AmLine(8 * multiply) }, AmLine(8 * multiply), playerColor);
+		DrawHorizontalLine(out, point, AmLine(8 * multiply) + 1, playerColor);
+		DrawMapLineSteepSE(out, point, AmLine(4 * multiply), playerColor);
 	} break;
 	case Direction::NoDirection:
 		break;
 	}
 }
 
-/**
- * @brief Renders game info, such as the name of the current level, and in multi player the name of the game and the game password.
- */
-void DrawAutomapText(const Surface &out)
-{
-	Point linePosition { 8, 8 };
-
-	if (gbIsMultiplayer) {
-		if (GameName != "0.0.0.0" && !IsLoopback) {
-			std::string description = std::string(_("Game: "));
-			description.append(GameName);
-			DrawString(out, description, linePosition);
-			linePosition.y += 15;
-		}
-
-		std::string description;
-		if (IsLoopback) {
-			description = std::string(_("Offline Game"));
-		} else if (!PublicGame) {
-			description = std::string(_("Password: "));
-			description.append(GamePassword);
-		} else {
-			description = std::string(_("Public Game"));
-		}
-		DrawString(out, description, linePosition);
-		linePosition.y += 15;
-	}
-
-	if (setlevel) {
-		DrawString(out, _(QuestLevelNames[setlvlnum]), linePosition);
-		return;
-	}
-
-	std::string description;
-	switch (leveltype) {
-	case DTYPE_NEST:
-		description = fmt::format(fmt::runtime(_("Level: Nest {:d}")), currlevel - 16);
-		break;
-	case DTYPE_CRYPT:
-		description = fmt::format(fmt::runtime(_("Level: Crypt {:d}")), currlevel - 20);
-		break;
-	case DTYPE_TOWN:
-		description = std::string(_("Town"));
-		break;
-	default:
-		description = fmt::format(fmt::runtime(_("Level: {:d}")), currlevel);
-		break;
-	}
-
-	DrawString(out, description, linePosition);
-	linePosition.y += 15;
-	string_view difficulty;
-	switch (sgGameInitInfo.nDifficulty) {
-	case DIFF_NORMAL:
-		difficulty = _("Normal");
-		break;
-	case DIFF_NIGHTMARE:
-		difficulty = _("Nightmare");
-		break;
-	case DIFF_HELL:
-		difficulty = _("Hell");
-		break;
-	}
-
-	std::string difficultyString = fmt::format(fmt::runtime(_(/* TRANSLATORS: {:s} means: Game Difficulty. */ "Difficulty: {:s}")), difficulty);
-	DrawString(out, difficultyString, linePosition);
-}
 
 std::unique_ptr<AutomapTile[]> LoadAutomapData(size_t &tileCount)
 {
@@ -995,7 +932,6 @@ void DrawAutomap(const Surface &out)
 		SearchAutomapItem(out, myPlayerOffset, std::max(MAXDUNX, MAXDUNY), ShouldHighlightDebugAutomapTile);
 #endif
 
-	DrawAutomapText(out);
 }
 
 
@@ -1055,8 +991,8 @@ void DrawMinimap(const Surface &out)
 	screen.x += AutoMapScale * myPlayerOffset.deltaX / 100 / 2;
 	screen.y += AutoMapScale * myPlayerOffset.deltaY / 100 / 2;
 
-	screen.x += gnScreenWidth / 4 + gnScreenWidth / 8;
-	screen.y -= gnScreenHeight / 3;
+	screen.x -= (gnScreenWidth / 4 + gnScreenWidth / 8);
+	screen.y -= (gnScreenHeight / 4 + gnScreenHeight / 12);
 
 
 	Point map = { Automap.x - cells, Automap.y - 1 };
@@ -1078,6 +1014,16 @@ void DrawMinimap(const Surface &out)
 		screen.y += AmLine(32);
 	}
 
+	Point start { 0, 0 };
+	DrawVerticalLine(out, start, out.region.h, MapColorsBright);
+	DrawHorizontalLine(out, start, out.region.w, MapColorsBright);
+
+	start = { out.region.w-1, 0 };
+	DrawVerticalLine(out, start, out.region.h, MapColorsBright);
+
+	start = { 0, out.region.h - 1 };
+	DrawHorizontalLine(out, start, out.region.w, MapColorsBright);
+
 	for (size_t playerId = 0; playerId < Players.size(); playerId++) {
 		Player &player = Players[playerId];
 		if (player.isOnActiveLevel() && player.plractive && !player._pLvlChanging && (&player == MyPlayer || player.friendlyMode)) {
@@ -1090,7 +1036,72 @@ void DrawMinimap(const Surface &out)
 		SearchAutomapItem(out, myPlayerOffset, std::max(MAXDUNX, MAXDUNY), ShouldHighlightDebugAutomapTile);
 #endif
 
-	DrawAutomapText(out);
+}
+
+
+void DrawAutomapText(const Surface &out)
+{
+	Point linePosition { 8, 8 };
+
+	if (gbIsMultiplayer) {
+		if (GameName != "0.0.0.0" && !IsLoopback) {
+			std::string description = std::string(_("Game: "));
+			description.append(GameName);
+			DrawString(out, description, linePosition);
+			linePosition.y += 15;
+		}
+
+		std::string description;
+		if (IsLoopback) {
+			description = std::string(_("Offline Game"));
+		} else if (!PublicGame) {
+			description = std::string(_("Password: "));
+			description.append(GamePassword);
+		} else {
+			description = std::string(_("Public Game"));
+		}
+		DrawString(out, description, linePosition);
+		linePosition.y += 15;
+	}
+
+	if (setlevel) {
+		DrawString(out, _(QuestLevelNames[setlvlnum]), linePosition);
+		return;
+	}
+
+	std::string description;
+	switch (leveltype) {
+	case DTYPE_NEST:
+		description = fmt::format(fmt::runtime(_("Level: Nest {:d}")), currlevel - 16);
+		break;
+	case DTYPE_CRYPT:
+		description = fmt::format(fmt::runtime(_("Level: Crypt {:d}")), currlevel - 20);
+		break;
+	case DTYPE_TOWN:
+		description = std::string(_("Town"));
+		break;
+	default:
+		description = fmt::format(fmt::runtime(_("Level: {:d}")), currlevel);
+		break;
+	}
+
+	DrawString(out, description, linePosition);
+	linePosition.y += 15;
+	string_view difficulty;
+	switch (sgGameInitInfo.nDifficulty) {
+	case DIFF_NORMAL:
+		difficulty = _("Normal");
+		break;
+	case DIFF_NIGHTMARE:
+		difficulty = _("Nightmare");
+		break;
+	case DIFF_HELL:
+		difficulty = _("Hell");
+		break;
+	}
+
+	std::string difficultyString = fmt::format(fmt::runtime(_(/* TRANSLATORS: {:s} means: Game Difficulty. */ "Difficulty: {:s}")), difficulty);
+	DrawString(out, difficultyString, linePosition);
 }
 
 void UpdateAutomapExplorer(Point map, MapExplorationType explorer)

@@ -97,8 +97,11 @@ void DrawAutomap(const Surface &out);
  * @brief Renders the minimap to the given buffer.
  */
 void DrawMinimap(const Surface &out);
-
 /**
+ * @brief Renders game info, such as the name of the current level, and in multi player the name of the game and the game password.
+ */
+void DrawAutomapText(const Surface &out);
+    /**
  * @brief Updates automap explorer at point if value is higher than existing.
  */
 void UpdateAutomapExplorer(Point map, MapExplorationType explorer);
