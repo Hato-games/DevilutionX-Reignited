@@ -1809,11 +1809,11 @@ int Player::GetManaShieldDamageReduction()
 void Player::RestorePartialLife()
 {
 	int wholeHitpoints = _pMaxHP >> 6;
-	int l = ((wholeHitpoints / 8) + GenerateRnd(wholeHitpoints / 4)) << 6;
-	if (IsAnyOf(_pClass, HeroClass::Warrior, HeroClass::Barbarian))
-		l *= 2;
-	if (IsAnyOf(_pClass, HeroClass::Rogue, HeroClass::Monk, HeroClass::Bard))
-		l += l / 2;
+
+	int flatVal = (IsAnyOf(_pClass, HeroClass::Warrior, HeroClass::Barbarian)) ? 100 : 50;
+	int l = std::max(flatVal, wholeHitpoints / 4);
+	l = l << 6;
+
 	_pHitPoints = std::min(_pHitPoints + l, _pMaxHP);
 	_pHPBase = std::min(_pHPBase + l, _pMaxHPBase);
 }
@@ -1821,11 +1821,11 @@ void Player::RestorePartialLife()
 void Player::RestorePartialMana()
 {
 	int wholeManaPoints = _pMaxMana >> 6;
-	int l = ((wholeManaPoints / 8) + GenerateRnd(wholeManaPoints / 4)) << 6;
-	if (_pClass == HeroClass::Sorcerer)
-		l *= 2;
-	if (IsAnyOf(_pClass, HeroClass::Rogue, HeroClass::Monk, HeroClass::Bard))
-		l += l / 2;
+
+	int flatVal = (IsAnyOf(_pClass, HeroClass::Sorcerer)) ? 100 : 50;
+	int l = std::max(flatVal, wholeManaPoints / 4);
+	l = l << 6;
+
 	if (HasNoneOf(_pIFlags, ItemSpecialEffect::NoMana)) {
 		_pMana = std::min(_pMana + l, _pMaxMana);
 		_pManaBase = std::min(_pManaBase + l, _pMaxManaBase);
