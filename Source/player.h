@@ -612,13 +612,13 @@ struct Player {
 	{
 		int tmac = monsterArmor;
 		if (_pIEnAc > 0) {
-			if (gbIsHellfire) {
+
 				int pIEnAc = _pIEnAc - 1;
 				if (pIEnAc > 0)
 					tmac >>= pIEnAc;
 				else
 					tmac -= tmac / 4;
-			}
+			
 			if (isMelee && _pClass == HeroClass::Barbarian) {
 				tmac -= monsterArmor / 8;
 			}

@@ -3573,12 +3573,12 @@ void AddDoppelganger(Monster &monster)
 	}
 }
 
-void ApplyMonsterDamage(DamageType damageType, Monster &monster, int damage)
+void ApplyMonsterDamage(DamageType damageType, Monster &monster, int damage, int pierce)
 {
 	// Physical resist
 	if (damageType == DamageType::Physical)
 	{
-		int mac = monster.data().armorClass;
+		int mac = monster.data().armorClass - pierce;
 		int mphyres = mac / 4;
 
 		mphyres = clamp(mphyres, 0, 50); // No more than 50%

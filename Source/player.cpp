@@ -681,7 +681,8 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 			dam = monster.hitPoints; /* ensure monster is killed with one hit */
 		}
 #endif
-		ApplyMonsterDamage(DamageType::Physical, monster, dam);
+		int pierce = player.CalculateArmorPierce(monster.armorClass, true);
+		ApplyMonsterDamage(DamageType::Physical, monster, dam, pierce);
 	}
 
 	int skdam = 0;

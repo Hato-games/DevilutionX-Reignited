@@ -261,7 +261,10 @@ bool MonsterMHit(int pnum, int monsterId, int mindam, int maxdam, int dist, Miss
 	}
 
 	if (&player == MyPlayer)
-		ApplyMonsterDamage(damageType, monster, dam);
+	{
+		int pierce = player.CalculateArmorPierce(monster.armorClass, true);
+		ApplyMonsterDamage(damageType, monster, dam, pierce);
+	}
 
 	if (monster.hitPoints >> 6 <= 0) {
 		M_StartKill(monster, player);
