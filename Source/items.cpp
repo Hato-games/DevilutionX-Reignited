@@ -3813,7 +3813,7 @@ bool DoOil(Player &player, int cii)
 			return _(/*xgettext:no-c-format*/ "hit steals 5% life");
 		return {};
 	case IPL_TARGAC:
-		return _("penetrates target's armor");
+		return fmt::format(fmt::runtime(_("penetrates {:d}% of target's armor")), item._iPLEnAc);
 	case IPL_FASTATTACK:
 		if (HasAnyOf(item._iFlags, ItemSpecialEffect::QuickAttack))
 			return _("quick attack");
