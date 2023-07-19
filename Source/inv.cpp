@@ -1879,7 +1879,10 @@ int8_t CheckInvHLight()
 	} else {
 		InfoColor = pi->getTextColor();
 		InfoString = pi->getName();
-		if (pi->_iIdentified) {
+
+
+		if (pi->_iClass == ICLASS_WEAPON || pi->_iClass == ICLASS_ARMOR || (pi->_iClass == ICLASS_MISC && (pi->_iLoc == ILOC_RING || pi->_iLoc == ILOC_AMULET))) 
+		{
 			PrintItemDetails(*pi);
 		} else {
 			PrintItemDur(*pi);

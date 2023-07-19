@@ -3893,21 +3893,145 @@ void DrawUniqueInfo(const Surface &out)
 
 	DrawUniqueInfoWindow(out);
 
+
 	Rectangle rect { position + Displacement { 32, 56 }, { 257, 0 } };
-	const UniqueItem &uitem = UniqueItems[curruitem._iUid];
-	DrawString(out, _(uitem.UIName), rect, UiFlags::AlignCenter);
+
+	UiFlags fontColor = curruitem.getTextColor();
+	InfoString = curruitem.getName();
+
+
+	switch (curruitem._iMagical)
+	{
+		case ITEM_QUALITY_NORMAL:
+		case ITEM_QUALITY_MAGIC: 
+			InfoString = curruitem.getName();
+			break;
+
+		case ITEM_QUALITY_UNIQUE:
+		{
+		    const UniqueItem &uitem = UniqueItems[curruitem._iUid];
+		    if (curruitem._iIdentified)
+			{
+				InfoString = string_view(uitem.UIName);
+			}
+			else
+			{
+			    InfoString = curruitem.getName();
+			}
+		}
+		break;
+	}
+
+	DrawString(out, InfoString, rect, UiFlags::AlignCenter | fontColor);
 
 	const Rectangle dividerLineRect { position + Displacement { 26, 25 }, { 267, 3 } };
 	out.BlitFrom(out, MakeSdlRect(dividerLineRect), dividerLineRect.position + Displacement { 0, 5 * 12 + 13 });
 
-	rect.position.y += (10 - uitem.UINumPL) * 12;
-	assert(uitem.UINumPL <= sizeof(uitem.powers) / sizeof(*uitem.powers));
-	for (const auto &power : uitem.powers) {
-		if (power.type == IPL_INVALID)
+	std::vector<std::string> texts;
+
+	switch (curruitem._iMagical)
+	{
+		case ITEM_QUALITY_MAGIC:
+		    AddPanelString(_("Magic item"));
+		case ITEM_QUALITY_NORMAL:
+		{
+
+		    if (curruitem._iClass == ICLASS_WEAPON)
+			{
+				if (curruitem._iMinDam == curruitem._iMaxDam)
+				{
+					if (curruitem._iMaxDur == DUR_INDESTRUCTIBLE)
+						texts.push_back(fmt::format(fmt::runtime(_("damage: {:d}  Indestructible")), curruitem._iMinDam));
+					else
+						texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "damage: {:d}  Dur: {:d}/{:d}")), curruitem._iMinDam, curruitem._iDurability, curruitem._iMaxDur));
+				}
+				else
+				{
+					if (curruitem._iMaxDur == DUR_INDESTRUCTIBLE)
+						texts.push_back(fmt::format(fmt::runtime(_("damage: {:d}-{:d}  Indestructible")), curruitem._iMinDam, curruitem._iMaxDam));
+					else
+						texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "damage: {:d}-{:d}  Dur: {:d}/{:d}")), curruitem._iMinDam, curruitem._iMaxDam, curruitem._iDurability, curruitem._iMaxDur));
+				}
+			}
+
+			if (curruitem._iClass == ICLASS_ARMOR)
+			{
+				if (curruitem._iMaxDur == DUR_INDESTRUCTIBLE)
+				    texts.push_back(fmt::format(fmt::runtime(_("armor: {:d}  Indestructible")), curruitem._iAC));
+				else
+				    texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "armor: {:d}  Dur: {:d}/{:d}")), curruitem._iAC, curruitem._iDurability, curruitem._iMaxDur));
+			}
+
+			if (curruitem._iMiscId == IMISC_STAFF && curruitem._iMaxCharges != 0)
+			{
+			    texts.push_back(fmt::format(fmt::runtime(_("Charges: {:d}/{:d}")), curruitem._iCharges, curruitem._iMaxCharges));
+			}
+
+			if (curruitem._iIdentified)
+			{
+			    if (curruitem._iPrePower != -1) {
+				    texts.push_back(PrintItemPower(curruitem._iPrePower, curruitem).str().data());
+			    }
+			    if (curruitem._iSufPower != -1) {
+				    texts.push_back(PrintItemPower(curruitem._iSufPower, curruitem).str().data());
+			    }
+			}
+			else
+			{
+			    texts.push_back("Not identified");
+			}
+
+
+		}
 			break;
-		rect.position.y += 2 * 12;
-		DrawString(out, PrintItemPower(power.type, curruitem), rect, UiFlags::ColorWhite | UiFlags::AlignCenter);
+		case ITEM_QUALITY_UNIQUE:
+		{
+		    AddPanelString(_("unique item"));
+
+			if (curruitem._iIdentified)
+			{
+			    const UniqueItem &uitem = UniqueItems[curruitem._iUid];
+
+			    assert(uitem.UINumPL <= sizeof(uitem.powers) / sizeof(*uitem.powers));
+			    for (const auto &power : uitem.powers) {
+				    if (power.type == IPL_INVALID)
+					    break;
+
+				    texts.push_back(PrintItemPower(power.type, curruitem).str().data());
+			    }
+		    }
+			else
+			{
+			    texts.push_back("Not identified");
+		    }
+		}
+			break;
 	}
+
+	uint8_t str = curruitem._iMinStr;
+	uint8_t dex = curruitem._iMinDex;
+	uint8_t mag = curruitem._iMinMag;
+	if (str != 0 || mag != 0 || dex != 0) {
+		    std::string text = std::string(_("Required:"));
+		    if (str != 0)
+			    text.append(fmt::format(fmt::runtime(_(" {:d} Str")), str));
+		    if (mag != 0)
+			    text.append(fmt::format(fmt::runtime(_(" {:d} Mag")), mag));
+		    if (dex != 0)
+			    text.append(fmt::format(fmt::runtime(_(" {:d} Dex")), dex));
+
+		    texts.push_back("");
+		    texts.push_back(text);
+	}
+
+	rect.position.y += (10 - texts.size()) * 12;
+	for (int i = 0; i < texts.size(); i++)
+	{
+		rect.position.y += 2 * 12;
+		DrawString(out, texts[i], rect, UiFlags::ColorWhite | UiFlags::AlignCenter);
+	}
+
+
 }
 
 void PrintItemDetails(const Item &item)
@@ -3915,39 +4039,9 @@ void PrintItemDetails(const Item &item)
 	if (HeadlessMode)
 		return;
 
-	if (item._iClass == ICLASS_WEAPON) {
-		if (item._iMinDam == item._iMaxDam) {
-			if (item._iMaxDur == DUR_INDESTRUCTIBLE)
-				AddPanelString(fmt::format(fmt::runtime(_("damage: {:d}  Indestructible")), item._iMinDam));
-			else
-				AddPanelString(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "damage: {:d}  Dur: {:d}/{:d}")), item._iMinDam, item._iDurability, item._iMaxDur));
-		} else {
-			if (item._iMaxDur == DUR_INDESTRUCTIBLE)
-				AddPanelString(fmt::format(fmt::runtime(_("damage: {:d}-{:d}  Indestructible")), item._iMinDam, item._iMaxDam));
-			else
-				AddPanelString(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "damage: {:d}-{:d}  Dur: {:d}/{:d}")), item._iMinDam, item._iMaxDam, item._iDurability, item._iMaxDur));
-		}
-	}
-	if (item._iClass == ICLASS_ARMOR) {
-		if (item._iMaxDur == DUR_INDESTRUCTIBLE)
-			AddPanelString(fmt::format(fmt::runtime(_("armor: {:d}  Indestructible")), item._iAC));
-		else
-			AddPanelString(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "armor: {:d}  Dur: {:d}/{:d}")), item._iAC, item._iDurability, item._iMaxDur));
-	}
-	if (item._iMiscId == IMISC_STAFF && item._iMaxCharges != 0) {
-		AddPanelString(fmt::format(fmt::runtime(_("Charges: {:d}/{:d}")), item._iCharges, item._iMaxCharges));
-	}
-	if (item._iPrePower != -1) {
-		AddPanelString(PrintItemPower(item._iPrePower, item));
-	}
-	if (item._iSufPower != -1) {
-		AddPanelString(PrintItemPower(item._iSufPower, item));
-	}
-	if (item._iMagical == ITEM_QUALITY_UNIQUE) {
-		AddPanelString(_("unique item"));
-		ShowUniqueItemInfoBox = true;
-		curruitem = item;
-	}
+	ShowUniqueItemInfoBox = true;
+	curruitem = item;
+
 	PrintItemInfo(item);
 }
 

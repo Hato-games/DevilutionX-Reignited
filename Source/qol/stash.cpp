@@ -447,7 +447,8 @@ uint16_t CheckStashHLight(Point mousePosition)
 
 	InfoColor = item.getTextColor();
 	InfoString = item.getName();
-	if (item._iIdentified) {
+
+	if (item._iClass == ICLASS_WEAPON || item._iClass == ICLASS_ARMOR || (item._iClass == ICLASS_MISC && (item._iLoc == ILOC_RING || item._iLoc == ILOC_AMULET)))  {
 		PrintItemDetails(item);
 	} else {
 		PrintItemDur(item);
