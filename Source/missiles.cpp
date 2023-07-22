@@ -248,6 +248,10 @@ bool MonsterMHit(int pnum, int monsterId, int mindam, int maxdam, int dist, Miss
 		{
 			dam *= 3;
 		}
+		int damageRed = (dist * dist) / 2;
+		damageRed = clamp(damageRed, 0, 50);
+		dam = dam * (100 - damageRed);
+		dam = dam / 100;
 	}
 	bool resist = monster.isResistant(t, damageType);
 	if (!shift)
