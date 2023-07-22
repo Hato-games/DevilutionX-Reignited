@@ -3034,33 +3034,7 @@ void ProcessPlayers()
 
 			if (&player == MyPlayer)
 			{
-				static int regenTick = 0;
-				regenTick++;
-				regenTick = regenTick % 5;//game tick is 40, so 10 is every 1/4 second
-				if (regenTick == 0)
-				{
-					int manaRefill = player._pMaxMana / (2000 + player._pLevel * 40); // 1.0% per second, 0.5% at lvl 50
-					if (manaRefill < 5) {
-						manaRefill = 5;
-					}
-					player._pMana += manaRefill;
-					if (player._pMana > player._pMaxMana) {
-						player._pMana = player._pMaxMana;
-					}
-					RedrawComponent(PanelDrawComponent::Mana);
-
-					int hpRefill = player._pMaxHP / (2000 + player._pLevel * 40); // 1.0% per second, 0.5% at lvl 50
-					if (hpRefill < 5) {
-						hpRefill = 5;
-					}
-					player._pHitPoints += hpRefill;
-					if (player._pHitPoints > player._pMaxHP) {
-						player._pHitPoints = player._pMaxHP;
-					}
-					RedrawComponent(PanelDrawComponent::Health);
-					RedrawComponent(PanelDrawComponent::Mana);
-				}
-
+				player.RegenTick();
 
 				if (HasAnyOf(player._pIFlags, ItemSpecialEffect::DrainLife) && leveltype != DTYPE_TOWN) {
 					ApplyPlrDamage(DamageType::Physical, player, 0, 0, 4);
@@ -3673,6 +3647,29 @@ void Player::CalculateBaseDamage()
 		    break;
 	}
 
+}
+
+void Player::RegenTick()
+{
+	regenTickCurrent++;
+	regenTickCurrent = regenTickCurrent % (20/4);
+
+	if (regenTickCurrent == 0)
+	{
+		if (HasNoneOf(_pIFlags, ItemSpecialEffect::NoMana))
+		{
+			int manaRefill = _pMaxMana / (100 * 4); // 1.0% per second
+			_pMana = std::min(_pMana + manaRefill, _pMaxMana);
+			_pManaBase = std::min(_pManaBase + manaRefill, _pMaxManaBase);
+		}
+
+		int hpRefill = _pMaxHP / (100 * 4); // 1.0% per second
+		_pHitPoints = std::min(_pHitPoints + hpRefill, _pMaxHP);
+		_pHPBase = std::min(_pHPBase + hpRefill, _pMaxHPBase);
+
+		RedrawComponent(PanelDrawComponent::Health);
+		RedrawComponent(PanelDrawComponent::Mana);
+	}
 }
 
 } // namespace devilution

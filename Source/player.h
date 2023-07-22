@@ -229,6 +229,8 @@ struct Player {
 
 	std::pair<int, int> GetDamage() const;
 	void CalculateBaseDamage();
+	void RegenTick();
+	int regenTickCurrent = 0;
 
 	Player() = default;
 	Player(Player &&) noexcept = default;
