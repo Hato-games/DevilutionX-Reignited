@@ -598,4 +598,10 @@ extern const PLStruct ItemPrefixes[];
 extern const PLStruct ItemSuffixes[];
 extern const UniqueItem UniqueItems[];
 
+
+extern const std::string RareItemPrefixes[];
+
+extern const std::string RareItemSufWeapon[];
+extern const std::string RareItemSufArmor[];
+extern const std::string RareItemSufAcc[];
 } // namespace devilution

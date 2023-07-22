@@ -281,16 +281,32 @@ void PrintStoreItem(const Item &item, int l, UiFlags flags, bool cursIndent = fa
 {
 	std::string productLine;
 
-	if (item._iIdentified) {
-		if (item._iMagical != ITEM_QUALITY_UNIQUE) {
-			if (item._iPrePower != -1) {
-				AppendStrView(productLine, PrintItemPower(item._iPrePower, item));
-			}
-		}
-		if (item._iSufPower != -1) {
-			if (!productLine.empty())
-				AppendStrView(productLine, _(",  "));
-			AppendStrView(productLine, PrintItemPower(item._iSufPower, item));
+	if (item._iIdentified)
+	{
+		switch (item._iMagical)
+		{
+			case ITEM_QUALITY_NORMAL:
+				break;
+			case ITEM_QUALITY_MAGIC:
+			{
+				if (item._iPrePower != -1) {
+					AppendStrView(productLine, PrintItemPower(item._iPrePower, item));
+				}
+
+				if (item._iSufPower != -1)
+				{
+					if (!productLine.empty())
+						AppendStrView(productLine, _(",  "));
+					AppendStrView(productLine, PrintItemPower(item._iSufPower, item));
+				}
+			} break;
+		    case ITEM_QUALITY_RARE:
+			    AppendStrView(productLine, _("Rare item"));
+			    break;
+		    case ITEM_QUALITY_UNIQUE:
+			    AppendStrView(productLine, _("Unique item"));
+			    break;
+
 		}
 	}
 	if (item._iMiscId == IMISC_STAFF && item._iMaxCharges != 0) {

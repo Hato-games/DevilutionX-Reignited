@@ -32,6 +32,7 @@ enum item_quality : uint8_t {
 	ITEM_QUALITY_NORMAL,
 	ITEM_QUALITY_MAGIC,
 	ITEM_QUALITY_UNIQUE,
+	ITEM_QUALITY_RARE
 };
 
 enum _unique_items : int8_t {
@@ -246,6 +247,18 @@ struct Item {
 	ItemSpecialEffectHf _iDamAcFlags = ItemSpecialEffectHf::None;
 	uint32_t dwBuff = 0;
 
+	enum item_effect_type _iRarePower = IPL_INVALID;
+	uint8_t _iRareNamePrefId = 0;
+	uint8_t _iRareNameSufId = 0;
+
+	int32_t _iPrefValue1 = 0;
+	int32_t _iPrefValue2 = 0;
+
+	int32_t _iSufValue1 = 0;
+	int32_t _iSufValue2 = 0;
+
+	int32_t _iRareValue1 = 0;
+	int32_t _iRareValue2 = 0;
 	/**
 	 * @brief Clears this item and returns the old value
 	 */
@@ -426,6 +439,8 @@ struct Item {
 		switch (_iMagical) {
 		case ITEM_QUALITY_MAGIC:
 			return UiFlags::ColorBlue;
+		case ITEM_QUALITY_RARE:
+			return UiFlags::ColorYellow;
 		case ITEM_QUALITY_UNIQUE:
 			return UiFlags::ColorWhitegold;
 		default:
@@ -454,6 +469,7 @@ struct Item {
 
 	/** @brief Returns the translated item name to display (respects identified flag) */
 	StringOrView getName() const;
+	std::string getItemRareName(uint8_t namePrefId, uint8_t nameSufId, item_equip_type type) const;
 };
 
 struct ItemGetRecordStruct {
@@ -533,7 +549,8 @@ void CheckIdentify(Player &player, int cii);
 void DoRepair(Player &player, int cii);
 void DoRecharge(Player &player, int cii);
 bool DoOil(Player &player, int cii);
-[[nodiscard]] StringOrView PrintItemPower(char plidx, const Item &item);
+[[nodiscard]] StringOrView PrintItemPower(char plidx, const Item &item, int affixType = -1);
+[[nodiscard]] StringOrView PrintItemPowerRare(char plidx, const Item &item, int affixType);
 void DrawUniqueInfo(const Surface &out);
 void PrintItemDetails(const Item &item);
 void PrintItemDur(const Item &item);

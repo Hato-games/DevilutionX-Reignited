@@ -294,6 +294,22 @@ void LoadItemData(LoadHelper &file, Item &item)
 	item._iPLEnAc = file.NextLE<int32_t>();
 	item._iPrePower = static_cast<item_effect_type>(file.NextLE<int8_t>());
 	item._iSufPower = static_cast<item_effect_type>(file.NextLE<int8_t>());
+	if (item._iMagical == ITEM_QUALITY_RARE)
+	{
+		item._iRarePower = static_cast<item_effect_type>(file.NextLE<int8_t>());
+		item._iRareNamePrefId = static_cast<item_effect_type>(file.NextLE<int8_t>());
+		item._iRareNameSufId = static_cast<item_effect_type>(file.NextLE<int8_t>());
+		
+		item._iPrefValue1 = static_cast<item_effect_type>(file.NextLE<int32_t>());
+		item._iPrefValue2 = static_cast<item_effect_type>(file.NextLE<int32_t>());
+
+		item._iSufValue1 = static_cast<item_effect_type>(file.NextLE<int32_t>());
+		item._iSufValue2 = static_cast<item_effect_type>(file.NextLE<int32_t>());
+
+		item._iRareValue1 = static_cast<item_effect_type>(file.NextLE<int32_t>());
+		item._iRareValue2 = static_cast<item_effect_type>(file.NextLE<int32_t>());
+		
+	}
 	file.Skip(2); // Alignment
 	item._iVAdd1 = file.NextLE<int32_t>();
 	item._iVMult1 = file.NextLE<int32_t>();
@@ -1098,6 +1114,21 @@ void SaveItem(SaveHelper &file, const Item &item)
 	file.WriteLE<int32_t>(item._iPLEnAc);
 	file.WriteLE<int8_t>(item._iPrePower);
 	file.WriteLE<int8_t>(item._iSufPower);
+	if (item._iMagical == ITEM_QUALITY_RARE)
+	{
+		file.WriteLE<int8_t>(item._iRarePower);
+		file.WriteLE<int8_t>(item._iRareNamePrefId);
+		file.WriteLE<int8_t>(item._iRareNameSufId);
+
+		file.WriteLE<int32_t>(item._iPrefValue1);
+		file.WriteLE<int32_t>(item._iPrefValue2);
+
+		file.WriteLE<int32_t>(item._iSufValue1);
+		file.WriteLE<int32_t>(item._iSufValue2);
+
+		file.WriteLE<int32_t>(item._iRareValue1);
+		file.WriteLE<int32_t>(item._iRareValue2);
+	}
 	file.Skip(2); // Alignment
 	file.WriteLE<int32_t>(item._iVAdd1);
 	file.WriteLE<int32_t>(item._iVMult1);

@@ -546,4 +546,31 @@ const UniqueItem UniqueItems[] = {
 	// clang-format on
 };
 
+/** Contains the data related to rare item names. */
+const std::string RareItemPrefixes[] = {
+	"Agony", "Apocalypse", "Armageddon", "Beast", "Behemoth", "Blight", "Blood", "Bramble", "Brimstone", "Brood", "Carrion", "Cataclysm", "Chimeric", "Corpse", "Corruption", "Damnation", "Death", "Demon", "Dire", "Dragon", "Dread", "Doom", "Dusk", "Eagle", "Empyrean", "Fate", "Foe", "Gale", "Ghoul", "Gloom", "Glyph", "Golem", "Grim", "Hate", "Havoc", "Honour", "Horror", "Hypnotic", "Kraken", "Loath", "Maelstrom", "Mind", "Miracle", "Morbid", "Oblivion", "Onslaught", "Pain", "Pandemonium", "Phoenix", "Plague", "Rage", "Rapture", "Rune", "Skull", "Sol", "Soul", "Sorrow", "Spirit", "Storm", "Tempest", "Torment", "Vengeance", "Victory", "Viper", "Vortex", "Woe", "Wrath"
+
+};
+
+const std::string RareItemSufWeapon[] = {
+	"Bane", "Barb", "Batter", "Breaker", "Impaler", "Knell", "Needle", "Rend", "Slayer", "Sunder"
+};
+
+const std::string RareItemSufArmor[] = {
+	"Chant", "Crack", "Etcher", "Gnarl", "Guide", "Gutter", "Pile", "Scratch", "Spawn", "Twine"
+};
+
+const std::string RareItemSufAcc[] = {
+	"Brand",
+	"Breeze",
+	"Call",
+	"Charm",
+	"Cry",
+	"Hunger",
+	"Mark",
+	"Rain",
+	"Roar",
+	"Song"
+};
+
 } // namespace devilution
