@@ -223,7 +223,7 @@ void CastSpell(int id, SpellID spl, int sx, int sy, int dx, int dy, int spllvl)
 		fizzled |= (missile == nullptr);
 	}
 	if (spl == SpellID::ChargedBolt) {
-		for (int i = (spllvl / 2) + 3; i > 0; i--) {
+		for (int i = (spllvl / 3) + 3; i > 0; i--) {
 			Missile *missile = AddMissile({ sx, sy }, { dx, dy }, dir, MissileID::ChargedBolt, TARGET_MONSTERS, id, 0, spllvl);
 			fizzled |= (missile == nullptr);
 		}

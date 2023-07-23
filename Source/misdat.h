@@ -138,6 +138,12 @@ struct MissileData {
 	MissileDataFlags flags;
 	MissileMovementDistribution movementDistribution;
 
+	//multiply by 10 in init
+	int dmgMinBase = 0;
+	int dmgMaxBase = 0;
+	int dmgMinPLv = 0;
+	int dmgMaxPLv = 0;
+
 	[[nodiscard]] bool isDrawn() const
 	{
 		return !HasAnyOf(flags, MissileDataFlags::Invisible);
@@ -151,6 +157,20 @@ struct MissileData {
 	[[nodiscard]] DamageType damageType() const
 	{
 		return static_cast<DamageType>(static_cast<std::underlying_type<MissileDataFlags>::type>(flags) & 0b111U);
+	}
+
+	std::pair<int,int> GetSpellDamage(int magicValue, int pLevel, int sLevel) const
+	{
+		int dmgMin = dmgMinBase + dmgMinPLv * sLevel;
+		int dmgMax = dmgMaxBase + dmgMaxPLv * sLevel;
+
+		dmgMin = dmgMin * (100 + magicValue / 2 + pLevel / 2);
+		dmgMin = dmgMin / 1000;
+
+		dmgMax = dmgMax * (100 + magicValue / 2 + pLevel / 2);
+		dmgMax = dmgMax / 1000;
+
+		return std::pair<int, int>(dmgMin, dmgMax);
 	}
 };
 
