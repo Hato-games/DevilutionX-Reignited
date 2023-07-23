@@ -1811,7 +1811,7 @@ void Player::RestorePartialLife()
 {
 	int wholeHitpoints = _pMaxHP >> 6;
 
-	int flatVal = (IsAnyOf(_pClass, HeroClass::Warrior, HeroClass::Barbarian)) ? 100 : 50;
+	int flatVal = (IsAnyOf(_pClass, HeroClass::Warrior, HeroClass::Barbarian)) ? 75 : 40;
 	int l = std::max(flatVal, wholeHitpoints / 4);
 	l = l << 6;
 
@@ -1823,7 +1823,7 @@ void Player::RestorePartialMana()
 {
 	int wholeManaPoints = _pMaxMana >> 6;
 
-	int flatVal = (IsAnyOf(_pClass, HeroClass::Sorcerer)) ? 100 : 50;
+	int flatVal = (IsAnyOf(_pClass, HeroClass::Sorcerer)) ? 75 : 40;
 	int l = std::max(flatVal, wholeManaPoints / 4);
 	l = l << 6;
 
