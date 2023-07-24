@@ -558,7 +558,8 @@ void LoadPlayer(LoadHelper &file, Player &player)
 		file.Skip(1);
 		player.pOriginalCathedral = true;
 	}
-	file.Skip(2); // Available bytes
+	player.pManaShieldDur = file.NextLE<uint16_t>();//file.Skip(2); // Available bytes
+	
 	player.wReflections = file.NextLE<uint16_t>();
 	file.Skip(14); // Available bytes
 
@@ -1374,7 +1375,7 @@ void SavePlayer(SaveHelper &file, const Player &player)
 		file.WriteLE<uint8_t>(0);
 	file.WriteLE<uint8_t>(player.pManaShield ? 1 : 0);
 	file.WriteLE<uint8_t>(player.pOriginalCathedral ? 1 : 0);
-	file.Skip(2); // Available bytes
+	file.WriteLE<uint16_t>(player.pManaShieldDur);//file.Skip(2); // Available bytes
 	file.WriteLE<uint16_t>(player.wReflections);
 	file.Skip(14); // Available bytes
 
@@ -2307,7 +2308,9 @@ void LoadGame(bool firstflag)
 
 	// convert stray manashield missiles into pManaShield flag
 	for (auto &missile : Missiles) {
-		if (missile._mitype == MissileID::ManaShield && !missile._miDelFlag) {
+		if (missile._mitype == MissileID::ManaShield && !missile._miDelFlag)
+		{
+			Players[missile._misource].pManaShieldDur = missile.var7;
 			Players[missile._misource].pManaShield = true;
 			missile._miDelFlag = true;
 		}

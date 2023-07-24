@@ -400,6 +400,7 @@ void InitLevelChange(Player &player)
 
 	RemovePlrMissiles(player);
 	player.pManaShield = false;
+	player.pManaShieldDur = 0;
 	player.wReflections = 0;
 	if (&player != MyPlayer) {
 		// share info about your manashield when another player joins the level
@@ -1801,10 +1802,9 @@ bool Player::isWalking() const
 	return IsAnyOf(_pmode, PM_WALK_NORTHWARDS, PM_WALK_SOUTHWARDS, PM_WALK_SIDEWAYS);
 }
 
-int Player::GetManaShieldDamageReduction()
+int Player::GetManaShieldAbsorb()
 {
-	constexpr uint8_t Max = 7;
-	return 24 - std::min(_pSplLvl[static_cast<int8_t>(SpellID::ManaShield)], Max) * 3;
+	return 60 + _pSplLvl[static_cast<int8_t>(SpellID::ManaShield)];
 }
 
 void Player::RestorePartialLife()
@@ -2370,6 +2370,7 @@ void CreatePlayer(Player &player, HeroClass c)
 	player.pTownWarps = 0;
 	player.pLvlLoad = 0;
 	player.pManaShield = false;
+	player.pManaShieldDur = 0;
 	player.pDamAcFlags = ItemSpecialEffectHf::None;
 	player.wReflections = 0;
 
@@ -2505,6 +2506,7 @@ void InitPlayer(Player &player, bool firstTime)
 		player.queuedSpell.spellId = player._pRSpell;
 		player.queuedSpell.spellType = player._pRSplType;
 		player.pManaShield = false;
+		player.pManaShieldDur = 0;
 		player.wReflections = 0;
 	}
 
@@ -2825,26 +2827,30 @@ void ApplyPlrDamage(DamageType damageType, Player &player, int dam, int minHP /*
 	if (&player == MyPlayer) {
 		AddFloatingNumber(damageType, player, totalDamage);
 	}
-	if (totalDamage > 0 && player.pManaShield) {
-		uint8_t manaShieldLevel = player._pSplLvl[static_cast<int8_t>(SpellID::ManaShield)];
-		if (manaShieldLevel > 0) {
-			totalDamage += totalDamage / -player.GetManaShieldDamageReduction();
+	if (totalDamage > 0 && player.pManaShield)
+	{
+		int ratio = 100 - player.GetManaShieldAbsorb();
+		int manaDamage = totalDamage - (totalDamage * ratio / 100);
+
+		if (player._pMana >= manaDamage)
+		{
+			player._pMana -= manaDamage;
+			player._pManaBase -= manaDamage;
 		}
-		if (&player == MyPlayer)
-			RedrawComponent(PanelDrawComponent::Mana);
-		if (player._pMana >= totalDamage) {
-			player._pMana -= totalDamage;
-			player._pManaBase -= totalDamage;
-			totalDamage = 0;
-		} else {
-			totalDamage -= player._pMana;
-			if (manaShieldLevel > 0) {
-				totalDamage += totalDamage / (player.GetManaShieldDamageReduction() - 1);
-			}
+		else
+		{
+			manaDamage -= player._pMana;
 			player._pMana = 0;
 			player._pManaBase = player._pMaxManaBase - player._pMaxMana;
 			if (&player == MyPlayer)
+			{
 				NetSendCmd(true, CMD_REMSHIELD);
+			}
+		}
+		totalDamage = totalDamage - manaDamage;
+
+		if (&player == MyPlayer) {
+			RedrawComponent(PanelDrawComponent::Mana);
 		}
 	}
 

@@ -794,8 +794,9 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 
 
 	switch (i) {
-	case SpellID::Firebolt:
+
 	case SpellID::ChargedBolt:
+	case SpellID::Firebolt:
 	case SpellID::HolyBolt:
 	case SpellID::Healing:
 	case SpellID::HealOther:
@@ -804,6 +805,7 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::Inferno:
 	case SpellID::Fireball:
 	case SpellID::Guardian:
+	case SpellID::ChainLightning:
 	{
 		MissileID missileId = SpellsData[(int)i].sMissiles[0];
 		if (SpellsData[(int)i].sMissiles[1] != MissileID::Null)
@@ -863,10 +865,6 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 		*mind = ScaleSpellEffect(base, sl);
 		*maxd = ScaleSpellEffect(base + 36, sl);
 	} break;
-	case SpellID::ChainLightning:
-		*mind = 4;
-		*maxd = 4 + (2 * myPlayer._pLevel);
-		break;
 	case SpellID::FlameWave:
 		*mind = 6 * (myPlayer._pLevel + 1);
 		*maxd = *mind + 54;
@@ -2104,11 +2102,13 @@ void AddManaShield(Missile &missile, AddMissileParameter &parameter)
 
 	Player &player = Players[missile._misource];
 
+	/*
 	if (player.pManaShield) {
 		parameter.spellFizzled = true;
 		return;
 	}
-
+	*/
+	player.pManaShieldDur = 40 * (60 + missile._mispllvl * 5);
 	player.pManaShield = true;
 	if (&player == MyPlayer)
 		NetSendCmd(true, CMD_SETSHIELD);
@@ -2628,7 +2628,8 @@ void AddInferno(Missile &missile, AddMissileParameter &parameter)
 	else
 	{
 		auto &monster = Monsters[missile._misource];
-		missile._midam = monster.minDamage + GenerateRnd(monster.maxDamage*2 - monster.minDamage + 1)*2;
+		missile._midam = monster.minDamage + GenerateRnd(monster.maxDamage - monster.minDamage + 1);
+		missile._midam = missile._midam * 3;
 	}
 }
 
@@ -4197,10 +4198,16 @@ static void DeleteMissiles()
 void ProcessManaShield()
 {
 	Player &myPlayer = *MyPlayer;
-	if (myPlayer.pManaShield && myPlayer._pMana <= 0) {
-		myPlayer.pManaShield = false;
-		NetSendCmd(true, CMD_REMSHIELD);
+	if (myPlayer.pManaShield)
+	{
+		if (myPlayer._pMana <= 0 || myPlayer.pManaShieldDur <= 0)
+		{
+			myPlayer.pManaShield = false;
+			NetSendCmd(true, CMD_REMSHIELD);
+		}
+		myPlayer.pManaShieldDur--;
 	}
+
 }
 
 void ProcessMissiles()

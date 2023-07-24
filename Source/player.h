@@ -378,6 +378,7 @@ struct Player {
 	uint8_t pDungMsgs;
 	uint8_t pLvlLoad;
 	bool pManaShield;
+	uint16_t pManaShieldDur;
 	uint8_t pDungMsgs2;
 	bool pOriginalCathedral;
 	uint8_t pDiabloKillLevel;
@@ -585,12 +586,11 @@ struct Player {
 	}
 
 	/**
-	 * @brief Return reciprocal of the factor for calculating damage reduction due to Mana Shield.
+	 * @brief Return reciprocal of the factor for calculating damage absorbed by mana due to Mana Shield.
 	 *
-	 * Valid only for players with Mana Shield spell level greater than zero.
+	 * Valid only for players with Mana Shield.
 	 */
-	int GetManaShieldDamageReduction();
-
+	int GetManaShieldAbsorb();
 	/**
 	 * @brief Gets the effective spell level for the player, considering item bonuses
 	 * @param spell SpellID enum member identifying the spell
