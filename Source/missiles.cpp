@@ -2644,7 +2644,15 @@ void AddInfernoControl(Missile &missile, AddMissileParameter &parameter)
 	missile.var2 = missile.position.start.y;
 	missile._mirange = 256;
 
-	missile.var7 = 3 + ((missile._mispllvl+3) / 5);
+	if (missile._micaster == TARGET_MONSTERS)
+	{
+		missile.var7 = 3 + ((missile._mispllvl + 3) / 5);
+	}
+	else
+	{
+		auto &monster = Monsters[missile._misource];
+		missile.var7 = 2 + monster.level(sgGameInitInfo.nDifficulty) / 10;
+	}
 }
 
 void AddChargedBolt(Missile &missile, AddMissileParameter &parameter)
