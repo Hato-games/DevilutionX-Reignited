@@ -138,9 +138,11 @@ void DrawSpellBook(const Surface &out)
 
 	int yp = 12;
 	const int textPaddingTop = 7;
-	for (size_t pageEntry = 0; pageEntry < SpellBookPageEntries; pageEntry++) {
+	for (size_t pageEntry = 0; pageEntry < SpellBookPageEntries; pageEntry++)
+	{
 		SpellID sn = GetSpellFromSpellPage(sbooktab, pageEntry);
-		if (IsValidSpell(sn) && (spl & GetSpellBitmask(sn)) != 0) {
+		if (IsValidSpell(sn) && (spl & GetSpellBitmask(sn)) != 0)
+		{
 			SpellType st = GetSBookTrans(sn, true);
 			SetSpellTrans(st);
 			const Point spellCellPosition = GetPanelPosition(UiPanels::Spell, { 11, yp + SpellBookDescription.height });
@@ -152,40 +154,63 @@ void DrawSpellBook(const Surface &out)
 
 			const Point line0 { 0, yp + textPaddingTop };
 			const Point line1 { 0, yp + textPaddingTop + lineHeight };
-			PrintSBookStr(out, line0, pgettext("spell", GetSpellData(sn).sNameText));
-			switch (GetSBookTrans(sn, false)) {
-			case SpellType::Skill:
-				PrintSBookStr(out, line1, _("Skill"));
-				break;
-			case SpellType::Charges: {
-				int charges = player.InvBody[INVLOC_HAND_LEFT]._iCharges;
-				PrintSBookStr(out, line1, fmt::format(fmt::runtime(ngettext("Staff ({:d} charge)", "Staff ({:d} charges)", charges)), charges));
-			} break;
-			default: {
-				int mana = GetManaAmount(player, sn) >> 6;
-				int lvl = player.GetSpellLevel(sn);
-				PrintSBookStr(out, line0, fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Level {:d}")), lvl), UiFlags::AlignRight);
-				if (lvl == 0) {
-					PrintSBookStr(out, line1, _("Unusable"), UiFlags::AlignRight);
-				} else {
-					if (sn != SpellID::BoneSpirit) {
-						int min;
-						int max;
-						GetDamageAmt(sn, &min, &max);
-						if (min != -1) {
-							if (sn == SpellID::Healing || sn == SpellID::HealOther) {
-								PrintSBookStr(out, line1, fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "Heals: {:d} - {:d}")), min, max), UiFlags::AlignRight);
-							} else {
-								PrintSBookStr(out, line1, fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "Damage: {:d} - {:d}")), min, max), UiFlags::AlignRight);
+
+			std::string spellName = GetSpellData(sn).sNameText;
+
+			switch (GetSBookTrans(sn, false))
+			{
+				case SpellType::Skill:
+					PrintSBookStr(out, line1, _("Skill"));
+					break;
+				case SpellType::Charges:
+				{
+					int charges = player.InvBody[INVLOC_HAND_LEFT]._iCharges;
+					PrintSBookStr(out, line1, fmt::format(fmt::runtime(ngettext("Staff ({:d} charge)", "Staff ({:d} charges)", charges)), charges));
+				}
+					break;
+				default:
+				{
+					int mana = GetManaAmount(player, sn) >> 6;
+					int lvl = player.GetSpellLevel(sn);
+				    spellName += fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", " Lv{:d}")), lvl);
+					//PrintSBookStr(out, line0, fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Level {:d}")), lvl), UiFlags::AlignRight);
+					if (lvl == 0)
+					{
+						PrintSBookStr(out, line1, _("Unusable"), UiFlags::AlignRight);
+					}
+					else
+					{
+
+					    std::string tooltip = GetSpellTooltip(sn);
+						if (sn != SpellID::BoneSpirit)
+						{
+							int min;
+							int max;
+							GetDamageAmt(sn, &min, &max);
+							if (min != -1)
+							{
+								if (sn == SpellID::Healing || sn == SpellID::HealOther)
+								{
+									PrintSBookStr(out, line0, fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "Heals: {:d} - {:d}")), min, max), UiFlags::AlignRight);
+								}
+								else
+								{
+									PrintSBookStr(out, line0, fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "Dmg: {:d} - {:d}")), min, max), UiFlags::AlignRight);
+								}
 							}
 						}
-					} else {
-						PrintSBookStr(out, line1, _(/* TRANSLATORS: UI constraints, keep short please.*/ "Dmg: 1/3 target hp"), UiFlags::AlignRight);
+
+						if (tooltip.length() > 0)
+						{
+						    PrintSBookStr(out, line1, tooltip, UiFlags::AlignRight);
+						}
+						
+						PrintSBookStr(out, line1, fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Mana: {:d}")), mana));
 					}
-					PrintSBookStr(out, line1, fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Mana: {:d}")), mana));
 				}
-			} break;
-			}
+					break;
+			    }
+			    PrintSBookStr(out, line0, pgettext("spell", spellName));
 		}
 		yp += SpellBookDescription.height;
 	}

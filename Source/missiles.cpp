@@ -783,6 +783,38 @@ bool IsMissileBlockedByTile(Point tile)
 	return object != nullptr && !object->_oMissFlag;
 }
 
+std::string GetSpellTooltip(SpellID spellId)
+{
+	assert(MyPlayer != nullptr);
+	assert(spellId >= SpellID::FIRST && spellId <= SpellID::LAST);
+
+	Player &myPlayer = *MyPlayer;
+
+	switch (spellId)
+	{
+		case SpellID::ManaShield:
+		{
+			const int sl = myPlayer.GetSpellLevel(spellId);
+			return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Mana abs. {:d}% dmg")), myPlayer.GetManaShieldAbsorb());
+		}
+	    case SpellID::BoneSpirit:
+		    return "Dmg: 1/3 target hp";
+	    case SpellID::FireWall:
+		{
+		    const int sl = myPlayer.GetSpellLevel(spellId);
+		    int duration = 16 * (5 + sl / 3);
+		    int fraction = duration % 40;
+		    fraction = fraction / 10;
+		    duration = duration / 40;
+
+		    return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Duration {:d}.{:d}s")), duration, fraction);
+	    }
+		    break;
+	}
+
+	return "";
+}
+
 void GetDamageAmt(SpellID i, int *mind, int *maxd)
 {
 	assert(MyPlayer != nullptr);

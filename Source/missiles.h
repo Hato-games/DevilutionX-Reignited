@@ -176,6 +176,7 @@ struct Missile {
 extern std::list<Missile> Missiles;
 extern bool MissilePreFlag;
 
+std::string GetSpellTooltip(SpellID spellId);
 void GetDamageAmt(SpellID i, int *mind, int *maxd);
 
 /**
