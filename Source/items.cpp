@@ -1212,7 +1212,7 @@ std::string GenerateMagicItemName(const string_view &baseNamel, const PLStruct *
 	return std::string(baseNamel);
 }
 
-void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, bool onlygood, bool hellfireItem, tl::function_ref<void(const PLStruct &prefix)> prefixFound, tl::function_ref<void(const PLStruct &suffix)> suffixFound, tl::function_ref<void(const PLStruct &rare)> rareFound)
+void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, bool onlygood, bool hellfireItem, int dungeonLevel, tl::function_ref<void(const PLStruct &prefix)> prefixFound, tl::function_ref<void(const PLStruct &suffix)> suffixFound, tl::function_ref<void(const PLStruct &rare)> rareFound)
 {
 	int preidx = -1;
 	int sufidx = -1;
@@ -1220,20 +1220,33 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 	int l[256];
 	goodorevil goe;
 
-	bool allocatePrefix = FlipCoin(4);
-	bool allocateSuffix = !FlipCoin(3);
+	bool allocatePrefix = false;
+	bool allocateSuffix = false;
 	bool allocateRare = false;
-	if (!allocatePrefix && !allocateSuffix) {
-		// At least try and give each item a prefix or suffix
-		if (FlipCoin())
-			allocatePrefix = true;
-		else
-			allocateSuffix = true;
+
+	//Rare try
+	int chance = 30 + (sgGameInitInfo.nDifficulty * 12) + dungeonLevel;
+	int rareRoll = FlipCoin(1000);
+	if (rareRoll < chance)
+	{
+		allocatePrefix = true;
+		allocateSuffix = true;
+		allocateRare = true;
 	}
 	else
 	{
-		allocateRare = FlipCoin(10);
+		allocatePrefix = FlipCoin(4);
+		allocateSuffix = !FlipCoin(3);
+
+		if (!allocatePrefix && !allocateSuffix) {
+			// At least try and give each item a prefix or suffix
+			if (FlipCoin())
+				allocatePrefix = true;
+			else
+				allocateSuffix = true;
+		}
 	}
+
 
 	goe = GOE_ANY;
 	if (!onlygood && !FlipCoin(3))
@@ -1332,8 +1345,9 @@ void GetItemPower(const Player &player, Item &item, int minlvl, int maxlvl, Affi
 	const PLStruct *pPrefix = nullptr;
 	const PLStruct *pSufix = nullptr;
 	const PLStruct *pRare = nullptr;
+	
 	GetItemPowerPrefixAndSuffix(
-	    minlvl, maxlvl, flgs, onlygood, gbIsHellfire,
+	    minlvl, maxlvl, flgs, onlygood, gbIsHellfire, player.plrlevel, // TODO:plrlevel is not dungeonlevel
 	    [&item, &player, &pPrefix](const PLStruct &prefix) {
 		    item._iMagical = ITEM_QUALITY_MAGIC;
 		    SaveItemAffix(player, item, prefix, 0);
@@ -2505,7 +2519,7 @@ std::string GetTranslatedItemNameMagical(const Item &item, bool hellfireItem, bo
 		const PLStruct *pSufix = nullptr;
 		const PLStruct *pRare = nullptr;
 		GetItemPowerPrefixAndSuffix(
-		    minlvl, maxlvl, affixItemType, onlygood, hellfireItem,
+		    minlvl, maxlvl, affixItemType, onlygood, hellfireItem, 0,
 		    [&pPrefix](const PLStruct &prefix) {
 			    pPrefix = &prefix;
 			    // GenerateRnd(prefix.power.param2 - prefix.power.param2 + 1)
