@@ -4013,8 +4013,8 @@ bool DoOil(Player &player, int cii)
 	switch (affixType)
 	{
 		case 0://pref
-		val1 = item._iPrefValue1;
-		val2 = item._iPrefValue2;
+			val1 = item._iPrefValue1;
+			val2 = item._iPrefValue2;
 			break;
 		case 1: //suf
 		    val1 = item._iSufValue1;
@@ -4095,10 +4095,10 @@ bool DoOil(Player &player, int cii)
 		    return fmt::format(fmt::runtime(_("{:+d} damage from enemies")), val1);
 	    case IPL_LIFE:
 	    case IPL_LIFE_CURSE:
-		    return fmt::format(fmt::runtime(_("Hit Points: {:+d}")), val1 >> 6);
+		    return fmt::format(fmt::runtime(_("Hit Points: {:+d}")), val1);
 	    case IPL_MANA:
 	    case IPL_MANA_CURSE:
-		    return fmt::format(fmt::runtime(_("Mana: {:+d}")), val1 >> 6);
+		    return fmt::format(fmt::runtime(_("Mana: {:+d}")), val1);
 	    case IPL_DUR:
 		    return fmt::format(fmt::runtime(_("Increased durability: {:+d}")), val1);
 	    case IPL_DUR_CURSE:

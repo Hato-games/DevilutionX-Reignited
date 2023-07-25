@@ -1022,10 +1022,11 @@ void InvDrawSlotBack(const Surface &out, Point targetPosition, Size size, item_q
 					pix -= PAL16_GRAY - (!IsInspectingPlayer() ? PAL16_BLUE : PAL16_ORANGE) - 1;
 					break;
 				case ITEM_QUALITY_UNIQUE:
-					pix -= PAL16_GRAY - (!IsInspectingPlayer() ? PAL16_YELLOW : PAL16_ORANGE) - 1;
+					pix -= PAL16_GRAY - (!IsInspectingPlayer() ? PAL16_ORANGE : PAL16_ORANGE) - 1;
 					break;
 				default:
-					pix -= PAL16_GRAY - (!IsInspectingPlayer() ? PAL16_BEIGE : PAL16_ORANGE) - 1;
+					//Just keep it gray
+					//pix -= PAL16_GRAY - (!IsInspectingPlayer() ? PAL16_BEIGE : PAL16_ORANGE) - 1;
 					break;
 				case ITEM_QUALITY_RARE:
 					pix -= PAL16_GRAY - (!IsInspectingPlayer() ? PAL16_YELLOW : PAL16_ORANGE) - 1;

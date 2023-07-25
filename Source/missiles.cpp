@@ -803,9 +803,9 @@ std::string GetSpellTooltip(SpellID spellId)
 		{
 		    const int sl = myPlayer.GetSpellLevel(spellId);
 		    int duration = 16 * (5 + sl / 3);
-		    int fraction = duration % 40;
+		    int fraction = duration % 20;
 		    fraction = fraction / 10;
-		    duration = duration / 40;
+		    duration = duration / 20;
 
 		    return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Duration {:d}.{:d}s")), duration, fraction);
 	    }
