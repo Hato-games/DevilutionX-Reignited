@@ -792,6 +792,27 @@ std::string GetSpellTooltip(SpellID spellId)
 
 	switch (spellId)
 	{
+		case SpellID::HolyBolt:
+			return "vs Undead";
+		case SpellID::ChargedBolt:
+		{
+		    const int sl = myPlayer.GetSpellLevel(spellId);
+		    int bolts = (sl / 3) + 3;
+		    return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Bolts: {:d}")), bolts);
+		}
+	    case SpellID::Lightning:
+	    case SpellID::ChainLightning:
+		{
+		    const int sl = myPlayer.GetSpellLevel(spellId);
+		    int bolts = (6 + (sl / 2))/2;
+		    return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Bolts: {:d}")), bolts);
+	    }
+	    case SpellID::Inferno:
+		{
+		    const int sl = myPlayer.GetSpellLevel(spellId);
+		    int range = 3 + ((sl + 3) / 5);
+		    return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Range: {:d}")), range);
+	    }
 		case SpellID::ManaShield:
 		{
 			const int sl = myPlayer.GetSpellLevel(spellId);
