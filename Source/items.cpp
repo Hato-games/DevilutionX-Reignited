@@ -1232,6 +1232,15 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 		allocatePrefix = true;
 		allocateSuffix = true;
 		allocateRare = true;
+
+		int penalty = (2 - sgGameInitInfo.nDifficulty) * 20;
+		minlvl = minlvl * 100;
+		minlvl = minlvl - (minlvl / (penalty * 2));
+		minlvl = minlvl / 100;
+
+		maxlvl = maxlvl * 100;
+		maxlvl = maxlvl - (maxlvl / penalty);
+		maxlvl = maxlvl / 100;
 	}
 	else
 	{
