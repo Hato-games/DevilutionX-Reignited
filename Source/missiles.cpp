@@ -235,10 +235,16 @@ bool MonsterMHit(int pnum, int monsterId, int mindam, int maxdam, int dist, Miss
 			return false;
 	}
 
-	int dam;
-	if (t == MissileID::BoneSpirit) {
-		dam = monster.hitPoints / 3 >> 6;
-	} else {
+	int dam = 0;
+	if (t == MissileID::BoneSpirit)
+	{
+		int percentage = mindam;
+		dam = monster.hitPoints >> 6;
+		dam = dam * percentage;
+		dam = dam / 100;
+	}
+	else
+	{
 		dam = mindam + GenerateRnd(maxdam - mindam + 1);
 	}
 
@@ -397,8 +403,12 @@ bool Plr2PlrMHit(const Player &player, int p, int mindam, int maxdam, int dist, 
 	blk = clamp(blk, 0, 100);
 
 	int dam;
-	if (mtype == MissileID::BoneSpirit) {
-		dam = target._pHitPoints / 3;
+	if (mtype == MissileID::BoneSpirit)
+	{
+		int percentage = mindam;
+		dam = target._pHitPoints;
+		dam = dam * percentage;
+		dam = dam / 100;
 	} else {
 		dam = mindam + GenerateRnd(maxdam - mindam + 1);
 
@@ -858,7 +868,12 @@ std::string GetSpellDesc(SpellID spellId)
 			return "";
 
 	    case SpellID::BoneSpirit:
-		    return "M.Dmg: 33% T.HP";
+		{
+		    Player &myPlayer = *MyPlayer;
+		    const int sl = myPlayer.GetSpellLevel(spellId);
+		    int dmg = 20 + sl;
+		    return fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "M.Dmg: {:d}% T.HP")), dmg);
+		}
 	    case SpellID::HealOther:
 	    case SpellID::Healing:
 		{
@@ -2998,6 +3013,9 @@ void AddBoneSpirit(Missile &missile, AddMissileParameter &parameter)
 	if (missile.position.start == dst) {
 		dst += parameter.midir;
 	}
+
+	missile._midam = 20 + missile._mispllvl;
+
 	UpdateMissileVelocity(missile, dst, 16);
 	SetMissDir(missile, GetDirection(missile.position.start, dst));
 	missile._mirange = 256;
