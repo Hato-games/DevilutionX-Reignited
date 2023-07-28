@@ -991,6 +991,7 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::Fireball:
 	case SpellID::Guardian:
 	case SpellID::ChainLightning:
+	case SpellID::Flash:
 	{
 		MissileID missileId = SpellsData[(int)i].sMissiles[0];
 		if (SpellsData[(int)i].sMissiles[1] != MissileID::Null)
@@ -1008,11 +1009,6 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::RuneOfLight:
 		*mind = 2;
 		*maxd = 2 + myPlayer._pLevel;
-		break;
-	case SpellID::Flash:
-		*mind = ScaleSpellEffect(myPlayer._pLevel, sl);
-		*mind += *mind / 2;
-		*maxd = *mind * 2;
 		break;
 	case SpellID::Identify:
 	case SpellID::TownPortal:
@@ -2253,16 +2249,21 @@ void AddFlashBottom(Missile &missile, AddMissileParameter & /*parameter*/)
 {
 	switch (missile.sourceType()) {
 	case MissileSource::Player: {
-		Player &player = *missile.sourcePlayer();
-		int dmg = GenerateRndSum(20, player._pLevel + 1) + player._pLevel + 1;
-		missile._midam = ScaleSpellEffect(dmg, missile._mispllvl);
-		missile._midam += missile._midam / 2;
+		const Player &player = *missile.sourcePlayer();
+
+		const MissileData &missileData = GetMissileData(missile._mitype);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+
+		missile._midam = damage.first / 2 *4;
+		missile.var7 = damage.second / 2 * 4;
 	} break;
 	case MissileSource::Monster:
-		missile._midam = missile.sourceMonster()->level(sgGameInitInfo.nDifficulty) * 2;
+		missile._midam = missile.sourceMonster()->level(sgGameInitInfo.nDifficulty) * 2 / 2 * 4;
+		missile.var7 = missile._midam * 2 / 2 * 4;
 		break;
 	case MissileSource::Trap:
-		missile._midam = currlevel / 2;
+		missile._midam = currlevel / 2 / 2 * 4;
+		missile.var7 = currlevel / 2 * 4;
 		break;
 	}
 
@@ -2271,23 +2272,28 @@ void AddFlashBottom(Missile &missile, AddMissileParameter & /*parameter*/)
 
 void AddFlashTop(Missile &missile, AddMissileParameter & /*parameter*/)
 {
-	if (missile._micaster == TARGET_MONSTERS) {
-		if (!missile.IsTrap())
-		{
-			const Player &player = *missile.sourcePlayer();
+	switch (missile.sourceType()) {
+	case MissileSource::Player: {
+		const Player &player = *missile.sourcePlayer();
 
-			const MissileData &missileData = GetMissileData(missile._mitype);
-			std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
-			int dmg = damage.first + GenerateRnd(damage.second - damage.first);
-			missile._midam = dmg;
-		}
-		else
-		{
-			missile._midam = currlevel / 2;
-		}
+		const MissileData &missileData = GetMissileData(missile._mitype);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+
+		missile._midam = damage.first/2;
+		missile.var7 = damage.second/2;
+	} break;
+	case MissileSource::Monster:
+		missile._midam = missile.sourceMonster()->level(sgGameInitInfo.nDifficulty) * 2 /2;
+		missile.var7 = missile._midam * 2 / 2;
+		break;
+	case MissileSource::Trap:
+		missile._midam = currlevel / 2 / 2;
+		missile.var7 = currlevel / 2;
+		break;
 	}
-	missile._miPreFlag = true;
+
 	missile._mirange = 19;
+	missile._miPreFlag = true;
 }
 
 void AddManaShield(Missile &missile, AddMissileParameter &parameter)
@@ -3664,16 +3670,24 @@ void ProcessFlashBottom(Missile &missile)
 	}
 	missile._mirange--;
 
-	constexpr Direction Offsets[] = {
-		Direction::NorthWest,
-		Direction::NoDirection,
-		Direction::SouthEast,
-		Direction::West,
-		Direction::SouthWest,
-		Direction::South
-	};
-	for (Direction offset : Offsets)
-		CheckMissileCol(missile, GetMissileData(missile._mitype).damageType(), missile._midam, missile._midam, true, missile.position.tile + offset, true);
+	if (missile._mirange < 16) {
+		constexpr Direction Offsets[] = {
+			Direction::South,
+			Direction::SouthWest,
+			Direction::West,
+			Direction::NorthWest,
+			Direction::North,
+			Direction::NorthEast,
+			Direction::East,
+			Direction::SouthEast,
+			Direction::NoDirection
+		};
+
+		
+		for (Direction offset : Offsets)
+			CheckMissileCol(missile, GetMissileData(missile._mitype).damageType(), missile._midam, missile.var7, true, missile.position.tile + offset, true);
+		
+	}
 
 	if (missile._mirange == 0) {
 		missile._miDelFlag = true;
@@ -3693,13 +3707,27 @@ void ProcessFlashTop(Missile &missile)
 	}
 	missile._mirange--;
 
-	constexpr Direction Offsets[] = {
-		Direction::North,
-		Direction::NorthEast,
-		Direction::East
-	};
-	for (Direction offset : Offsets)
-		CheckMissileCol(missile, GetMissileData(missile._mitype).damageType(), missile._midam, missile._midam, true, missile.position.tile + offset, true);
+
+
+	if (missile._mirange == 15)
+	{
+		constexpr Direction Offsets[] = {
+			Direction::South,
+			Direction::SouthWest,
+			Direction::West,
+			Direction::NorthWest,
+			Direction::North,
+			Direction::NorthEast,
+			Direction::East,
+			Direction::SouthEast,
+			Direction::NoDirection
+		};
+		
+		for (Direction offset : Offsets)
+			CheckMissileCol(missile, GetMissileData(missile._mitype).damageType(), missile._midam, missile.var7, false, missile.position.tile + offset, true);
+		
+	}
+
 
 	if (missile._mirange == 0) {
 		missile._miDelFlag = true;
