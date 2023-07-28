@@ -205,7 +205,7 @@ bool MonsterMHit(int pnum, int monsterId, int mindam, int maxdam, int dist, Miss
 {
 	auto &monster = Monsters[monsterId];
 
-	if (!monster.isPossibleToHit() || monster.isImmune(t, damageType))
+	if (!monster.isPossibleToHit())
 		return false;
 
 	int hit = GenerateRnd(100);
@@ -254,14 +254,47 @@ bool MonsterMHit(int pnum, int monsterId, int mindam, int maxdam, int dist, Miss
 		dam = dam / 100;
 	}
 	bool resist = monster.isResistant(t, damageType);
+
+
 	if (!shift)
 		dam <<= 6;
-	if (resist)
-		dam >>= 2;
+
+	int resistReduce = 0;
+
+	if (monster.isImmune(t, damageType))
+	{
+		resistReduce = 100;
+	}
+	if (monster.isResistant(t, damageType))
+	{
+		resistReduce = 50;
+	}
+
+	if (player._pSkillActiveId == SpellID::Aetherize)
+	{
+		resistReduce -= 15 + player._pLevel / 5;
+	}
+	if (resistReduce == 100)
+	{
+		return false;
+	}
+
+	if (resistReduce != 0)
+	{
+		resistReduce = 100 - resistReduce;
+		dam = dam * resistReduce;
+		dam = dam / 100;
+	}
 
 	if(GenerateRnd(100) < player._pCriticalChance)
 	{
-		dam *= 2;
+		int dmgAmp = 200;
+		if (player._pSkillActiveId == SpellID::Deadeye)
+		{
+			dmgAmp += 10 +player._pLevel / 5;
+		}
+		dam = dam * dmgAmp;
+		dam = dam / 100;
 	}
 
 	if (&player == MyPlayer)
@@ -783,6 +816,66 @@ bool IsMissileBlockedByTile(Point tile)
 	return object != nullptr && !object->_oMissFlag;
 }
 
+std::string GetSpellDesc(SpellID spellId)
+{
+	switch (spellId)
+	{
+		case SpellID::NobleSpirit:
+		case SpellID::Deadeye:
+		case SpellID::Aetherize:
+		{
+			Player &myPlayer = *MyPlayer;
+
+			int duration = 40 * 5 + (4 * myPlayer._pLevel);
+			int durSec = duration / 40;
+			int durMili = duration % 40;
+			durMili = durMili / 4;
+			return fmt::format(fmt::runtime(_("Dur {:d}.{:d}s CD: 30s")), durSec, durMili);
+
+		}
+	    case SpellID::Identify:
+	    case SpellID::TownPortal:
+	    case SpellID::StoneCurse:
+	    case SpellID::Infravision:
+	    case SpellID::Phasing:
+	    case SpellID::ManaShield:
+	    case SpellID::DoomSerpents:
+	    case SpellID::BloodRitual:
+	    case SpellID::Invisibility:
+	    case SpellID::Rage:
+	    case SpellID::Teleport:
+	    case SpellID::Etherealize:
+	    case SpellID::ItemRepair:
+	    case SpellID::StaffRecharge:
+	    case SpellID::TrapDisarm:
+	    case SpellID::Resurrect:
+	    case SpellID::Telekinesis:
+	    case SpellID::BoneSpirit:
+	    case SpellID::Warp:
+	    case SpellID::Reflect:
+	    case SpellID::Berserk:
+	    case SpellID::Search:
+	    case SpellID::RuneOfStone:
+			return "";
+	    case SpellID::HealOther:
+	    case SpellID::Healing:
+		{
+		    int min;
+		    int max;
+		    GetDamageAmt(spellId, &min, &max);
+		    return fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "Heals: {:d} - {:d}")), min, max);
+	    }
+		default:
+		{
+		    int min;
+		    int max;
+		    GetDamageAmt(spellId, &min, &max);
+		    return fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "Dmg: {:d} - {:d}")), min, max);
+		}
+			 break;
+	}
+}
+
 std::string GetSpellTooltip(SpellID spellId)
 {
 	assert(MyPlayer != nullptr);
@@ -792,6 +885,45 @@ std::string GetSpellTooltip(SpellID spellId)
 
 	switch (spellId)
 	{
+		case SpellID::NobleSpirit:
+		{
+		    assert(MyPlayer != nullptr);
+		    assert(spellId >= SpellID::FIRST && spellId <= SpellID::LAST);
+
+		    Player &myPlayer = *MyPlayer;
+
+		    const int level = myPlayer._pLevel;
+
+		    int tohit = 20 + level / 5;
+		    int dmgRed = 20 + level / 5;
+		    return fmt::format(fmt::runtime(_("+{:d}%ToHit +{:d}%DmgRed")), tohit, dmgRed);
+		}
+			break;
+	    case SpellID::Deadeye:
+		{
+		    assert(MyPlayer != nullptr);
+		    assert(spellId >= SpellID::FIRST && spellId <= SpellID::LAST);
+
+		    Player &myPlayer = *MyPlayer;
+
+		    const int level = myPlayer._pLevel;
+
+		    int cr = 10 + level / 10;
+		    int cd = 10 + level / 5;
+		    return fmt::format(fmt::runtime(_("+{:d}%Crit Ch +{:d}%CritD")), cr, cd);
+	    } break;
+	    case SpellID::Aetherize:
+		{
+		    assert(MyPlayer != nullptr);
+		    assert(spellId >= SpellID::FIRST && spellId <= SpellID::LAST);
+
+		    Player &myPlayer = *MyPlayer;
+
+		    const int level = myPlayer._pLevel;
+
+		    int cr = 15 + level / 5;
+		    return fmt::format(fmt::runtime(_("Spells ignore {:d}% Ele res")), cr);
+	    } break;
 		case SpellID::HolyBolt:
 			return "vs Undead";
 		case SpellID::ChargedBolt:
@@ -825,7 +957,7 @@ std::string GetSpellTooltip(SpellID spellId)
 		    const int sl = myPlayer.GetSpellLevel(spellId);
 		    int duration = 16 * (5 + sl / 3);
 		    int fraction = duration % 20;
-		    fraction = fraction / 10;
+		    fraction = fraction / 2;
 		    duration = duration / 20;
 
 		    return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Duration {:d}.{:d}s")), duration, fraction);
@@ -905,6 +1037,8 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::Berserk:
 	case SpellID::Search:
 	case SpellID::RuneOfStone:
+
+	case SpellID::NobleSpirit:
 		*mind = -1;
 		*maxd = -1;
 		break;
@@ -1147,8 +1281,15 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 		return true;
 	}
 
+	if (player._pSkillActiveId == SpellID::NobleSpirit) {
+		int dmgRed = 20 + player._pLevel / 5;
+		dam = dam * (100 - dmgRed);
+		dam = dam / 100;
+	}
+
 	if (resper > 0) {
 		dam -= dam * resper / 100;
+
 		if (&player == MyPlayer) {
 			ApplyPlrDamage(damageType, player, 0, 0, dam, deathReason);
 		}
@@ -2594,6 +2735,37 @@ void AddRage(Missile &missile, AddMissileParameter &parameter)
 	CalcPlrItemVals(player, true);
 	RedrawEverything();
 	player.Say(HeroSpeech::Aaaaargh);
+}
+
+void AddNobleSpirit(Missile &missile, AddMissileParameter &parameter)
+{
+	Player &player = Players[missile._misource];
+
+	missile._miDelFlag = true;
+	if (&player == MyPlayer)
+	{
+		player.EnableSkill(SpellID::NobleSpirit);
+	}
+}
+
+void AddDeadeye(Missile &missile, AddMissileParameter &parameter)
+{
+	Player &player = Players[missile._misource];
+
+	missile._miDelFlag = true;
+	if (&player == MyPlayer) {
+		player.EnableSkill(SpellID::Deadeye);
+	}
+}
+
+void AddAetherize(Missile &missile, AddMissileParameter &parameter)
+{
+	Player &player = Players[missile._misource];
+
+	missile._miDelFlag = true;
+	if (&player == MyPlayer) {
+		player.EnableSkill(SpellID::Aetherize);
+	}
 }
 
 void AddItemRepair(Missile &missile, AddMissileParameter & /*parameter*/)

@@ -16,6 +16,7 @@ enum class SpellCheckResult : uint8_t {
 	Fail_NoMana,
 	Fail_Level0,
 	Fail_Busy,
+	Fail_Cooldown
 };
 
 bool IsValidSpell(SpellID spl);

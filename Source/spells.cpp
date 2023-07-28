@@ -193,7 +193,12 @@ SpellCheckResult CheckSpell(const Player &player, SpellID sn, SpellType st, bool
 		return SpellCheckResult::Fail_Busy;
 	}
 
-	if (st == SpellType::Skill) {
+	if (st == SpellType::Skill)
+	{
+		if (player._pSkillCooldown > 0)
+		{
+			return SpellCheckResult::Fail_Cooldown;
+		}
 		return SpellCheckResult::Success;
 	}
 

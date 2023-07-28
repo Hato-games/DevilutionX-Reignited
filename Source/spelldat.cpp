@@ -57,6 +57,11 @@ const SpellData SpellsData[] = {
 /*SpellID::HealOther*/        { P_("spell", "Heal Other"),         IS_CAST8,         100,            5,          5, Magic | AllowedInTown,         1,          1,      17, { MissileID::HealOther,            MissileID::Null,    },         3,         1,         20,         40 },
 /*SpellID::BloodStar*/        { P_("spell", "Blood Star"),         IS_CAST2,        2750,          180,         25, Magic,                        14,         13,      70, { MissileID::BloodStar,            MissileID::Null,    },         2,        14,         20,         60 },
 /*SpellID::BoneSpirit*/       { P_("spell", "Bone Spirit"),        IS_CAST2,        1150,           80,         24, Magic,                         9,          7,      34, { MissileID::BoneSpirit,           MissileID::Null,    },         1,        12,         20,         60 },
+
+/*SpellID::NobleSpirit*/      { P_("spell", "Noble Spirit"),       IS_CAST6,           0,            0,          0, Magic,						 -1,         -1,     255, { MissileID::NobleSpirit,           MissileID::Null,    },         0,         0,         0,         0 },
+/*SpellID::Deadeye*/          { P_("spell", "Deadeye"),            IS_CAST6,           0,            0,          0, Magic,						-1,         -1,     255, { MissileID::Deadeye,           MissileID::Null,    },         0,         0,         0,         0 },
+/*SpellID::Aetherize*/        { P_("spell", "Aetherize"),          IS_CAST6,           0,            0,          0, Magic,						   -1,         -1,     255, { MissileID::Aetherize,           MissileID::Null,    },         0,         0,         0,        0 },
+
 /*SpellID::Mana*/             { P_("spell", "Mana"),               IS_CAST8,         100,            5,        255, Magic | AllowedInTown,        -1,          5,      17, { MissileID::Mana,                 MissileID::Null,    },         3,         1,         12,         24 },
 /*SpellID::Magi*/             { P_("spell", "the Magi"),           IS_CAST8,       10000,           20,        255, Magic | AllowedInTown,        -1,         20,      45, { MissileID::Magi,                 MissileID::Null,    },         3,         1,         15,         30 },
 /*SpellID::Jester*/           { P_("spell", "the Jester"),         IS_CAST8,       10000,           20,        255, Magic | Targeted,             -1,          4,      30, { MissileID::Jester,               MissileID::Null,    },         3,         1,         15,         30 },
@@ -72,6 +77,8 @@ const SpellData SpellsData[] = {
 /*SpellID::RuneOfNova*/       { P_("spell", "Rune of Nova"),       IS_CAST8,         800,           30,        255, Magic | Targeted,             -1,         -1,      48, { MissileID::RuneOfNova,           MissileID::Null,    },         1,        10,         40,         80 },
 /*SpellID::RuneOfImmolation*/ { P_("spell", "Rune of Immolation"), IS_CAST8,         800,           30,        255, Magic | Targeted,             -1,         -1,      48, { MissileID::RuneOfImmolation,     MissileID::Null,    },         1,        10,         40,         80 },
 /*SpellID::RuneOfStone*/      { P_("spell", "Rune of Stone"),      IS_CAST8,         800,           30,        255, Magic | Targeted,             -1,         -1,      48, { MissileID::RuneOfStone,          MissileID::Null,    },         1,        10,         40,         80 },
+
+
 	// clang-format on
 };
 

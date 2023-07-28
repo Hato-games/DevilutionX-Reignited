@@ -230,6 +230,9 @@ struct Player {
 	std::pair<int, int> GetDamage() const;
 	void CalculateBaseDamage();
 	void RegenTick();
+	void EnableSkill(SpellID sn);
+	void DisableSkill();
+
 	int regenTickCurrent = 0;
 
 	Player() = default;
@@ -291,6 +294,10 @@ struct Player {
 	int destParam4;
 	int _pGold;
 	int _pCriticalChance;
+
+	SpellID _pSkillActiveId = SpellID::Null;
+	int _pSkillCooldown = 0;
+	int _pSkillDurationLeft = 0;
 	/**
 	 * @brief Contains Information for current Animation
 	 */

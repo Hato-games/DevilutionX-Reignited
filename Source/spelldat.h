@@ -64,7 +64,12 @@ enum class SpellID : int8_t {
 	HealOther,
 	BloodStar,
 	BoneSpirit,
-	LastDiablo = BoneSpirit,
+
+	NobleSpirit,
+	Deadeye,
+	Aetherize,
+
+	LastDiablo = Aetherize,
 	Mana,
 	Magi,
 	Jester,
@@ -201,6 +206,11 @@ enum class MissileID : int8_t {
 	BlueExplosion,
 	BlueExplosion2,
 	OrangeExplosion,
+
+	NobleSpirit,
+	Deadeye,
+	Aetherize,
+
 	Null = -1,
 	// clang-format on
 };

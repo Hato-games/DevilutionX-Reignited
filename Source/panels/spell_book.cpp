@@ -47,11 +47,11 @@ SpellID GetSpellFromSpellPage(size_t page, size_t entry)
 	if (page == 0 && entry == 0) {
 		switch (InspectPlayer->_pClass) {
 		case HeroClass::Warrior:
-			return SpellID::ItemRepair;
+			return SpellID::NobleSpirit;
 		case HeroClass::Rogue:
-			return SpellID::TrapDisarm;
+			return SpellID::Deadeye;
 		case HeroClass::Sorcerer:
-			return SpellID::StaffRecharge;
+			return SpellID::Aetherize;
 		case HeroClass::Monk:
 			return SpellID::Search;
 		case HeroClass::Bard:
@@ -157,11 +157,9 @@ void DrawSpellBook(const Surface &out)
 
 			std::string spellName = GetSpellData(sn).sNameText;
 
-			switch (GetSBookTrans(sn, false))
+			const SpellType spellType = GetSBookTrans(sn, false);
+			switch (spellType)
 			{
-				case SpellType::Skill:
-					PrintSBookStr(out, line1, _("Skill"));
-					break;
 				case SpellType::Charges:
 				{
 					int charges = player.InvBody[INVLOC_HAND_LEFT]._iCharges;
@@ -172,40 +170,36 @@ void DrawSpellBook(const Surface &out)
 				{
 					int mana = GetManaAmount(player, sn) >> 6;
 					int lvl = player.GetSpellLevel(sn);
-				    spellName += fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", " Lv{:d}")), lvl);
-					//PrintSBookStr(out, line0, fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Level {:d}")), lvl), UiFlags::AlignRight);
-					if (lvl == 0)
+				    if (spellType != SpellType::Skill)
+					{
+					    spellName += fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", " Lv{:d}")), lvl);
+				    }
+
+				    if (lvl == 0 && spellType != SpellType::Skill)
 					{
 						PrintSBookStr(out, line1, _("Unusable"), UiFlags::AlignRight);
 					}
 					else
 					{
-
-					    std::string tooltip = GetSpellTooltip(sn);
-						if (sn != SpellID::BoneSpirit)
+					    std::string desc = GetSpellDesc(sn);
+					    if (desc.length() > 0)
 						{
-							int min;
-							int max;
-							GetDamageAmt(sn, &min, &max);
-							if (min != -1)
-							{
-								if (sn == SpellID::Healing || sn == SpellID::HealOther)
-								{
-									PrintSBookStr(out, line0, fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "Heals: {:d} - {:d}")), min, max), UiFlags::AlignRight);
-								}
-								else
-								{
-									PrintSBookStr(out, line0, fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "Dmg: {:d} - {:d}")), min, max), UiFlags::AlignRight);
-								}
-							}
-						}
-
+						    PrintSBookStr(out, line0, desc, UiFlags::AlignRight);
+					    }
+					    std::string tooltip = GetSpellTooltip(sn);
 						if (tooltip.length() > 0)
 						{
 						    PrintSBookStr(out, line1, tooltip, UiFlags::AlignRight);
 						}
-						
-						PrintSBookStr(out, line1, fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Mana: {:d}")), mana));
+
+						if (spellType == SpellType::Skill)
+						{
+						    PrintSBookStr(out, line1, _("Skill"));
+						}
+						else
+						{
+						    PrintSBookStr(out, line1, fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Mana: {:d}")), mana));
+					    }
 					}
 				}
 					break;

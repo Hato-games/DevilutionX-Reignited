@@ -1201,7 +1201,14 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 	
 	dam = dam * (100-player._pPhyResist);
 	dam = dam / 100;
-	
+
+	if (player._pSkillActiveId == SpellID::NobleSpirit)
+	{
+		int dmgRed = 20 + player._pLevel / 5;
+		dam = dam * (100 - dmgRed);
+		dam = dam / 100;
+	}
+
 	if (&player == MyPlayer) {
 		if (player.wReflections > 0) {
 			int reflectedDamage = CheckReflect(monster, player, dam);

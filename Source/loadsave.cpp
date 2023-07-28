@@ -299,7 +299,7 @@ void LoadItemData(LoadHelper &file, Item &item)
 		item._iRarePower = static_cast<item_effect_type>(file.NextLE<int8_t>());
 		item._iRareNamePrefId = static_cast<item_effect_type>(file.NextLE<int8_t>());
 		item._iRareNameSufId = static_cast<item_effect_type>(file.NextLE<int8_t>());
-		
+
 		item._iPrefValue1 = static_cast<item_effect_type>(file.NextLE<int32_t>());
 		item._iPrefValue2 = static_cast<item_effect_type>(file.NextLE<int32_t>());
 
@@ -308,7 +308,7 @@ void LoadItemData(LoadHelper &file, Item &item)
 
 		item._iRareValue1 = static_cast<item_effect_type>(file.NextLE<int32_t>());
 		item._iRareValue2 = static_cast<item_effect_type>(file.NextLE<int32_t>());
-		
+
 	}
 	file.Skip(2); // Alignment
 	item._iVAdd1 = file.NextLE<int32_t>();
@@ -337,11 +337,11 @@ void LoadItemData(LoadHelper &file, Item &item)
 	RemoveInvalidItem(item);
 }
 
-void LoadPlayer(LoadHelper &file, Player &player)
+void LoadPlayer(LoadHelper& file, Player& player)
 {
 	player._pmode = static_cast<PLR_MODE>(file.NextLE<int32_t>());
 
-	for (int8_t &step : player.walkpath) {
+	for (int8_t& step : player.walkpath) {
 		step = file.NextLE<int8_t>();
 	}
 	player.plractive = file.NextBool8();
@@ -391,11 +391,26 @@ void LoadPlayer(LoadHelper &file, Player &player)
 	file.Skip(3); // Alignment
 	player._pSBkSpell = static_cast<SpellID>(file.NextLE<int32_t>());
 	file.Skip<int8_t>(); // Skip _pSBkSplType
-	for (uint8_t &spellLevel : player._pSplLvl)
+	for (uint8_t& spellLevel : player._pSplLvl)
 		spellLevel = file.NextLE<uint8_t>();
 	file.Skip(7); // Alignment
 	player._pMemSpells = file.NextLE<uint64_t>();
 	player._pAblSpells = file.NextLE<uint64_t>();
+
+	if ((player._pAblSpells & GetSpellBitmask(SpellID::ItemRepair)) != 0)
+	{
+		player._pAblSpells &= ~GetSpellBitmask(SpellID::ItemRepair);
+		player._pAblSpells |= GetSpellBitmask(SpellID::NobleSpirit);
+	}
+	if ((player._pAblSpells & GetSpellBitmask(SpellID::TrapDisarm)) != 0) {
+		player._pAblSpells &= ~GetSpellBitmask(SpellID::TrapDisarm);
+		player._pAblSpells |= GetSpellBitmask(SpellID::Deadeye);
+	}
+	if ((player._pAblSpells & GetSpellBitmask(SpellID::StaffRecharge)) != 0) {
+		player._pAblSpells &= ~GetSpellBitmask(SpellID::StaffRecharge);
+		player._pAblSpells |= GetSpellBitmask(SpellID::Aetherize);
+	}
+
 	player._pScrlSpells = file.NextLE<uint64_t>();
 	player._pSpellFlags = static_cast<SpellFlag>(file.NextLE<uint8_t>());
 	file.Skip(3); // Alignment
@@ -561,7 +576,12 @@ void LoadPlayer(LoadHelper &file, Player &player)
 	player.pManaShieldDur = file.NextLE<uint16_t>();//file.Skip(2); // Available bytes
 	
 	player.wReflections = file.NextLE<uint16_t>();
-	file.Skip(14); // Available bytes
+
+	player._pSkillActiveId = (SpellID)file.NextLE<int8_t>();
+	player._pSkillCooldown = file.NextLE<int32_t>();
+	player._pSkillDurationLeft = file.NextLE<int32_t>();
+	file.Skip(14-9); // Available bytes
+
 
 	player.pDiabloKillLevel = file.NextLE<uint32_t>();
 	sgGameInitInfo.nDifficulty = static_cast<_difficulty>(file.NextLE<uint32_t>());
@@ -1377,7 +1397,12 @@ void SavePlayer(SaveHelper &file, const Player &player)
 	file.WriteLE<uint8_t>(player.pOriginalCathedral ? 1 : 0);
 	file.WriteLE<uint16_t>(player.pManaShieldDur);//file.Skip(2); // Available bytes
 	file.WriteLE<uint16_t>(player.wReflections);
-	file.Skip(14); // Available bytes
+
+	
+	file.WriteLE<uint8_t>((int8_t)player._pSkillActiveId);
+	file.WriteLE<int32_t>(player._pSkillCooldown);
+	file.WriteLE<int32_t>(player._pSkillDurationLeft);
+	file.Skip(14-9); // Available bytes
 
 	file.WriteLE<uint32_t>(player.pDiabloKillLevel);
 	file.WriteLE<uint32_t>(sgGameInitInfo.nDifficulty);

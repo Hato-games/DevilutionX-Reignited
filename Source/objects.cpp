@@ -1757,7 +1757,14 @@ void UpdateBurningCrossDamage(Object &cross)
 	if (myPlayer.position.tile != cross.position + Displacement { 0, -1 })
 		return;
 
-	ApplyPlrDamage(DamageType::Fire, myPlayer, 0, 0, damage[leveltype - 1]);
+	int dam = damage[leveltype - 1];
+	if (myPlayer._pSkillActiveId == SpellID::NobleSpirit) {
+		int dmgRed = 20 + myPlayer._pLevel / 2;
+		dam = dam * (100 - dmgRed);
+		dam = dam / 100;
+	}
+
+	ApplyPlrDamage(DamageType::Fire, myPlayer, 0, 0, dam);
 	if (myPlayer._pHitPoints >> 6 > 0) {
 		myPlayer.Say(HeroSpeech::Argh);
 	}

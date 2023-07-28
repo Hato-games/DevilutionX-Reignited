@@ -616,7 +616,12 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 
 	if (GenerateRnd(100) < player._pCriticalChance)
 	{
-		dam *= 2;
+		int dmgAmp = 200;
+		if (player._pSkillActiveId == SpellID::Deadeye) {
+			dmgAmp += 10 + player._pLevel / 5;
+		}
+		dam = dam * dmgAmp;
+		dam = dam / 100;
 	}
 	
 
@@ -3219,16 +3224,21 @@ void CheckPlrSpell(bool isShiftHeld, SpellID spellID, SpellType spellType)
 	}
 
 	if (!addflag) {
-		if (spellType == SpellType::Spell) {
+		if (spellType == SpellType::Skill && spellcheck == SpellCheckResult::Fail_Cooldown)
+		{
+			myPlayer.Say(HeroSpeech::ICantCastThatYet);
+		}
+		else if (spellType == SpellType::Spell)
+		{
 			switch (spellcheck) {
 			case SpellCheckResult::Fail_NoMana:
 				myPlayer.Say(HeroSpeech::NotEnoughMana);
 				break;
 			case SpellCheckResult::Fail_Level0:
+			case SpellCheckResult::Fail_Cooldown:
 				myPlayer.Say(HeroSpeech::ICantCastThatYet);
 				break;
 			default:
-				myPlayer.Say(HeroSpeech::ICantDoThat);
 				break;
 			}
 			LastMouseButtonAction = MouseActionType::None;
@@ -3658,24 +3668,51 @@ void Player::CalculateBaseDamage()
 void Player::RegenTick()
 {
 	regenTickCurrent++;
-	regenTickCurrent = regenTickCurrent % (20/4);
+	regenTickCurrent = regenTickCurrent % (20 / 4);
 
-	if (regenTickCurrent == 0)
-	{
-		if (HasNoneOf(_pIFlags, ItemSpecialEffect::NoMana))
-		{
-			int manaRefill = _pMaxMana / (100 * 4); // 1.0% per second
-			_pMana = std::min(_pMana + manaRefill, _pMaxMana);
-			_pManaBase = std::min(_pManaBase + manaRefill, _pMaxManaBase);
-		}
+	if (regenTickCurrent == 0) {
+		    if (HasNoneOf(_pIFlags, ItemSpecialEffect::NoMana)) {
+			    int manaRefill = _pMaxMana / (100 * 4); // 1.0% per second
+			    _pMana = std::min(_pMana + manaRefill, _pMaxMana);
+			    _pManaBase = std::min(_pManaBase + manaRefill, _pMaxManaBase);
+		    }
 
-		int hpRefill = _pMaxHP / (100 * 4); // 1.0% per second
-		_pHitPoints = std::min(_pHitPoints + hpRefill, _pMaxHP);
-		_pHPBase = std::min(_pHPBase + hpRefill, _pMaxHPBase);
+		    int hpRefill = _pMaxHP / (100 * 4); // 1.0% per second
+		    _pHitPoints = std::min(_pHitPoints + hpRefill, _pMaxHP);
+		    _pHPBase = std::min(_pHPBase + hpRefill, _pMaxHPBase);
 
-		RedrawComponent(PanelDrawComponent::Health);
-		RedrawComponent(PanelDrawComponent::Mana);
+		    RedrawComponent(PanelDrawComponent::Health);
+		    RedrawComponent(PanelDrawComponent::Mana);
 	}
+
+	if (_pSkillDurationLeft > 0) {
+		    _pSkillDurationLeft--;
+		    if (_pSkillDurationLeft <= 0) {
+			    DisableSkill();
+		    }
+	}
+	if (_pSkillCooldown > 0)
+	{
+		_pSkillCooldown--;
+	}
+}
+
+void Player::EnableSkill(SpellID sn)
+{
+	_pSkillDurationLeft = 20 * 5 + (2 * _pLevel); // 5 sec +0.1 per level
+
+	_pSkillCooldown = 20 * 30; // 30 second cooldown
+	_pSkillActiveId = sn;
+
+	CalcPlrItemVals(*this, true);
+}
+
+void Player::DisableSkill()
+{
+	_pSkillDurationLeft = 0;
+	_pSkillActiveId = SpellID::Null;
+
+	CalcPlrItemVals(*this, true);
 }
 
 } // namespace devilution

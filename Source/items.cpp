@@ -2790,6 +2790,11 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 		vadd -= 2 * player._pLevel;
 	}
 
+	if(player._pSkillActiveId == SpellID::NobleSpirit)
+	{
+		btohit += 20 + player._pLevel / 5;
+	}
+
 	player._pIMinDam = mind;
 	player._pIMaxDam = maxd;
 	player._pIAC = tac;
@@ -2876,6 +2881,11 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 	{
 		cr += btohit / 8;
 	}
+
+	if (player._pSkillActiveId == SpellID::Deadeye) {
+		cr += 10 + player._pLevel / 10;
+	}
+
 	cr = clamp(cr, 1, 100);
 	player._pCriticalChance = cr;
 

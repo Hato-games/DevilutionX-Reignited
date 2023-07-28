@@ -176,6 +176,7 @@ struct Missile {
 extern std::list<Missile> Missiles;
 extern bool MissilePreFlag;
 
+std::string GetSpellDesc(SpellID spellId);
 std::string GetSpellTooltip(SpellID spellId);
 void GetDamageAmt(SpellID i, int *mind, int *maxd);
 
@@ -368,6 +369,9 @@ void AddInfravision(Missile &missile, AddMissileParameter &parameter);
 void AddFlameWaveControl(Missile &missile, AddMissileParameter &parameter);
 void AddNova(Missile &missile, AddMissileParameter &parameter);
 void AddRage(Missile &missile, AddMissileParameter &parameter);
+void AddNobleSpirit(Missile &missile, AddMissileParameter &parameter);
+void AddDeadeye(Missile &missile, AddMissileParameter &parameter);
+void AddAetherize(Missile &missile, AddMissileParameter &parameter);
 void AddItemRepair(Missile &missile, AddMissileParameter &parameter);
 void AddStaffRecharge(Missile &missile, AddMissileParameter &parameter);
 void AddTrapDisarm(Missile &missile, AddMissileParameter &parameter);

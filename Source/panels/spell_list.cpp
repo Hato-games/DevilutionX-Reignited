@@ -98,6 +98,10 @@ void DrawSpell(const Surface &out)
 		if (tlvl <= 0)
 			st = SpellType::Invalid;
 	}
+	if (st == SpellType::Skill && MyPlayer->_pSkillCooldown > 0)
+	{
+		st = SpellType::Invalid;
+	}
 
 	if (leveltype == DTYPE_TOWN && st != SpellType::Invalid && !GetSpellData(spl).isAllowedInTown())
 		st = SpellType::Invalid;
