@@ -850,13 +850,15 @@ std::string GetSpellDesc(SpellID spellId)
 	    case SpellID::TrapDisarm:
 	    case SpellID::Resurrect:
 	    case SpellID::Telekinesis:
-	    case SpellID::BoneSpirit:
 	    case SpellID::Warp:
 	    case SpellID::Reflect:
 	    case SpellID::Berserk:
 	    case SpellID::Search:
 	    case SpellID::RuneOfStone:
 			return "";
+
+	    case SpellID::BoneSpirit:
+		    return "M.Dmg: 33% T.HP";
 	    case SpellID::HealOther:
 	    case SpellID::Healing:
 		{
@@ -870,7 +872,28 @@ std::string GetSpellDesc(SpellID spellId)
 		    int min;
 		    int max;
 		    GetDamageAmt(spellId, &min, &max);
-		    return fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "Dmg: {:d} - {:d}")), min, max);
+
+			std::string dmgType = "";
+
+			switch (GetSpellData(spellId).type())
+			{
+				case MagicType::Fire:
+					dmgType = "F.";
+					break;
+		        case MagicType::Lightning:
+			        dmgType = "L.";
+					break;
+		        case MagicType::Magic:
+			        dmgType = "M.";
+			        break;
+			}
+
+			if (spellId == SpellID::Golem)
+			{
+			        dmgType = "P.";
+			}
+
+		    return dmgType + fmt::format(fmt::runtime(_("Dmg: {:d} - {:d}")), min, max);
 		}
 			 break;
 	}
@@ -887,8 +910,6 @@ std::string GetSpellTooltip(SpellID spellId)
 	{
 		case SpellID::NobleSpirit:
 		{
-		    assert(MyPlayer != nullptr);
-		    assert(spellId >= SpellID::FIRST && spellId <= SpellID::LAST);
 
 		    Player &myPlayer = *MyPlayer;
 
@@ -901,8 +922,6 @@ std::string GetSpellTooltip(SpellID spellId)
 			break;
 	    case SpellID::Deadeye:
 		{
-		    assert(MyPlayer != nullptr);
-		    assert(spellId >= SpellID::FIRST && spellId <= SpellID::LAST);
 
 		    Player &myPlayer = *MyPlayer;
 
@@ -914,8 +933,6 @@ std::string GetSpellTooltip(SpellID spellId)
 	    } break;
 	    case SpellID::Aetherize:
 		{
-		    assert(MyPlayer != nullptr);
-		    assert(spellId >= SpellID::FIRST && spellId <= SpellID::LAST);
 
 		    Player &myPlayer = *MyPlayer;
 
@@ -951,7 +968,7 @@ std::string GetSpellTooltip(SpellID spellId)
 			return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Mana abs. {:d}% dmg")), myPlayer.GetManaShieldAbsorb());
 		}
 	    case SpellID::BoneSpirit:
-		    return "Dmg: 1/3 target hp";
+		    return "Consume 6 HitPoints";
 	    case SpellID::FireWall:
 		{
 		    const int sl = myPlayer.GetSpellLevel(spellId);
@@ -961,7 +978,9 @@ std::string GetSpellTooltip(SpellID spellId)
 		    duration = duration / 20;
 
 		    return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Duration {:d}.{:d}s")), duration, fraction);
-	    }
+	    } break;
+	    case SpellID::BloodStar:
+		    return "Consume 5 HitPoints";
 		    break;
 	}
 
@@ -992,6 +1011,7 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::Guardian:
 	case SpellID::ChainLightning:
 	case SpellID::Flash:
+	case SpellID::BloodStar:
 	{
 		MissileID missileId = SpellsData[(int)i].sMissiles[0];
 		if (SpellsData[(int)i].sMissiles[1] != MissileID::Null)
@@ -1072,10 +1092,6 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 		/// BUGFIX: add here '*mind /= 2;'
 		*maxd = ScaleSpellEffect(2 * myPlayer._pLevel + 40, sl);
 		/// BUGFIX: add here '*maxd /= 2;'
-		break;
-	case SpellID::BloodStar:
-		*mind = (myPlayer._pMagic / 2) + 3 * sl - (myPlayer._pMagic / 8);
-		*maxd = *mind;
 		break;
 	default:
 		break;
@@ -2453,9 +2469,13 @@ void AddGenericMagicMissile(Missile &missile, AddMissileParameter &parameter)
 
 	if (missile._midam == 0) {
 		switch (missile.sourceType()) {
-		case MissileSource::Player: {
+		case MissileSource::Player:
+		{
 			const Player &player = *missile.sourcePlayer();
-			missile._midam = 3 * missile._mispllvl - (player._pMagic / 8) + (player._pMagic / 2);
+			const MissileData &missileData = GetMissileData(missile._mitype);
+			std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+			int dmg = damage.first + GenerateRnd(damage.second - damage.first);
+			missile._midam = dmg;	
 			break;
 		}
 		case MissileSource::Monster:
