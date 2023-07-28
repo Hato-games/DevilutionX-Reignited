@@ -2888,14 +2888,14 @@ void AddInferno(Missile &missile, AddMissileParameter &parameter)
 		const Player &player = *missile.sourcePlayer();
 		const MissileData &missileData = GetMissileData(missile._mitype);
 		std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
-		int dmg = damage.first + GenerateRnd(damage.second - damage.first);
-		missile._midam = dmg;
+		missile._midam = damage.first * 4;
+		missile.var6 = damage.second * 4;
 	}
 	else
 	{
 		auto &monster = Monsters[missile._misource];
-		missile._midam = monster.minDamage + GenerateRnd(monster.maxDamage - monster.minDamage + 1);
-		missile._midam = missile._midam * 3;
+		missile._midam = monster.minDamage * 2;
+		missile.var6 = monster.maxDamage - monster.minDamage * 2;
 	}
 }
 
@@ -4232,7 +4232,8 @@ void ProcessInferno(Missile &missile)
 	missile._mirange--;
 	missile.var2--;
 	int k = missile._mirange;
-	CheckMissileCol(missile, GetMissileData(missile._mitype).damageType(), missile._midam, missile._midam, true, missile.position.tile, false);
+	CheckMissileCol(missile, GetMissileData(missile._mitype).damageType(), missile._midam, missile.var6, true, missile.position.tile, false);
+
 	if (missile._mirange == 0 && missile._miHitFlag)
 		missile._mirange = k;
 	if (missile.var2 == 0)
