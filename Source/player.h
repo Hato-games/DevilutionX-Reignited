@@ -232,6 +232,7 @@ struct Player {
 	void RegenTick();
 	void EnableSkill(SpellID sn);
 	void DisableSkill();
+	int GetSpellPower() const;
 
 	int regenTickCurrent = 0;
 

@@ -159,15 +159,15 @@ struct MissileData {
 		return static_cast<DamageType>(static_cast<std::underlying_type<MissileDataFlags>::type>(flags) & 0b111U);
 	}
 
-	std::pair<int,int> GetSpellDamage(int magicValue, int pLevel, int sLevel) const
+	std::pair<int,int> GetSpellDamage(int spellPower, int sLevel) const
 	{
 		int dmgMin = dmgMinBase + dmgMinPLv * sLevel;
 		int dmgMax = dmgMaxBase + dmgMaxPLv * sLevel;
 
-		dmgMin = dmgMin * (100 + magicValue / 2 + pLevel / 2);
+		dmgMin = dmgMin * (100 + spellPower);
 		dmgMin = dmgMin / 1000;
 
-		dmgMax = dmgMax * (100 + magicValue / 2 + pLevel / 2);
+		dmgMax = dmgMax * (100 + spellPower);
 		dmgMax = dmgMax / 1000;
 
 		return std::pair<int, int>(dmgMin, dmgMax);

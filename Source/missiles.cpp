@@ -1027,6 +1027,7 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::ChainLightning:
 	case SpellID::Flash:
 	case SpellID::BloodStar:
+	case SpellID::FlameWave:
 	{
 		MissileID missileId = SpellsData[(int)i].sMissiles[0];
 		if (SpellsData[(int)i].sMissiles[1] != MissileID::Null)
@@ -1035,7 +1036,7 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 		}
 
 		const MissileData &missileData = GetMissileData(missileId);
-		std::pair<int, int> damage = missileData.GetSpellDamage(myPlayer._pMagic, myPlayer._pLevel, sl);
+		std::pair<int, int> damage = missileData.GetSpellDamage(myPlayer.GetSpellPower(), sl);
 		*mind = damage.first;
 		*maxd = damage.second;
 	}
@@ -1083,10 +1084,6 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 		*mind = ScaleSpellEffect(base, sl);
 		*maxd = ScaleSpellEffect(base + 36, sl);
 	} break;
-	case SpellID::FlameWave:
-		*mind = 6 * (myPlayer._pLevel + 1);
-		*maxd = *mind + 54;
-		break;
 	case SpellID::Nova:
 	case SpellID::Immolation:
 	case SpellID::RuneOfImmolation:
@@ -2018,7 +2015,7 @@ void AddFirebolt(Missile &missile, AddMissileParameter &parameter)
 			const Player &player = *missile.sourcePlayer();
 
 			const MissileData &missileData = GetMissileData(missile._mitype);
-			std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+			std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 			int dmg = damage.first + GenerateRnd(damage.second - damage.first);
 			missile._midam = dmg;
 		} break;
@@ -2096,7 +2093,7 @@ void AddFireWall(Missile &missile, AddMissileParameter &parameter)
 	const Player &player = *missile.sourcePlayer();
 
 	const MissileData &missileData = GetMissileData(missile._mitype);
-	std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+	std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 	int dmg = damage.first + GenerateRnd(damage.second - damage.first);
 	missile._midam = dmg;
 
@@ -2127,7 +2124,7 @@ void AddFireball(Missile &missile, AddMissileParameter &parameter)
 
 		const Player &player = *missile.sourcePlayer();
 		const MissileData &missileData = GetMissileData(missile._mitype);
-		std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 		int dmg = damage.first + GenerateRnd(damage.second - damage.first);
 		missile._midam = dmg;
 	}
@@ -2151,7 +2148,7 @@ void AddLightningControl(Missile &missile, AddMissileParameter &parameter)
 	{
 		const Player &player = *missile.sourcePlayer();
 		const MissileData &missileData = GetMissileData(missile._mitype);
-		std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 
 		missile._midam = damage.first;
 		missile.var7 = damage.second;
@@ -2283,7 +2280,7 @@ void AddFlashBottom(Missile &missile, AddMissileParameter & /*parameter*/)
 		const Player &player = *missile.sourcePlayer();
 
 		const MissileData &missileData = GetMissileData(missile._mitype);
-		std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 
 		missile._midam = damage.first / 2 *4;
 		missile.var7 = damage.second / 2 * 4;
@@ -2308,7 +2305,7 @@ void AddFlashTop(Missile &missile, AddMissileParameter & /*parameter*/)
 		const Player &player = *missile.sourcePlayer();
 
 		const MissileData &missileData = GetMissileData(missile._mitype);
-		std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 
 		missile._midam = damage.first/2;
 		missile.var7 = damage.second/2;
@@ -2347,9 +2344,16 @@ void AddManaShield(Missile &missile, AddMissileParameter &parameter)
 
 void AddFlameWave(Missile &missile, AddMissileParameter &parameter)
 {
-	missile._midam = GenerateRnd(10) + Players[missile._misource]._pLevel + 1;
+	const Player &player = *missile.sourcePlayer();
+
+	const MissileData &missileData = GetMissileData(missile._mitype);
+	std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
+
+	missile._midam = damage.first;
+	missile.var7 = damage.second;
+
 	UpdateMissileVelocity(missile, parameter.dst, 16);
-	missile._mirange = 255;
+	missile._mirange = 32;
 
 	// Adjust missile's position for rendering
 	missile.position.tile += Direction::South;
@@ -2488,7 +2492,7 @@ void AddGenericMagicMissile(Missile &missile, AddMissileParameter &parameter)
 		{
 			const Player &player = *missile.sourcePlayer();
 			const MissileData &missileData = GetMissileData(missile._mitype);
-			std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+			std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 			int dmg = damage.first + GenerateRnd(damage.second - damage.first);
 			missile._midam = dmg;	
 			break;
@@ -2887,7 +2891,7 @@ void AddInferno(Missile &missile, AddMissileParameter &parameter)
 	{
 		const Player &player = *missile.sourcePlayer();
 		const MissileData &missileData = GetMissileData(missile._mitype);
-		std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 		missile._midam = damage.first * 4;
 		missile.var6 = damage.second * 4;
 	}
@@ -2931,7 +2935,7 @@ void AddChargedBolt(Missile &missile, AddMissileParameter &parameter)
 		const Player &player = *missile.sourcePlayer();
 
 		const MissileData &missileData = GetMissileData(missile._mitype);
-		std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 		int dmg = damage.first + GenerateRnd(damage.second - damage.first);
 		missile._midam = dmg;
 	}
@@ -2974,7 +2978,7 @@ void AddHolyBolt(Missile &missile, AddMissileParameter &parameter)
 	missile._mlid = AddLight(missile.position.start, 8);
 
 	const MissileData &missileData = GetMissileData(missile._mitype);
-	std::pair<int, int> damage = missileData.GetSpellDamage(player._pMagic, player._pLevel, missile._mispllvl);
+	std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 	int dmg = damage.first + GenerateRnd(damage.second - damage.first);
 	missile._midam = dmg;
 }
@@ -3785,31 +3789,56 @@ void ProcessFlameWave(Missile &missile)
 	missile.position.tile += Direction::North;
 	missile.position.offset.deltaY += 32;
 
-	missile.var1++;
-	if (missile.var1 == missile._miAnimLen) {
-		SetMissDir(missile, 1);
-		missile._miAnimFrame = GenerateRnd(11) + 1;
+	if (missile._mirange == 32)
+	{
+		missile._mlid = AddLight(missile.position.tile, ExpLight[0]);
 	}
+
+	missile._mirange--;
+
 	int j = missile._mirange;
-	MoveMissileAndCheckMissileCol(missile, GetMissileData(missile._mitype).damageType(), missile._midam, missile._midam, false, false);
+	MoveMissileAndCheckMissileCol(missile, GetMissileData(missile._mitype).damageType(), missile._midam, missile.var7, false, false);
 	if (missile._miHitFlag)
+	{
 		missile._mirange = j;
-	if (missile._mirange == 0) {
+	}
+
+
+	if (missile._mirange > 32+2 - missile._miAnimLen)
+	{
+		missile._miAnimFrame = 2+(32 - missile._mirange);
+	}
+	else if (missile._mirange < missile._miAnimLen)
+	{
+		missile._miAnimFrame = missile._mirange;
+	}
+	else
+	{
+		missile._miAnimFrame = 8 + GenerateRnd(4);
+	}
+	
+	if (missile._mirange <= 0)
+	{
 		missile._miDelFlag = true;
 		AddUnLight(missile._mlid);
 	}
-	if (missile._mimfnum != 0 || missile._mirange == 0) {
-		if (missile.position.tile != Point { missile.var3, missile.var4 }) {
+	else if (missile._mirange < missile.var2)
+	{
+		ChangeLight(missile._mlid, missile.position.tile, ExpLight[missile._mirange]);
+	}
+	else if (missile.var2 < 12)
+	{
+		missile.var2++;
+		ChangeLight(missile._mlid, missile.position.tile, ExpLight[missile.var2]);
+	}
+	else if (missile.position.tile != Point { missile.var3, missile.var4 })
+	{
 			missile.var3 = missile.position.tile.x;
 			missile.var4 = missile.position.tile.y;
-			ChangeLight(missile._mlid, missile.position.tile, 8);
-		}
-	} else {
-		if (missile.var2 == 0)
-			missile._mlid = AddLight(missile.position.tile, ExpLight[0]);
-		ChangeLight(missile._mlid, missile.position.tile, ExpLight[missile.var2]);
-		missile.var2++;
+			ChangeLight(missile._mlid, missile.position.tile, ExpLight[missile.var2]);
 	}
+	
+
 	// Adjust missile's position for rendering
 	missile.position.tile += Direction::South;
 	missile.position.offset.deltaY -= 32;

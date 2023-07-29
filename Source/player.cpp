@@ -3715,4 +3715,8 @@ void Player::DisableSkill()
 	CalcPlrItemVals(*this, true);
 }
 
+int Player::GetSpellPower() const
+{
+	return _pMagic / 2 + _pLevel / 2;
+}
 } // namespace devilution
