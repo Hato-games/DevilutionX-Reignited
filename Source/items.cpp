@@ -2840,6 +2840,8 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 		lr -= player._pLevel;
 	}
 
+	pr = (tac + bac) / 3 + player._pStrength / 20 + player._pVitality / 10;
+
 	int diffResistPenalty = 0;
 	switch (sgGameInitInfo.nDifficulty)
 	{
@@ -2851,6 +2853,7 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 			break;
 	}
 
+	pr -= diffResistPenalty;
 	mr -= diffResistPenalty;
 	fr -= diffResistPenalty;
 	lr -= diffResistPenalty;
@@ -2862,11 +2865,10 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 		lr = 0;
 	}
 
-	pr = (tac+bac) / 4 + player._pStrength / 10 + player._pVitality / 5;
 	player._pPhyResist = clamp(pr, 0, MaxResistance);
-	player._pMagResist = clamp(mr, 0, MaxResistance);
-	player._pFireResist = clamp(fr, 0, MaxResistance);
-	player._pLghtResist = clamp(lr, 0, MaxResistance);
+	player._pMagResist = clamp(mr, -diffResistPenalty*2, MaxResistance);
+	player._pFireResist = clamp(fr, -diffResistPenalty*2, MaxResistance);
+	player._pLghtResist = clamp(lr, -diffResistPenalty*2, MaxResistance);
 
 	vadd = (vadd * PlayersData[static_cast<size_t>(player._pClass)].itmLife) >> 6;
 	ihp += (vadd << 6); // BUGFIX: blood boil can cause negative shifts here (see line 757)
