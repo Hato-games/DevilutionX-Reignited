@@ -1150,7 +1150,15 @@ void DrawView(const Surface &out, Point startPosition)
 
 	if (AutomapActive > 0)
 	{
-		DrawAutomapText(out.subregionY(0, gnViewportHeight));
+		    DrawAutomapText(out.subregionY(0, gnViewportHeight));
+	}
+
+	if (AutomapActive == 2)
+	{
+		    DrawBuffs(out.subregion(gnScreenWidth - gnScreenWidth / 4 - 8, 8 + 4 + gnViewportHeight / 4, gnScreenWidth / 4, gnViewportHeight / 4));
+	}
+	else {
+		    DrawBuffs(out.subregion(gnScreenWidth - gnScreenWidth / 4 - 8, 8, gnScreenWidth / 4, gnViewportHeight / 4));
 	}
 
 #ifdef _DEBUG

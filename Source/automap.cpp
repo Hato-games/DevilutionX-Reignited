@@ -24,6 +24,7 @@
 #ifdef _DEBUG
 #include "debug.h"
 #endif
+#include <panels/spell_icons.hpp>
 
 namespace devilution {
 
@@ -1039,6 +1040,77 @@ void DrawMinimap(const Surface &out)
 }
 
 
+void DrawBuffs(const Surface &out)
+{
+	const Player &player = *MyPlayer;
+
+	std::vector<BuffInfo> buffs;
+	if (player.pManaShield)
+	{
+		BuffInfo buffMS;
+		buffMS.spellID = SpellID::ManaShield;
+		buffMS.duration = player.pManaShieldDur;
+		buffMS.spellType = SpellType::Spell;
+		buffs.push_back(buffMS);
+	}
+	if (player._pSkillActiveId != SpellID::Null)
+	{
+		BuffInfo buffClass;
+		buffClass.spellID = player._pSkillActiveId;
+		buffClass.duration = player._pSkillDurationLeft;
+		buffClass.spellType = SpellType::Skill;
+		buffs.push_back(buffClass);
+	}
+	if (player._pSkillCooldown > 0)
+	{
+		BuffInfo buffClassCD;
+		switch (player._pClass)
+		{
+			case HeroClass::Warrior:
+				buffClassCD.spellID = SpellID::NobleSpirit;
+			break;
+			case HeroClass::Rogue:
+				buffClassCD.spellID = SpellID::Deadeye;
+				break;
+		    case HeroClass::Sorcerer:
+				buffClassCD.spellID = SpellID::Aetherize;
+				break;
+		}
+		buffClassCD.duration = player._pSkillCooldown;
+		buffClassCD.spellType = SpellType::Invalid;
+		buffs.push_back(buffClassCD);
+	}
+
+	for (int i = 0; i < buffs.size(); i++)
+	{
+		SetSpellTrans(buffs[i].spellType);
+		Point pos(gnScreenWidth / 4 - ((i+1)*44) - 4, 4 + 38);
+		DrawSmallSpellIcon(out, pos, buffs[i].spellID);
+
+		std::string text = "";
+
+		int duration = buffs[i].duration / 2;
+		int secs = duration / 10;
+		if (secs > 60)
+		{
+			int mins = secs / 60;
+			secs = secs % 60;
+			text = fmt::format(fmt::runtime(_("{:d}m{:d}s")), mins, secs);
+		}
+		else
+		{
+			text = fmt::format(fmt::runtime(_("{:d}s")), secs);
+
+			pos.x += 8;
+			if (text.length() == 2)
+			{
+				pos.x += 4;
+			}
+		}
+
+		DrawString(out, text, pos);
+	}
+}
 void DrawAutomapText(const Surface &out)
 {
 	Point linePosition { 8, 8 };

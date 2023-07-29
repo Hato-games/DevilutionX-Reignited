@@ -12,6 +12,7 @@
 #include "engine/point.hpp"
 #include "levels/gendung.h"
 #include "utils/attributes.h"
+#include <spelldat.h>
 
 namespace devilution {
 
@@ -43,6 +44,12 @@ inline int AmLine(int x)
 	return AutoMapScale * x / 100;
 }
 
+struct BuffInfo
+{
+	SpellID spellID = SpellID::Null;
+	int duration = 0;
+	SpellType spellType;
+};
 /**
  * @brief Initializes the automap.
  */
@@ -98,6 +105,11 @@ void DrawAutomap(const Surface &out);
  */
 void DrawMinimap(const Surface &out);
 /**
+ * @brief Renders player buffs to the given buffer.
+ */
+void DrawBuffs(const Surface &out);
+
+    /**
  * @brief Renders game info, such as the name of the current level, and in multi player the name of the game and the game password.
  */
 void DrawAutomapText(const Surface &out);
