@@ -189,7 +189,7 @@ constexpr unsigned GoldHeaderEntryIndex = 16;
 	{ N_("Armor class"), { RightColumnLabelX, 135 - 26 }, 57, RightColumnLabelWidth,
 	    []() { return StyledText { GetValueColor(InspectPlayer->_pIBonusAC), StrCat(InspectPlayer->GetArmor() + InspectPlayer->_pLevel * 2) }; } },
 	{ N_("To hit"), { RightColumnLabelX, 163 - 26 }, 57, RightColumnLabelWidth,
-	    []() { return StyledText { GetValueColor(InspectPlayer->_pIBonusToHit), StrCat(InspectPlayer->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow ? InspectPlayer->GetRangedToHit() : InspectPlayer->GetMeleeToHit(), "%") }; } },
+	    []() { return StyledText { GetValueColor(InspectPlayer->_pIBonusToHit), StrCat(InspectPlayer->GetWeaponToHit(), "%") }; } },
 	{ N_("Damage"), { RightColumnLabelX, 191 - 26 }, 57, RightColumnLabelWidth,
 	    []() {
 	        std::pair<int, int> dmg = GetDamage();

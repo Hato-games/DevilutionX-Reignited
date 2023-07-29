@@ -546,6 +546,11 @@ struct Player {
 		return hper;
 	}
 
+
+	int GetWeaponToHit() const
+	{
+		return InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow ? GetRangedToHit() : GetMeleeToHit();
+	}
 	/**
 	 * @brief Return player's ranged to hit value
 	 */

@@ -4565,12 +4565,18 @@ void SpawnGolem(Player &player, Monster &golem, Point position, Missile &missile
 	golem.position.future = position;
 	golem.position.old = position;
 	golem.pathCount = 0;
-	golem.maxHitPoints = 2 * (320 * missile._mispllvl + player._pMaxMana / 3);
+
+	golem.maxHitPoints = ((100 + missile._mispllvl * 5 + player._pMaxHP / 2) * (100 + player.GetSpellPower())) / 100;
 	golem.hitPoints = golem.maxHitPoints;
-	golem.armorClass = 25;
-	golem.toHit = 5 * (missile._mispllvl + 8) + 2 * player._pLevel;
-	golem.minDamage = 2 * (missile._mispllvl + 4);
-	golem.maxDamage = 2 * (missile._mispllvl + 8);
+	golem.armorClass = ((25 + player._pArmorClass / 4) * (100 + player.GetSpellPower())) / 100;
+	golem.toHit = 50 + missile._mispllvl * 2 + player.GetWeaponToHit() / 4;
+
+	const MissileData &missileData = GetMissileData(missile._mitype);
+	std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
+
+	golem.minDamage = damage.first;
+	golem.maxDamage = damage.second;
+
 	golem.flags |= MFLAG_GOLEM;
 	StartSpecialStand(golem, Direction::South);
 	UpdateEnemy(golem);

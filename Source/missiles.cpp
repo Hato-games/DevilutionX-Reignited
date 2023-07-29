@@ -925,37 +925,21 @@ std::string GetSpellTooltip(SpellID spellId)
 	{
 		case SpellID::NobleSpirit:
 		{
-
-		    Player &myPlayer = *MyPlayer;
-
-		    const int level = myPlayer._pLevel;
-
-		    int tohit = 20 + level / 5;
-		    int dmgRed = 20 + level / 5;
+		    int tohit = 20 + myPlayer._pLevel / 5;
+		    int dmgRed = 20 + myPlayer._pLevel / 5;
 		    return fmt::format(fmt::runtime(_("+{:d}%ToHit +{:d}%DmgRed")), tohit, dmgRed);
 		}
-			break;
 	    case SpellID::Deadeye:
 		{
-
-		    Player &myPlayer = *MyPlayer;
-
-		    const int level = myPlayer._pLevel;
-
-		    int cr = 10 + level / 10;
-		    int cd = 10 + level / 5;
+		    int cr = 10 + myPlayer._pLevel / 10;
+		    int cd = 10 + myPlayer._pLevel / 5;
 		    return fmt::format(fmt::runtime(_("+{:d}%Crit Ch +{:d}%CritD")), cr, cd);
-	    } break;
+	    }
 	    case SpellID::Aetherize:
 		{
-
-		    Player &myPlayer = *MyPlayer;
-
-		    const int level = myPlayer._pLevel;
-
-		    int cr = 15 + level / 5;
+		    int cr = 15 + myPlayer._pLevel / 5;
 		    return fmt::format(fmt::runtime(_("Spells ignore {:d}% Ele res")), cr);
-	    } break;
+	    }
 		case SpellID::HolyBolt:
 			return "vs Undead";
 		case SpellID::ChargedBolt:
@@ -996,7 +980,15 @@ std::string GetSpellTooltip(SpellID spellId)
 	    } break;
 	    case SpellID::BloodStar:
 		    return "Consume 5 HitPoints";
-		    break;
+	    case SpellID::Golem:
+		{
+		    const int sl = myPlayer.GetSpellLevel(spellId);
+		    int hp = ((100 + sl * 5 + myPlayer._pMaxHP / 2) * (100+myPlayer.GetSpellPower())) / 100;
+		    hp = hp >> 6;
+		    int ac = ((25 + myPlayer._pArmorClass / 4) * (100+myPlayer.GetSpellPower())) / 100;
+		    int th = 50 + sl * 2 + myPlayer.GetWeaponToHit() / 4;
+		    return fmt::format(fmt::runtime(_("HP:{:d} AC:{:d} TH:{:d}%")), hp, ac, th);
+	    }
 	}
 
 	return "";
