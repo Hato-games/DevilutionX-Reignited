@@ -240,6 +240,8 @@ struct Item {
 	int _iVMult1 = 0;
 	int _iVAdd2 = 0;
 	int _iVMult2 = 0;
+	int _iVAdd3 = 0;
+	int _iVMult3 = 0;
 	int8_t _iMinStr = 0;
 	uint8_t _iMinMag = 0;
 	int8_t _iMinDex = 0;

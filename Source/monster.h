@@ -378,8 +378,9 @@ struct Monster { // note: missing field _mAFNum
 			}
 		}
 
-		if (type().type == MT_DIABLO && !gbIsHellfire) {
-			baseLevel -= 15;
+		if (type().type == MT_DIABLO)
+		{
+			baseLevel += 5;
 		}
 
 		if (difficulty == DIFF_NIGHTMARE) {

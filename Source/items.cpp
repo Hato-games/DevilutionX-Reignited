@@ -606,14 +606,15 @@ void GetSuperItemSpace(Point position, int8_t inum)
 
 void CalcItemValue(Item &item)
 {
-	int v = item._iVMult1 + item._iVMult2;
+	int v = item._iVMult1 + item._iVMult2 + item._iVMult3;
+	
 	if (v > 0) {
 		v *= item._ivalue;
 	}
 	if (v < 0) {
 		v = item._ivalue / v;
 	}
-	v = item._iVAdd1 + item._iVAdd2 + v;
+	v = item._iVAdd1 + item._iVAdd2 + item._iVAdd3 + v;
 	item._iIvalue = std::max(v, 1);
 }
 
@@ -1111,7 +1112,12 @@ void SaveItemAffix(const Player &player, Item &item, const PLStruct &affix, int 
 	int value = SaveItemPower(player, item, power, affixType);
 
 	value = PLVal(value, power.param1, power.param2, affix.minVal, affix.maxVal);
-	if (item._iVAdd1 != 0 || item._iVMult1 != 0) {
+
+	if (item._iVAdd2 != 0 || item._iVMult2 != 0) {
+		item._iVAdd3 = value;
+		item._iVMult3 = affix.multVal;
+	}
+	else if (item._iVAdd1 != 0 || item._iVMult1 != 0) {
 		item._iVAdd2 = value;
 		item._iVMult2 = affix.multVal;
 	} else {
@@ -1356,7 +1362,7 @@ void GetItemPower(const Player &player, Item &item, int minlvl, int maxlvl, Affi
 	const PLStruct *pRare = nullptr;
 	
 	GetItemPowerPrefixAndSuffix(
-	    minlvl, maxlvl, flgs, onlygood, gbIsHellfire, player.plrlevel, // TODO:plrlevel is not dungeonlevel
+	    minlvl, maxlvl, flgs, onlygood, gbIsHellfire, player.plrlevel,
 	    [&item, &player, &pPrefix](const PLStruct &prefix) {
 		    item._iMagical = ITEM_QUALITY_MAGIC;
 		    SaveItemAffix(player, item, prefix, 0);
@@ -3438,9 +3444,7 @@ void SpawnItem(Monster &monster, Point position, bool sendmsg, bool spawn /*= fa
 	GetSuperItemSpace(position, ii);
 	int uper = monster.isUnique() ? 15 : 1;
 
-	int8_t mLevel = monster.data().level;
-	if (!gbIsHellfire && monster.type().type == MT_DIABLO)
-		mLevel -= 15;
+	int8_t mLevel = monster.level(sgGameInitInfo.nDifficulty);
 
 	SetupAllItems(*MyPlayer, item, idx, AdvanceRndSeed(), mLevel, uper, onlygood, false, false);
 

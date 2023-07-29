@@ -309,6 +309,8 @@ void LoadItemData(LoadHelper &file, Item &item)
 		item._iRareValue1 = static_cast<item_effect_type>(file.NextLE<int32_t>());
 		item._iRareValue2 = static_cast<item_effect_type>(file.NextLE<int32_t>());
 
+		item._iVAdd3 = file.NextLE<int32_t>();
+		item._iVMult3 = file.NextLE<int32_t>();
 	}
 	file.Skip(2); // Alignment
 	item._iVAdd1 = file.NextLE<int32_t>();
@@ -1149,6 +1151,9 @@ void SaveItem(SaveHelper &file, const Item &item)
 
 		file.WriteLE<int32_t>(item._iRareValue1);
 		file.WriteLE<int32_t>(item._iRareValue2);
+
+		file.WriteLE<int32_t>(item._iVAdd3);
+		file.WriteLE<int32_t>(item._iVMult3);
 	}
 	file.Skip(2); // Alignment
 	file.WriteLE<int32_t>(item._iVAdd1);
