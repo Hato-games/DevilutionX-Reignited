@@ -1233,7 +1233,7 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 		allocateSuffix = true;
 		allocateRare = true;
 
-		int penalty = (2 - sgGameInitInfo.nDifficulty) * 20;
+		int penalty = (3 - sgGameInitInfo.nDifficulty) * 20;
 		minlvl = minlvl * 100;
 		minlvl = minlvl - (minlvl / (penalty * 2));
 		minlvl = minlvl / 100;
@@ -2839,6 +2839,21 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 		fr -= player._pLevel;
 		lr -= player._pLevel;
 	}
+
+	int diffResistPenalty = 0;
+	switch (sgGameInitInfo.nDifficulty)
+	{
+		case _difficulty::DIFF_NIGHTMARE:
+			diffResistPenalty = 15;
+			break;
+		case _difficulty::DIFF_HELL:
+		    diffResistPenalty = 45;
+			break;
+	}
+
+	mr -= diffResistPenalty;
+	fr -= diffResistPenalty;
+	lr -= diffResistPenalty;
 
 	if (HasAnyOf(iflgs, ItemSpecialEffect::ZeroResistance)) {
 		// reset resistances to zero if the respective special effect is active
