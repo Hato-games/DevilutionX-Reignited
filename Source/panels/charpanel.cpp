@@ -133,15 +133,15 @@ constexpr unsigned GoldHeaderEntryIndex = 16;
 	{ "", { 161, 14 }, 149, 0,
 	    []() { return StyledText { UiFlags::ColorWhite, std::string(_("Lvl " + StrCat(InspectPlayer->_pLevel) + " " + PlayersData[static_cast<std::size_t>(InspectPlayer->_pClass)].className)) }; } },
 
-	{ N_("Experience"), { 9, 38 }, 0, 99, {} },
-	{ "", { 9, 58 }, 99, 91,
+	{ N_("Experience"), { 9, 35 }, 0, 99, {} },
+	{ "", { 9, 55 }, 99, 91,
 	    []() {
 	        int spacing = ((InspectPlayer->_pExperience >= 1000000000) ? 0 : 1);
 	        return StyledText { UiFlags::ColorWhite, FormatInteger(InspectPlayer->_pExperience), spacing };
 	    } },
 
-	{ N_("Next level"), { 9+99, 38 }, 0, 99, {} },
-	{ "", { 9 + 99, 58 }, 99, 91,
+	{ N_("Next level"), { 9+99, 35 }, 0, 99, {} },
+	{ "", { 9 + 99, 55 }, 99, 91,
 	    []() {
 	        if (InspectPlayer->_pLevel == MaxCharacterLevel) {
 		        return StyledText { UiFlags::ColorWhitegold, std::string(_("None")) };
@@ -150,8 +150,8 @@ constexpr unsigned GoldHeaderEntryIndex = 16;
 	        return StyledText { UiFlags::ColorWhite, FormatInteger(InspectPlayer->_pNextExper), spacing };
 	    } },
 
-	{ N_("Gold"), { 9+99*2, 38 }, 0, 99, {} },
-	{ "", { 9+99*2, 58 }, 99, 0,
+	{ N_("Gold"), { 9+99*2, 35 }, 0, 99, {} },
+	{ "", { 9+99*2, 55 }, 99, 0,
 	    []() { return StyledText { UiFlags::ColorWhite, FormatInteger(InspectPlayer->_pGold) }; } },
 
 	{ N_("Base"), { LeftColumnLabelX, 113-26 }, 0, 44, {} },
@@ -185,27 +185,30 @@ constexpr unsigned GoldHeaderEntryIndex = 16;
 	{ "", { 135, 312 - 26 }, 45, 0,
 	    []() { return StyledText { (InspectPlayer->_pMana != InspectPlayer->_pMaxMana ? UiFlags::ColorRed : GetMaxManaColor()), StrCat(InspectPlayer->_pMana >> 6) }; } },
 
-
-	{ N_("Armor class"), { RightColumnLabelX, 135 - 26 }, 57, RightColumnLabelWidth,
-	    []() { return StyledText { GetValueColor(InspectPlayer->_pIBonusAC), StrCat(InspectPlayer->GetArmor() + InspectPlayer->_pLevel * 2) }; } },
-	{ N_("To hit"), { RightColumnLabelX, 163 - 26 }, 57, RightColumnLabelWidth,
+		
+	{ N_("Armor class"), { RightColumnLabelX, 110 - 26 }, 57, RightColumnLabelWidth,
+	    []() { return StyledText { GetValueColor(InspectPlayer->_pIBonusAC), StrCat(InspectPlayer->GetArmor()) }; } },
+	{ N_("To hit"), { RightColumnLabelX, 138 - 26 }, 57, RightColumnLabelWidth,
 	    []() { return StyledText { GetValueColor(InspectPlayer->_pIBonusToHit), StrCat(InspectPlayer->GetWeaponToHit(), "%") }; } },
-	{ N_("Damage"), { RightColumnLabelX, 191 - 26 }, 57, RightColumnLabelWidth,
+	{ N_("Damage"), { RightColumnLabelX, 166 - 26 }, 57, RightColumnLabelWidth,
 	    []() {
 	        std::pair<int, int> dmg = GetDamage();
 	        int spacing = ((dmg.first >= 100) ? -1 : 1);
 	        return StyledText { GetValueColor(InspectPlayer->_pIBonusDam), StrCat(dmg.first, "-", dmg.second), spacing };
 	    } },
-	{ N_("Critical chance"), { RightColumnLabelX, 219 - 26 }, 57, RightColumnLabelWidth,
+
+	{ N_("Critical chance"), { RightColumnLabelX, 194 - 26 }, 57, RightColumnLabelWidth,
 	    []() { return StyledText { GetValueColorCapped(InspectPlayer->_pCriticalChance, 100), StrCat(InspectPlayer->_pCriticalChance, "%") }; } },
-		
-	{ N_("Resist physical"), { RightColumnLabelX, 252-26 }, 57, RightColumnLabelWidth,
+	{ N_("Spell power"), { RightColumnLabelX, 222 - 26 }, 57, RightColumnLabelWidth,
+	    []() { return StyledText { GetValueColor(InspectPlayer->GetSpellPower()), StrCat(InspectPlayer->GetSpellPower(), "%") }; } },
+
+	{ N_("Resist physical"), { RightColumnLabelX, 254-26 }, 57, RightColumnLabelWidth,
 	    []() { return GetResistInfo(InspectPlayer->_pPhyResist); } },
-	{ N_("Resist magic"), { RightColumnLabelX, 252 + 28 - 26 }, 57, RightColumnLabelWidth,
+	{ N_("Resist magic"), { RightColumnLabelX, 254 + 28 - 26 }, 57, RightColumnLabelWidth,
 	    []() { return GetResistInfo(InspectPlayer->_pMagResist); } },
-	{ N_("Resist fire"), { RightColumnLabelX, 252 + 28 * 2 - 26 }, 57, RightColumnLabelWidth,
+	{ N_("Resist fire"), { RightColumnLabelX, 254 + 28 * 2 - 26 }, 57, RightColumnLabelWidth,
 	    []() { return GetResistInfo(InspectPlayer->_pFireResist); } },
-	{ N_("Resist lightning"), { RightColumnLabelX, 252 + 28 * 3 - 26 }, 57, RightColumnLabelWidth,
+	{ N_("Resist lightning"), { RightColumnLabelX, 254 + 28 * 3 - 26 }, 57, RightColumnLabelWidth,
 	    []() { return GetResistInfo(InspectPlayer->_pLghtResist); } },
 };
 
