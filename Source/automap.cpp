@@ -1061,6 +1061,15 @@ void DrawBuffs(const Surface &out)
 		buffClass.spellType = SpellType::Skill;
 		buffs.push_back(buffClass);
 	}
+	if (player._pInfraFlag)
+	{
+		BuffInfo buffInfra;
+		buffInfra.spellID = SpellID::Infravision;
+		buffInfra.duration = 0;
+		buffInfra.spellType = SpellType::Scroll;
+		buffs.push_back(buffInfra);
+	}
+
 	if (player._pSkillCooldown > 0)
 	{
 		BuffInfo buffClassCD;
@@ -1088,27 +1097,26 @@ void DrawBuffs(const Surface &out)
 		DrawSmallSpellIcon(out, pos, buffs[i].spellID);
 
 		std::string text = "";
-
-		int duration = buffs[i].duration / 2;
-		int secs = duration / 10;
-		if (secs > 60)
+		if (buffs[i].duration > 0)
 		{
+			int duration = buffs[i].duration / 2;
+			int secs = duration / 10;
+			if (secs > 60) {
 			int mins = secs / 60;
 			secs = secs % 60;
 			text = fmt::format(fmt::runtime(_("{:d}m{:d}s")), mins, secs);
-		}
-		else
-		{
+			} else {
 			text = fmt::format(fmt::runtime(_("{:d}s")), secs);
 
 			pos.x += 8;
-			if (text.length() == 2)
-			{
+			if (text.length() == 2) {
 				pos.x += 4;
 			}
+			}
+
+			DrawString(out, text, pos);
 		}
 
-		DrawString(out, text, pos);
 	}
 }
 void DrawAutomapText(const Surface &out)
