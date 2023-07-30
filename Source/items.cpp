@@ -3853,14 +3853,14 @@ bool DoOil(Player &player, int cii)
 	case IPL_TOHIT:
 	case IPL_TOHIT_CURSE:
 	{
-		return fmt::format(fmt::runtime(_("chance to hit: {:+d}%")), item._iPLToHit);
+		return fmt::format(fmt::runtime(_("to hit: {:+d}% and critical {:+d}%")), item._iPLToHit, item._iPLToHit/4);
 	}
 	case IPL_DAMP:
 	case IPL_DAMP_CURSE:
 		return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% damage")), item._iPLDam);
 	case IPL_TOHIT_DAMP:
 	case IPL_TOHIT_DAMP_CURSE:
-		return fmt::format(fmt::runtime(_("to hit: {:+d}%, {:+d}% damage")), item._iPLToHit, item._iPLDam);
+		return fmt::format(fmt::runtime(_("to hit: {:+d}%, critical {:+d}%,\n {:+d}% damage")), item._iPLToHit, item._iPLToHit / 4, item._iPLDam);
 	case IPL_ACP:
 	case IPL_ACP_CURSE:
 		return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% armor")), item._iPLAC);
@@ -4069,14 +4069,14 @@ bool DoOil(Player &player, int cii)
 	switch (plidx)
 	{
 		case IPL_TOHIT:
-		case IPL_TOHIT_CURSE:
-		    return fmt::format(fmt::runtime(_("chance to hit: {:+d}%")), val1);
+	case IPL_TOHIT_CURSE:
+		    return fmt::format(fmt::runtime(_("to hit: {:+d}% and critical {:+d}%")), val1, val1 / 4);
 		case IPL_DAMP:
 		case IPL_DAMP_CURSE:
 		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% damage")), val1);
 		case IPL_TOHIT_DAMP:
-		case IPL_TOHIT_DAMP_CURSE:
-		    return fmt::format(fmt::runtime(_("to hit: {:+d}%, {:+d}% damage")), val1, val2);
+	    case IPL_TOHIT_DAMP_CURSE:
+		    return fmt::format(fmt::runtime(_("to hit: {:+d}%, critical {:+d}%,\n {:+d}% damage")), val1, val1 / 4, val2);
 		case IPL_ACP:
 		case IPL_ACP_CURSE:
 		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% armor")), val1);
@@ -4422,6 +4422,10 @@ void DrawUniqueInfo(const Surface &out)
 	{
 		rect.position.y += 2 * 12;
 		DrawString(out, texts[i], rect, UiFlags::ColorWhite | UiFlags::AlignCenter);
+		if (texts[i].find('\n') != std::string::npos)
+		{
+			    rect.position.y += 6;
+		}
 	}
 
 
