@@ -315,6 +315,12 @@ bool MonsterMHit(int pnum, int monsterId, int mindam, int maxdam, int dist, Miss
 		dam = mindam + GenerateRnd(maxdam - mindam + 1);
 	}
 
+	
+	if (t == MissileID::HolyBolt && monster.data().monsterClass == MonsterClass::Undead)
+	{
+		dam *= 2;
+	}
+
 	if (damageType == DamageType::Elemental)
 	{
 		for (int i = 0; i < 3; i++)
@@ -351,9 +357,7 @@ bool Plr2PlrMHit(const Player &player, int p, int mindam, int maxdam, int dist, 
 		return false;
 	}
 
-	if (mtype == MissileID::HolyBolt) {
-		return false;
-	}
+
 
 	const MissileData &missileData = GetMissileData(mtype);
 
@@ -950,7 +954,7 @@ std::string GetSpellTooltip(SpellID spellId)
 		    return fmt::format(fmt::runtime(_("Spells ignore {:d}% Ele res")), cr);
 	    }
 		case SpellID::HolyBolt:
-			return "vs Undead";
+			return "Dmg x2 to Undead";
 		case SpellID::ChargedBolt:
 		{
 		    const int sl = myPlayer.GetSpellLevel(spellId);
