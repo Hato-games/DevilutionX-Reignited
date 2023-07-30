@@ -12,6 +12,7 @@ namespace {
 const auto Fire = SpellDataFlags::Fire;
 const auto Lightning = SpellDataFlags::Lightning;
 const auto Magic = SpellDataFlags::Magic;
+const auto Elemental = SpellDataFlags::Elemental;
 const auto Targeted = SpellDataFlags::Targeted;
 const auto AllowedInTown = SpellDataFlags::AllowedInTown;
 } // namespace
@@ -31,7 +32,7 @@ const SpellData SpellsData[] = {
 /*SpellID::StoneCurse*/       { P_("spell", "Stone Curse"),        IS_CAST2,        1200,           80,         60, Magic | Targeted,              6,          5,      51, { MissileID::StoneCurse,           MissileID::Null,    },         3,        40,          8,         16 },
 /*SpellID::Infravision*/      { P_("spell", "Infravision"),        IS_CAST8,           0,           60,         40, Magic,                        -1,         -1,      36, { MissileID::Infravision,          MissileID::Null,    },         5,        20,          0,          0 },
 /*SpellID::Phasing*/          { P_("spell", "Phasing"),            IS_CAST2,         350,           20,         12, Magic,                         7,          6,      39, { MissileID::Phasing,              MissileID::Null,    },         2,         4,         40,         80 },
-/*SpellID::ManaShield*/       { P_("spell", "Mana Shield"),        IS_CAST2,        1600,          120,         33, Magic,                         6,          5,      25, { MissileID::ManaShield,           MissileID::Null,    },         0,        33,          4,         10 },
+/*SpellID::ManaShield*/       { P_("spell", "Mana Shield"),        IS_CAST2,        1600,          120,         33, Magic | AllowedInTown,         6,          5,      25, { MissileID::ManaShield,           MissileID::Null,    },         0,        33,          4,         10 },
 /*SpellID::Fireball*/         { P_("spell", "Fireball"),           IS_CAST2,         800,           30,         16, Fire | Targeted,               8,          7,      48, { MissileID::Fireball,             MissileID::Null,    },         1,        10,         40,         80 },
 /*SpellID::Guardian*/         { P_("spell", "Guardian"),           IS_CAST2,        1400,           95,         50, Fire | Targeted,               9,          8,      61, { MissileID::Guardian,             MissileID::Null,    },         2,        30,         16,         32 },
 /*SpellID::ChainLightning*/   { P_("spell", "Chain Lightning"),    IS_CAST2,        1100,           75,         30, Lightning,                     8,          7,      54, { MissileID::ChainLightning,       MissileID::Null,    },         1,        18,         20,         60 },
@@ -49,7 +50,7 @@ const SpellData SpellsData[] = {
 /*SpellID::ItemRepair*/       { P_("spell", "Item Repair"),        IS_CAST6,           0,            0,          0, Magic | AllowedInTown,        -1,         -1,     255, { MissileID::ItemRepair,           MissileID::Null,    },         0,         0,         40,         80 },
 /*SpellID::StaffRecharge*/    { P_("spell", "Staff Recharge"),     IS_CAST6,           0,            0,          0, Magic | AllowedInTown,        -1,         -1,     255, { MissileID::StaffRecharge,        MissileID::Null,    },         0,         0,         40,         80 },
 /*SpellID::TrapDisarm*/       { P_("spell", "Trap Disarm"),        IS_CAST6,           0,            0,          0, Magic,                        -1,         -1,     255, { MissileID::TrapDisarm,           MissileID::Null,    },         0,         0,         40,         80 },
-/*SpellID::Elemental*/        { P_("spell", "Elemental"),          IS_CAST2,        1050,           70,         35, Fire,                          8,          6,      68, { MissileID::Elemental,            MissileID::Null,    },         2,        20,         20,         60 },
+/*SpellID::Elemental*/        { P_("spell", "Elemental"),          IS_CAST2,        1050,           70,         35, Elemental,                     8,          6,      68, { MissileID::Elemental,            MissileID::Null,    },         2,        20,         20,         60 },
 /*SpellID::ChargedBolt*/      { P_("spell", "Charged Bolt"),       IS_CAST2,         100,            5,          6, Lightning | Targeted,          1,          1,      25, { MissileID::ChargedBolt,          MissileID::Null,    },         1,         6,         40,         80 },
 /*SpellID::HolyBolt*/         { P_("spell", "Holy Bolt"),          IS_CAST2,         100,            5,          7, Magic | Targeted,              1,          1,      20, { MissileID::HolyBolt,             MissileID::Null,    },         1,         3,         40,         80 },
 /*SpellID::Resurrect*/        { P_("spell", "Resurrect"),          IS_CAST8,         400,           25,         20, Magic | AllowedInTown,        -1,          5,      30, { MissileID::Resurrect,            MissileID::Null,    },         0,        20,          4,         10 },
@@ -58,9 +59,9 @@ const SpellData SpellsData[] = {
 /*SpellID::BloodStar*/        { P_("spell", "Blood Star"),         IS_CAST2,        2750,          180,         25, Magic,                        14,         13,      70, { MissileID::BloodStar,            MissileID::Null,    },         2,        14,         20,         60 },
 /*SpellID::BoneSpirit*/       { P_("spell", "Bone Spirit"),        IS_CAST2,        1150,           80,         24, Magic,                         9,          7,      34, { MissileID::BoneSpirit,           MissileID::Null,    },         1,        12,         20,         60 },
 
-/*SpellID::NobleSpirit*/      { P_("spell", "Noble Spirit"),       IS_CAST6,           0,            0,          0, Magic,						 -1,         -1,     255, { MissileID::NobleSpirit,           MissileID::Null,    },         0,         0,         0,         0 },
-/*SpellID::Deadeye*/          { P_("spell", "Deadeye"),            IS_CAST6,           0,            0,          0, Magic,						-1,         -1,     255, { MissileID::Deadeye,           MissileID::Null,    },         0,         0,         0,         0 },
-/*SpellID::Aetherize*/        { P_("spell", "Aetherize"),          IS_CAST6,           0,            0,          0, Magic,						   -1,         -1,     255, { MissileID::Aetherize,           MissileID::Null,    },         0,         0,         0,        0 },
+/*SpellID::NobleSpirit*/      { P_("spell", "Noble Spirit"),       IS_CAST6,           0,            0,          0, Magic | AllowedInTown,			-1,         -1,     255, { MissileID::NobleSpirit,           MissileID::Null,    },         0,         0,         0,         0 },
+/*SpellID::Deadeye*/          { P_("spell", "Deadeye"),            IS_CAST6,           0,            0,          0, Magic | AllowedInTown,			-1,         -1,     255, { MissileID::Deadeye,           MissileID::Null,    },         0,         0,         0,         0 },
+/*SpellID::Aetherize*/        { P_("spell", "Aetherize"),          IS_CAST6,           0,            0,          0, Magic | AllowedInTown,		-1,         -1,     255, { MissileID::Aetherize,           MissileID::Null,    },         0,         0,         0,        0 },
 
 /*SpellID::Mana*/             { P_("spell", "Mana"),               IS_CAST8,         100,            5,        255, Magic | AllowedInTown,        -1,          5,      17, { MissileID::Mana,                 MissileID::Null,    },         3,         1,         12,         24 },
 /*SpellID::Magi*/             { P_("spell", "the Magi"),           IS_CAST8,       10000,           20,        255, Magic | AllowedInTown,        -1,         20,      45, { MissileID::Magi,                 MissileID::Null,    },         3,         1,         15,         30 },

@@ -94,6 +94,7 @@ enum class MagicType : uint8_t {
 	Fire,
 	Lightning,
 	Magic,
+	Elemental,
 };
 
 enum class MissileID : int8_t {
@@ -220,6 +221,7 @@ enum class SpellDataFlags : uint8_t {
 	Fire = static_cast<uint8_t>(MagicType::Fire),
 	Lightning = static_cast<uint8_t>(MagicType::Lightning),
 	Magic = static_cast<uint8_t>(MagicType::Magic),
+	Elemental = static_cast<uint8_t>(MagicType::Elemental),
 	Targeted = 1U << 2,
 	AllowedInTown = 1U << 3,
 };

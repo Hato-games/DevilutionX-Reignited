@@ -177,7 +177,7 @@ void DrawSpellBook(const Surface &out)
 
 				    if (lvl == 0 && spellType != SpellType::Skill)
 					{
-						PrintSBookStr(out, line1, _("Unusable"), UiFlags::AlignRight);
+						PrintSBookStr(out, line1, _("Unusable"));
 					}
 					else
 					{

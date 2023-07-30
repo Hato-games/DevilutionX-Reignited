@@ -201,9 +201,76 @@ int ProjectileTrapDamage(Missile &missile)
 	return currlevel + GenerateRnd(2 * currlevel);
 }
 
+bool applyMonsterHit(Monster& monster, const Player& player, const MissileData missileData, MissileID t, int dist, int dam, DamageType damageType, bool shift)
+{
+
+	if (missileData.isArrow() && damageType == DamageType::Physical) {
+		if (monster.data().monsterClass == MonsterClass::Demon && HasAnyOf(player._pIFlags, ItemSpecialEffect::TripleDemonDamage)) {
+			dam *= 3;
+		}
+		int damageRed = (dist * dist) / 2;
+		damageRed = clamp(damageRed, 0, 50);
+		dam = dam * (100 - damageRed);
+		dam = dam / 100;
+	}
+
+	if (!shift)
+		dam <<= 6;
+
+	int resistReduce = 0;
+
+	if (monster.isImmune(t, damageType)) {
+		resistReduce = 100;
+	}
+	if (monster.isResistant(t, damageType)) {
+		resistReduce = 50;
+	}
+
+	if (player._pSkillActiveId == SpellID::Aetherize) {
+		resistReduce -= 15 + player._pLevel / 5;
+	}
+	if (resistReduce == 100) {
+		return false;
+	}
+
+	if (resistReduce != 0) {
+		resistReduce = 100 - resistReduce;
+		dam = dam * resistReduce;
+		dam = dam / 100;
+	}
+
+	if (GenerateRnd(100) < player._pCriticalChance) {
+		int dmgAmp = 200;
+		if (player._pSkillActiveId == SpellID::Deadeye) {
+			dmgAmp += 10 + player._pLevel / 5;
+		}
+		dam = dam * dmgAmp;
+		dam = dam / 100;
+	}
+
+	if (&player == MyPlayer) {
+		int pierce = player.CalculateArmorPierce(monster.armorClass, true);
+		ApplyMonsterDamage(damageType, monster, dam, pierce);
+	}
+
+	if (monster.hitPoints >> 6 <= 0) {
+		M_StartKill(monster, player);
+	} else if (resistReduce == 100) {
+		monster.tag(player);
+		PlayEffect(monster, MonsterSound::Hit);
+	} else {
+		if (monster.mode != MonsterMode::Petrified && missileData.isArrow() && HasAnyOf(player._pIFlags, ItemSpecialEffect::Knockback))
+			M_GetKnockback(monster);
+		if (monster.type().type != MT_GOLEM)
+			M_StartHit(monster, player, dam);
+	}
+
+	return true;
+}
+
 bool MonsterMHit(int pnum, int monsterId, int mindam, int maxdam, int dist, MissileID t, DamageType damageType, bool shift)
 {
-	auto &monster = Monsters[monsterId];
+	Monster &monster = Monsters[monsterId];
 
 	if (!monster.isPossibleToHit())
 		return false;
@@ -248,77 +315,16 @@ bool MonsterMHit(int pnum, int monsterId, int mindam, int maxdam, int dist, Miss
 		dam = mindam + GenerateRnd(maxdam - mindam + 1);
 	}
 
-	if (missileData.isArrow() && damageType == DamageType::Physical)
+	if (damageType == DamageType::Elemental)
 	{
-		if (monster.data().monsterClass == MonsterClass::Demon && HasAnyOf(player._pIFlags, ItemSpecialEffect::TripleDemonDamage))
+		for (int i = 0; i < 3; i++)
 		{
-			dam *= 3;
+			applyMonsterHit(monster, player, missileData, t, dist, dam / 3, (DamageType)(i+1), shift);
 		}
-		int damageRed = (dist * dist) / 2;
-		damageRed = clamp(damageRed, 0, 50);
-		dam = dam * (100 - damageRed);
-		dam = dam / 100;
 	}
-	bool resist = monster.isResistant(t, damageType);
-
-
-	if (!shift)
-		dam <<= 6;
-
-	int resistReduce = 0;
-
-	if (monster.isImmune(t, damageType))
+	else
 	{
-		resistReduce = 100;
-	}
-	if (monster.isResistant(t, damageType))
-	{
-		resistReduce = 50;
-	}
-
-	if (player._pSkillActiveId == SpellID::Aetherize)
-	{
-		resistReduce -= 15 + player._pLevel / 5;
-	}
-	if (resistReduce == 100)
-	{
-		return false;
-	}
-
-	if (resistReduce != 0)
-	{
-		resistReduce = 100 - resistReduce;
-		dam = dam * resistReduce;
-		dam = dam / 100;
-	}
-
-	if(GenerateRnd(100) < player._pCriticalChance)
-	{
-		int dmgAmp = 200;
-		if (player._pSkillActiveId == SpellID::Deadeye)
-		{
-			dmgAmp += 10 +player._pLevel / 5;
-		}
-		dam = dam * dmgAmp;
-		dam = dam / 100;
-	}
-
-	if (&player == MyPlayer)
-	{
-		int pierce = player.CalculateArmorPierce(monster.armorClass, true);
-		ApplyMonsterDamage(damageType, monster, dam, pierce);
-	}
-
-	if (monster.hitPoints >> 6 <= 0) {
-		M_StartKill(monster, player);
-	} else if (resist) {
-		monster.tag(player);
-		PlayEffect(monster, MonsterSound::Hit);
-	} else {
-		if (monster.mode != MonsterMode::Petrified && missileData.isArrow() && HasAnyOf(player._pIFlags, ItemSpecialEffect::Knockback))
-			M_GetKnockback(monster);
-		if (monster.type().type != MT_GOLEM)
-			M_StartHit(monster, player, dam);
+		applyMonsterHit(monster, player, missileData, t, dist, dam, damageType, shift);
 	}
 
 	if (monster.activeForTicks == 0) {
@@ -872,7 +878,7 @@ std::string GetSpellDesc(SpellID spellId)
 		    Player &myPlayer = *MyPlayer;
 		    const int sl = myPlayer.GetSpellLevel(spellId);
 		    int dmg = 20 + sl;
-		    return fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "M.Dmg: {:d}% T.HP")), dmg);
+		    return fmt::format(fmt::runtime(_(/* TRANSLATORS: UI constraints, keep short please.*/ "M.Dmg:{:d}%T.HP")), dmg);
 		}
 	    case SpellID::HealOther:
 	    case SpellID::Healing:
@@ -901,6 +907,9 @@ std::string GetSpellDesc(SpellID spellId)
 		        case MagicType::Magic:
 			        dmgType = "M.";
 			        break;
+		        case MagicType::Elemental:
+			        dmgType = "E.";
+			        break;
 			}
 
 			if (spellId == SpellID::Golem)
@@ -908,7 +917,7 @@ std::string GetSpellDesc(SpellID spellId)
 			        dmgType = "P.";
 			}
 
-		    return dmgType + fmt::format(fmt::runtime(_("Dmg: {:d} - {:d}")), min, max);
+		    return dmgType + fmt::format(fmt::runtime(_("Dmg:{:d} - {:d}")), min, max);
 		}
 			 break;
 	}
@@ -968,6 +977,10 @@ std::string GetSpellTooltip(SpellID spellId)
 		}
 	    case SpellID::BoneSpirit:
 		    return "Consume 6 HitPoints";
+	    case SpellID::Elemental:
+		    return "Uses 3 elements";
+	    case SpellID::Fireball:
+		    return "Direct hit 2xDmg";
 	    case SpellID::FireWall:
 		{
 		    const int sl = myPlayer.GetSpellLevel(spellId);
@@ -1020,6 +1033,7 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::Flash:
 	case SpellID::BloodStar:
 	case SpellID::FlameWave:
+	case SpellID::Elemental:
 	{
 		MissileID missileId = SpellsData[(int)i].sMissiles[0];
 		if (SpellsData[(int)i].sMissiles[1] != MissileID::Null)
@@ -1090,12 +1104,6 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::Apocalypse:
 		*mind = myPlayer._pLevel;
 		*maxd = *mind * 6;
-		break;
-	case SpellID::Elemental:
-		*mind = ScaleSpellEffect(2 * myPlayer._pLevel + 4, sl);
-		/// BUGFIX: add here '*mind /= 2;'
-		*maxd = ScaleSpellEffect(2 * myPlayer._pLevel + 40, sl);
-		/// BUGFIX: add here '*maxd /= 2;'
 		break;
 	default:
 		break;
@@ -2664,10 +2672,12 @@ void AddElemental(Missile &missile, AddMissileParameter &parameter)
 		dst += parameter.midir;
 	}
 
-	Player &player = Players[missile._misource];
+	const Player &player = *missile.sourcePlayer();
 
-	int dmg = 2 * (player._pLevel + GenerateRndSum(10, 2)) + 4;
-	missile._midam = ScaleSpellEffect(dmg, missile._mispllvl) / 2;
+	const MissileData &missileData = GetMissileData(missile._mitype);
+	std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
+	int dmg = damage.first + GenerateRnd(damage.second - damage.first);
+	missile._midam = dmg;
 
 	UpdateMissileVelocity(missile, dst, 16);
 	SetMissDir(missile, GetDirection(missile.position.start, dst));

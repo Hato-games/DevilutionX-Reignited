@@ -31,6 +31,7 @@ enum class DamageType : uint8_t {
 	Lightning,
 	Magic,
 	Acid,
+	Elemental,
 };
 
 enum class MissileGraphicID : uint8_t {
@@ -124,6 +125,7 @@ enum class MissileDataFlags : uint8_t {
 	Lightning = static_cast<uint8_t>(DamageType::Lightning),
 	Magic = static_cast<uint8_t>(DamageType::Magic),
 	Acid = static_cast<uint8_t>(DamageType::Acid),
+	Elemental = static_cast<uint8_t>(DamageType::Elemental),
 	Arrow = 1 << 4,
 	Invisible = 1 << 5,
 };
