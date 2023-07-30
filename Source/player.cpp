@@ -399,8 +399,8 @@ void InitLevelChange(Player &player)
 	Player &myPlayer = *MyPlayer;
 
 	RemovePlrMissiles(player);
-	player.pManaShield = false;
-	player.pManaShieldDur = 0;
+	//player.pManaShield = false;
+	//player.pManaShieldDur = 0;
 	player.wReflections = 0;
 	if (&player != MyPlayer) {
 		// share info about your manashield when another player joins the level
