@@ -4309,6 +4309,31 @@ void DrawUniqueInfo(const Surface &out)
 
 	std::vector<std::string> texts;
 
+	if (curruitem._iClass == ICLASS_WEAPON) {
+		    if (curruitem._iMinDam == curruitem._iMaxDam) {
+			    if (curruitem._iMaxDur == DUR_INDESTRUCTIBLE)
+				texts.push_back(fmt::format(fmt::runtime(_("damage: {:d}  Indestructible")), curruitem._iMinDam));
+			    else
+				texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "damage: {:d}  Dur: {:d}/{:d}")), curruitem._iMinDam, curruitem._iDurability, curruitem._iMaxDur));
+		    } else {
+			    if (curruitem._iMaxDur == DUR_INDESTRUCTIBLE)
+				texts.push_back(fmt::format(fmt::runtime(_("damage: {:d}-{:d}  Indestructible")), curruitem._iMinDam, curruitem._iMaxDam));
+			    else
+				texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "damage: {:d}-{:d}  Dur: {:d}/{:d}")), curruitem._iMinDam, curruitem._iMaxDam, curruitem._iDurability, curruitem._iMaxDur));
+		    }
+	}
+
+	if (curruitem._iClass == ICLASS_ARMOR) {
+		    if (curruitem._iMaxDur == DUR_INDESTRUCTIBLE)
+			    texts.push_back(fmt::format(fmt::runtime(_("armor: {:d}  Indestructible")), curruitem._iAC));
+		    else
+			    texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "armor: {:d}  Dur: {:d}/{:d}")), curruitem._iAC, curruitem._iDurability, curruitem._iMaxDur));
+	}
+
+	if (curruitem._iMiscId == IMISC_STAFF && curruitem._iMaxCharges != 0) {
+		    texts.push_back(fmt::format(fmt::runtime(_("Charges: {:d}/{:d}")), curruitem._iCharges, curruitem._iMaxCharges));
+	}
+
 	switch (curruitem._iMagical)
 	{
 		case ITEM_QUALITY_RARE: 
@@ -4322,60 +4347,22 @@ void DrawUniqueInfo(const Surface &out)
 			{
 			    AddPanelString(_("Magic item"));
 			}
-		}
-		case ITEM_QUALITY_NORMAL:
-		{
 
-		    if (curruitem._iClass == ICLASS_WEAPON)
-			{
-				if (curruitem._iMinDam == curruitem._iMaxDam)
-				{
-					if (curruitem._iMaxDur == DUR_INDESTRUCTIBLE)
-						texts.push_back(fmt::format(fmt::runtime(_("damage: {:d}  Indestructible")), curruitem._iMinDam));
-					else
-						texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "damage: {:d}  Dur: {:d}/{:d}")), curruitem._iMinDam, curruitem._iDurability, curruitem._iMaxDur));
-				}
-				else
-				{
-					if (curruitem._iMaxDur == DUR_INDESTRUCTIBLE)
-						texts.push_back(fmt::format(fmt::runtime(_("damage: {:d}-{:d}  Indestructible")), curruitem._iMinDam, curruitem._iMaxDam));
-					else
-						texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "damage: {:d}-{:d}  Dur: {:d}/{:d}")), curruitem._iMinDam, curruitem._iMaxDam, curruitem._iDurability, curruitem._iMaxDur));
-				}
-			}
-
-			if (curruitem._iClass == ICLASS_ARMOR)
-			{
-				if (curruitem._iMaxDur == DUR_INDESTRUCTIBLE)
-				    texts.push_back(fmt::format(fmt::runtime(_("armor: {:d}  Indestructible")), curruitem._iAC));
-				else
-				    texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "armor: {:d}  Dur: {:d}/{:d}")), curruitem._iAC, curruitem._iDurability, curruitem._iMaxDur));
-			}
-
-			if (curruitem._iMiscId == IMISC_STAFF && curruitem._iMaxCharges != 0)
-			{
-			    texts.push_back(fmt::format(fmt::runtime(_("Charges: {:d}/{:d}")), curruitem._iCharges, curruitem._iMaxCharges));
-			}
-
-			if (curruitem._iIdentified)
-			{
+			if (curruitem._iIdentified) {
 			    if (curruitem._iPrePower != -1) {
-				    texts.push_back(PrintItemPower(curruitem._iPrePower, curruitem, 0).str().data());
+				texts.push_back(PrintItemPower(curruitem._iPrePower, curruitem, 0).str().data());
 			    }
 			    if (curruitem._iSufPower != -1) {
-				    texts.push_back(PrintItemPower(curruitem._iSufPower, curruitem, 1).str().data());
+				texts.push_back(PrintItemPower(curruitem._iSufPower, curruitem, 1).str().data());
 			    }
-			    if (curruitem._iMagical == ITEM_QUALITY_RARE && curruitem._iRarePower != -1)
-				{
-				    texts.push_back(PrintItemPower(curruitem._iRarePower, curruitem, 2).str().data());
+			    if (curruitem._iMagical == ITEM_QUALITY_RARE && curruitem._iRarePower != -1) {
+				texts.push_back(PrintItemPower(curruitem._iRarePower, curruitem, 2).str().data());
 			    }
-		    } else if (curruitem._iMagical != ITEM_QUALITY_NORMAL)
-			{
+		    } else if (curruitem._iMagical != ITEM_QUALITY_NORMAL) {
 			    texts.push_back("Not identified");
-			}
-
-
+		    }
 		}
+		case ITEM_QUALITY_NORMAL:
 			break;
 		case ITEM_QUALITY_UNIQUE:
 		{
