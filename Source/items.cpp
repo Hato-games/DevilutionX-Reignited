@@ -4388,6 +4388,7 @@ void DrawUniqueInfo(const Surface &out)
 			break;
 	}
 
+	std::string reqs = "";
 	uint8_t str = curruitem._iMinStr;
 	uint8_t dex = curruitem._iMinDex;
 	uint8_t mag = curruitem._iMinMag;
@@ -4399,12 +4400,11 @@ void DrawUniqueInfo(const Surface &out)
 			    text.append(fmt::format(fmt::runtime(_(" {:d} Mag")), mag));
 		    if (dex != 0)
 			    text.append(fmt::format(fmt::runtime(_(" {:d} Dex")), dex));
-
-		    texts.push_back("");
-		    texts.push_back(text);
+		    reqs = text;
 	}
 
-	rect.position.y += (10 - texts.size()) * 12;
+	int startPos = rect.position.y + 30;
+	rect.position.y += 30;
 	for (int i = 0; i < texts.size(); i++)
 	{
 		rect.position.y += 2 * 12;
@@ -4413,6 +4413,12 @@ void DrawUniqueInfo(const Surface &out)
 		{
 			    rect.position.y += 6;
 		}
+	}
+
+	if(!reqs.empty())
+	{
+		rect.position.y = startPos + 9 * 24;
+		DrawString(out, reqs, rect, UiFlags::ColorWhite | UiFlags::AlignCenter);
 	}
 
 
