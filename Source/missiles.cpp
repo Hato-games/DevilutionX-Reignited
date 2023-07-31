@@ -1279,16 +1279,22 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 	}
 
 	int dam;
-	if (mtype == MissileID::BoneSpirit) {
+	if (mtype == MissileID::BoneSpirit)
+	{
 		dam = player._pHitPoints / 3;
-	} else {
-		if (!shift) {
+	}
+	else
+	{
+		if (!shift)
+		{
 			dam = (mind << 6) + GenerateRnd(((maxd - mind) << 6) + 1);
 			if (monster == nullptr)
 				if (HasAnyOf(player._pIFlags, ItemSpecialEffect::HalfTrapDamage))
 					dam /= 2;
 			dam += player._pIGetHit * 64;
-		} else {
+		}
+		else
+		{
 			dam = mind + GenerateRnd(maxd - mind + 1);
 			if (monster == nullptr)
 				if (HasAnyOf(player._pIFlags, ItemSpecialEffect::HalfTrapDamage))
@@ -1309,13 +1315,26 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 		return true;
 	}
 
+
+
 	if (player._pSkillActiveId == SpellID::NobleSpirit) {
 		int dmgRed = 20 + player._pLevel / 5;
 		dam = dam * (100 - dmgRed);
 		dam = dam / 100;
 	}
 
-	if (resper > 0) {
+	int level = monster->level(sgGameInitInfo.nDifficulty) * 10;
+	int cr = level / 5;
+	int critRoll = GenerateRnd(1000);
+	if (critRoll < cr)
+	{
+		int critDmg = 150 + sgGameInitInfo.nDifficulty * 25;
+		dam = dam * critDmg;
+		dam = dam / 100;
+	}
+
+	if (resper > 0)
+	{
 		dam -= dam * resper / 100;
 
 		if (&player == MyPlayer) {

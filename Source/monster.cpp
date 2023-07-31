@@ -1200,6 +1200,16 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 	dam = dam * (100-player._pPhyResist);
 	dam = dam / 100;
 
+	int level = monster.level(sgGameInitInfo.nDifficulty)*10;
+	int cr = level / 3;
+	int critRoll = GenerateRnd(1000);
+	if (critRoll < cr)
+	{
+		int critDmg = 150 + sgGameInitInfo.nDifficulty * 25;
+		dam = dam * critDmg;
+		dam = dam / 100;
+	}
+
 	if (player._pSkillActiveId == SpellID::NobleSpirit)
 	{
 		int dmgRed = 20 + player._pLevel / 5;
