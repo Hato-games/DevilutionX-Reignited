@@ -3853,14 +3853,14 @@ bool DoOil(Player &player, int cii)
 	case IPL_TOHIT:
 	case IPL_TOHIT_CURSE:
 	{
-		return fmt::format(fmt::runtime(_("to hit: {:+d}% and critical {:+d}%")), item._iPLToHit, item._iPLToHit/4);
+		return fmt::format(fmt::runtime(_("{:+d}% to hit, {:+d}% crit")), item._iPLToHit, item._iPLToHit/4);
 	}
 	case IPL_DAMP:
 	case IPL_DAMP_CURSE:
 		return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% damage")), item._iPLDam);
 	case IPL_TOHIT_DAMP:
 	case IPL_TOHIT_DAMP_CURSE:
-		return fmt::format(fmt::runtime(_("to hit: {:+d}%, critical {:+d}%,\n {:+d}% damage")), item._iPLToHit, item._iPLToHit / 4, item._iPLDam);
+		return fmt::format(fmt::runtime(_("{:+d}% to hit, {:+d}% crit, {:+d}% dmg")), item._iPLToHit, item._iPLToHit / 4, item._iPLDam);
 	case IPL_ACP:
 	case IPL_ACP_CURSE:
 		return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% armor")), item._iPLAC);
@@ -4070,13 +4070,13 @@ bool DoOil(Player &player, int cii)
 	{
 		case IPL_TOHIT:
 	case IPL_TOHIT_CURSE:
-		    return fmt::format(fmt::runtime(_("to hit: {:+d}% and critical {:+d}%")), val1, val1 / 4);
+		    return fmt::format(fmt::runtime(_("{:+d}% to hit, {:+d}% crit")), val1, val1 / 4);
 		case IPL_DAMP:
 		case IPL_DAMP_CURSE:
 		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% damage")), val1);
 		case IPL_TOHIT_DAMP:
 	    case IPL_TOHIT_DAMP_CURSE:
-		    return fmt::format(fmt::runtime(_("to hit: {:+d}%, critical {:+d}%,\n {:+d}% damage")), val1, val1 / 4, val2);
+		    return fmt::format(fmt::runtime(_("{:+d}% to hit, {:+d}% crit, {:+d}% dmg")), val1, val1 / 4, val2);
 		case IPL_ACP:
 		case IPL_ACP_CURSE:
 		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% armor")), val1);
