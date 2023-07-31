@@ -3678,6 +3678,13 @@ void Player::RegenTick()
 		    }
 
 		    int hpRefill = _pMaxHP / (100 * 4); // 1.0% per second
+			if (_pSkillActiveId == SpellID::NobleSpirit)
+			{
+			    int increase = 100 + _pLevel * 2;
+			    hpRefill = hpRefill * increase;
+			    hpRefill = hpRefill  / 100;
+			}
+
 		    _pHitPoints = std::min(_pHitPoints + hpRefill, _pMaxHP);
 		    _pHPBase = std::min(_pHPBase + hpRefill, _pMaxHPBase);
 

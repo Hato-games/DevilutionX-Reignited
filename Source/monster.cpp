@@ -1212,7 +1212,7 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 
 	if (player._pSkillActiveId == SpellID::NobleSpirit)
 	{
-		int dmgRed = 20 + player._pLevel / 5;
+		int dmgRed = 25 + player._pLevel / 2;
 		dam = dam * (100 - dmgRed);
 		dam = dam / 100;
 	}
@@ -4576,7 +4576,7 @@ void SpawnGolem(Player &player, Monster &golem, Point position, Missile &missile
 
 	golem.maxHitPoints = ((100 + missile._mispllvl * 5 + player._pMaxHP / 2) * (100 + player.GetSpellPower())) / 100;
 	golem.hitPoints = golem.maxHitPoints;
-	golem.armorClass = ((25 + player._pArmorClass / 4) * (100 + player.GetSpellPower())) / 100;
+	golem.armorClass = ((25 + missile._mispllvl + player._pIBonusAC / 4) * (100 + player.GetSpellPower())) / 100;
 	golem.toHit = 50 + missile._mispllvl * 2 + player.GetWeaponToHit() / 4;
 
 	const MissileData &missileData = GetMissileData(missile._mitype);

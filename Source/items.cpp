@@ -2796,11 +2796,6 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 		vadd -= 2 * player._pLevel;
 	}
 
-	if(player._pSkillActiveId == SpellID::NobleSpirit)
-	{
-		btohit += 20 + player._pLevel / 5;
-	}
-
 	player._pIMinDam = mind;
 	player._pIMaxDam = maxd;
 	player._pIAC = tac;

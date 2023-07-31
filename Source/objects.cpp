@@ -1759,7 +1759,7 @@ void UpdateBurningCrossDamage(Object &cross)
 
 	int dam = damage[leveltype - 1];
 	if (myPlayer._pSkillActiveId == SpellID::NobleSpirit) {
-		int dmgRed = 20 + myPlayer._pLevel / 2;
+		int dmgRed = 25 + myPlayer._pLevel / 2;
 		dam = dam * (100 - dmgRed);
 		dam = dam / 100;
 	}

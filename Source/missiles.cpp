@@ -938,9 +938,9 @@ std::string GetSpellTooltip(SpellID spellId)
 	{
 		case SpellID::NobleSpirit:
 		{
-		    int tohit = 20 + myPlayer._pLevel / 5;
-		    int dmgRed = 20 + myPlayer._pLevel / 5;
-		    return fmt::format(fmt::runtime(_("+{:d}%ToHit +{:d}%DmgRed")), tohit, dmgRed);
+		    int regen = 100 + myPlayer._pLevel * 2;
+		    int dmgRed = 25 + myPlayer._pLevel / 2;
+		    return fmt::format(fmt::runtime(_("+{:d}%HpReg, +{:d}%DmgRed")), regen, dmgRed);
 		}
 	    case SpellID::Deadeye:
 		{
@@ -1002,7 +1002,7 @@ std::string GetSpellTooltip(SpellID spellId)
 		    const int sl = myPlayer.GetSpellLevel(spellId);
 		    int hp = ((100 + sl * 5 + myPlayer._pMaxHP / 2) * (100+myPlayer.GetSpellPower())) / 100;
 		    hp = hp >> 6;
-		    int ac = ((25 + myPlayer._pArmorClass / 4) * (100+myPlayer.GetSpellPower())) / 100;
+		    int ac = ((25 + sl + myPlayer._pIBonusAC / 4) * (100 + myPlayer.GetSpellPower())) / 100;
 		    int th = 50 + sl * 2 + myPlayer.GetWeaponToHit() / 4;
 		    return fmt::format(fmt::runtime(_("HP:{:d} AC:{:d} TH:{:d}%")), hp, ac, th);
 	    }
@@ -1038,6 +1038,7 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::BloodStar:
 	case SpellID::FlameWave:
 	case SpellID::Elemental:
+	case SpellID::Golem:
 	{
 		MissileID missileId = SpellsData[(int)i].sMissiles[0];
 		if (SpellsData[(int)i].sMissiles[1] != MissileID::Null)
@@ -1100,10 +1101,6 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::RuneOfNova:
 		*mind = ScaleSpellEffect((myPlayer._pLevel + 5) / 2, sl) * 5;
 		*maxd = ScaleSpellEffect((myPlayer._pLevel + 30) / 2, sl) * 5;
-		break;
-	case SpellID::Golem:
-		*mind = 11;
-		*maxd = 17;
 		break;
 	case SpellID::Apocalypse:
 		*mind = myPlayer._pLevel;
@@ -1318,7 +1315,7 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 
 
 	if (player._pSkillActiveId == SpellID::NobleSpirit) {
-		int dmgRed = 20 + player._pLevel / 5;
+		int dmgRed = 25 + player._pLevel / 2;
 		dam = dam * (100 - dmgRed);
 		dam = dam / 100;
 	}
