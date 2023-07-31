@@ -1323,15 +1323,18 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 		dam = dam / 100;
 	}
 
-	int level = monster->level(sgGameInitInfo.nDifficulty) * 10;
-	int cr = level / 5;
-	int critRoll = GenerateRnd(1000);
-	if (critRoll < cr)
+	if (monster != nullptr)
 	{
-		int critDmg = 150 + sgGameInitInfo.nDifficulty * 25;
-		dam = dam * critDmg;
-		dam = dam / 100;
+		int level = monster->level(sgGameInitInfo.nDifficulty) * 10;
+		int cr = level / 5;
+		int critRoll = GenerateRnd(1000);
+		if (critRoll < cr) {
+			int critDmg = 150 + sgGameInitInfo.nDifficulty * 25;
+			dam = dam * critDmg;
+			dam = dam / 100;
+		}
 	}
+
 
 	if (resper > 0)
 	{
