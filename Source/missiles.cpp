@@ -201,7 +201,7 @@ int ProjectileTrapDamage(Missile &missile)
 	return currlevel + GenerateRnd(2 * currlevel);
 }
 
-bool applyMonsterHit(Monster& monster, const Player& player, const MissileData missileData, MissileID t, int dist, int dam, DamageType damageType, bool shift)
+bool applyMonsterHit(Monster& monster, const Player& player, const MissileData missileData, MissileID missileId, int dist, int dam, DamageType damageType, bool shift)
 {
 
 	if (missileData.isArrow() && damageType == DamageType::Physical) {
@@ -219,17 +219,24 @@ bool applyMonsterHit(Monster& monster, const Player& player, const MissileData m
 
 	int resistReduce = 0;
 
-	if (monster.isImmune(t, damageType)) {
+	if (monster.isImmune(missileId, damageType)) {
 		resistReduce = 100;
 	}
-	if (monster.isResistant(t, damageType)) {
+	if (monster.isResistant(missileId, damageType)) {
 		resistReduce = 50;
 	}
 
-	if (player._pSkillActiveId == SpellID::Aetherize) {
+	if (player._pSkillActiveId == SpellID::Aetherize)
+	{
 		resistReduce -= 15 + player._pLevel / 5;
 	}
-	if (resistReduce == 100) {
+
+	if (missileId == MissileID::ApocalypseBoom)
+	{
+		resistReduce -= 25;
+	}
+
+	if (resistReduce >= 100) {
 		return false;
 	}
 
@@ -1006,6 +1013,8 @@ std::string GetSpellTooltip(SpellID spellId)
 		    int th = 50 + sl * 2 + myPlayer.GetWeaponToHit() / 4;
 		    return fmt::format(fmt::runtime(_("HP:{:d} AC:{:d} TH:{:d}%")), hp, ac, th);
 	    }
+	    case SpellID::Apocalypse:
+		    return "Ignores 25% Ele Res";
 	}
 
 	return "";
@@ -1039,6 +1048,8 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 	case SpellID::FlameWave:
 	case SpellID::Elemental:
 	case SpellID::Golem:
+	case SpellID::Apocalypse:
+	case SpellID::Nova:
 	{
 		MissileID missileId = SpellsData[(int)i].sMissiles[0];
 		if (SpellsData[(int)i].sMissiles[1] != MissileID::Null)
@@ -1095,16 +1106,11 @@ void GetDamageAmt(SpellID i, int *mind, int *maxd)
 		*mind = ScaleSpellEffect(base, sl);
 		*maxd = ScaleSpellEffect(base + 36, sl);
 	} break;
-	case SpellID::Nova:
 	case SpellID::Immolation:
 	case SpellID::RuneOfImmolation:
 	case SpellID::RuneOfNova:
 		*mind = ScaleSpellEffect((myPlayer._pLevel + 5) / 2, sl) * 5;
 		*maxd = ScaleSpellEffect((myPlayer._pLevel + 30) / 2, sl) * 5;
-		break;
-	case SpellID::Apocalypse:
-		*mind = myPlayer._pLevel;
-		*maxd = *mind * 6;
 		break;
 	default:
 		break;
@@ -2891,6 +2897,8 @@ void AddTrapDisarm(Missile &missile, AddMissileParameter & /*parameter*/)
 void AddApocalypse(Missile &missile, AddMissileParameter & /*parameter*/)
 {
 	Player &player = Players[missile._misource];
+
+	player._apocalipseCooldownLeft = 20 * 60;//1 min cooldown
 
 	missile.var1 = 8;
 	missile.var2 = std::max(missile.position.start.y - 8, 1);

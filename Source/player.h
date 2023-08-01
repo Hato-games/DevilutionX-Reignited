@@ -299,6 +299,8 @@ struct Player {
 	SpellID _pSkillActiveId = SpellID::Null;
 	int _pSkillCooldown = 0;
 	int _pSkillDurationLeft = 0;
+
+	short _apocalipseCooldownLeft = 0;
 	/**
 	 * @brief Contains Information for current Animation
 	 */

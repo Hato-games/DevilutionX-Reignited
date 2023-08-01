@@ -582,7 +582,9 @@ void LoadPlayer(LoadHelper& file, Player& player)
 	player._pSkillActiveId = (SpellID)file.NextLE<int8_t>();
 	player._pSkillCooldown = file.NextLE<int32_t>();
 	player._pSkillDurationLeft = file.NextLE<int32_t>();
-	file.Skip(14-9); // Available bytes
+	player._apocalipseCooldownLeft = file.NextLE<int16_t>();
+	
+	file.Skip(14-11); // Available bytes
 
 
 	player.pDiabloKillLevel = file.NextLE<uint32_t>();
@@ -1407,7 +1409,8 @@ void SavePlayer(SaveHelper &file, const Player &player)
 	file.WriteLE<uint8_t>((int8_t)player._pSkillActiveId);
 	file.WriteLE<int32_t>(player._pSkillCooldown);
 	file.WriteLE<int32_t>(player._pSkillDurationLeft);
-	file.Skip(14-9); // Available bytes
+	file.WriteLE<int16_t>(player._apocalipseCooldownLeft);
+	file.Skip(14-11); // Available bytes
 
 	file.WriteLE<uint32_t>(player.pDiabloKillLevel);
 	file.WriteLE<uint32_t>(sgGameInitInfo.nDifficulty);

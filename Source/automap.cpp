@@ -1090,6 +1090,15 @@ void DrawBuffs(const Surface &out)
 		buffs.push_back(buffClassCD);
 	}
 
+	if (player._apocalipseCooldownLeft > 0)
+	{
+		BuffInfo buffApo;
+		buffApo.spellID = SpellID::Apocalypse;
+		buffApo.duration = player._apocalipseCooldownLeft;
+		buffApo.spellType = SpellType::Invalid;
+		buffs.push_back(buffApo);
+	}
+
 	for (int i = 0; i < buffs.size(); i++)
 	{
 		SetSpellTrans(buffs[i].spellType);

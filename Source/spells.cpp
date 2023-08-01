@@ -210,6 +210,11 @@ SpellCheckResult CheckSpell(const Player &player, SpellID sn, SpellType st, bool
 		return SpellCheckResult::Fail_NoMana;
 	}
 
+	if (sn == SpellID::Apocalypse && player._apocalipseCooldownLeft > 0)
+	{
+		return SpellCheckResult::Fail_Cooldown;
+	}
+
 	return SpellCheckResult::Success;
 }
 

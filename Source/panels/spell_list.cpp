@@ -91,7 +91,8 @@ void DrawSpell(const Surface &out)
 		spl = SpellID::Null;
 	}
 
-	if (st == SpellType::Spell) {
+	if (st == SpellType::Spell)
+	{
 		int tlvl = myPlayer.GetSpellLevel(spl);
 		if (CheckSpell(*MyPlayer, spl, st, true) != SpellCheckResult::Success)
 			st = SpellType::Invalid;

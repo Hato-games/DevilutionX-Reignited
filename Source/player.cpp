@@ -3702,6 +3702,10 @@ void Player::RegenTick()
 	{
 		_pSkillCooldown--;
 	}
+	if (_apocalipseCooldownLeft > 0)
+	{
+		_apocalipseCooldownLeft--;
+	}
 }
 
 void Player::EnableSkill(SpellID sn)
