@@ -3700,9 +3700,46 @@ void MonsterDeath(Monster &monster, Direction md, bool sendmsg)
 	MonsterKillCounts[monster.type().type]++;
 	monster.hitPoints = 0;
 	monster.flags &= ~MFLAG_HIDDEN;
-	SetRndSeed(monster.rndItemSeed);
 
-	SpawnLoot(monster, sendmsg);
+	int dropChance = 100;//Each 100 is a guaranted item drop, modulo from it is chance for last item
+	if (monster.type().type == MT_DIABLO)
+	{
+		dropChance = 300;//Diablo drop at least 3 items
+	}
+
+	if (monster.isUnique())
+	{
+		dropChance += sgGameInitInfo.nDifficulty * 75;
+		if (gbIsMultiplayer)
+		{
+			dropChance += 100;
+		}
+	}
+
+	if (monster.type().type == MT_DIABLO)
+	{
+		SetRndSeed(monster.rndItemSeed);
+		int apocalypseChance = sgGameInitInfo.nDifficulty+1;
+		if (apocalypseChance < GenerateRnd(100))
+		{
+			dropChance -= 100;
+			CreateSpellBook(monster.position.tile, SpellID::Apocalypse, sendmsg, false, true);
+		}
+	}
+
+	int itemCount = 0;
+	for(; dropChance >= 100; dropChance -= 100)
+	{
+		SetRndSeed(monster.rndItemSeed + itemCount);
+		SpawnLoot(monster, sendmsg);
+		itemCount++;
+	}
+
+	if (dropChance > 0 && GenerateRnd(100) < dropChance)
+	{
+		SetRndSeed(monster.rndItemSeed + itemCount);
+		SpawnLoot(monster, sendmsg);
+	}
 
 	if (monster.type().type == MT_DIABLO)
 		DiabloDeath(monster, true);
