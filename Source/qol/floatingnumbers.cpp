@@ -105,6 +105,15 @@ void AddFloatingNumber(Point pos, Displacement offset, DamageType type, int valu
 		endOffset = goodAngles[rand() % 3];
 	} else if (*sgOptions.Gameplay.enableFloatingNumbers == FloatingNumbers::Vertical) {
 		endOffset = goodAngles[0];
+
+		switch (type)
+		{
+			case DamageType::Magic:
+			case DamageType::Lightning:
+			case DamageType::Fire:
+				offset.deltaX += 7 - (int)type*7;
+				break;
+		}
 	}
 
 	if (damageToPlayer)

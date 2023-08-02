@@ -1014,7 +1014,7 @@ std::string GetSpellTooltip(SpellID spellId)
 		    return fmt::format(fmt::runtime(_("HP:{:d} AC:{:d} TH:{:d}%")), hp, ac, th);
 	    }
 	    case SpellID::Apocalypse:
-		    return "Ignores 25% Ele Res";
+		    return "CD:1m Ignores 25% Res";
 	}
 
 	return "";

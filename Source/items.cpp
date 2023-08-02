@@ -4961,12 +4961,12 @@ int ItemNoFlippy()
 	return r;
 }
 
-void CreateSpellBook(Point position, SpellID ispell, bool sendmsg, bool delta, bool ignoreLvl)
+void CreateSpellBook(Point position, SpellID ispell, bool sendmsg, bool delta, bool allowApocalypse)
 {
 	int lvl = currlevel;
-	if (ignoreLvl)
+	if (allowApocalypse)
 	{
-		lvl = 99;
+		lvl = 100;
 	}
 	if (gbIsHellfire) {
 		lvl = GetSpellBookLevel(ispell) + 1;
