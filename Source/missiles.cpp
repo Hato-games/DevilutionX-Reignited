@@ -436,7 +436,7 @@ bool Plr2PlrMHit(const Player &player, int p, int mindam, int maxdam, int dist, 
 
 	if (!missileData.isArrow())
 		dam /= 2;
-	if (resper > 0) {
+	if (resper != 0) {
 		dam -= (dam * resper) / 100;
 		if (&player == MyPlayer)
 			NetSendCmdDamage(true, p, dam, damageType);
@@ -1242,6 +1242,10 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 		minhit = 30;
 	hper = std::max(hper, minhit);
 
+	if (hit >= hper) {
+		return false;
+	}
+
 	int blk = 100;
 	if ((player._pmode == PM_STAND || player._pmode == PM_ATTACK) && player._pBlockFlag) {
 		blk = GenerateRnd(100);
@@ -1257,29 +1261,18 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 		blkper -= (monster->level(sgGameInitInfo.nDifficulty) - player._pLevel) * 2;
 	blkper = clamp(blkper, 0, 100);
 
-	int8_t resper;
-	switch (damageType) {
-	case DamageType::Physical:
-		resper = player._pPhyResist;
-		break;
-	case DamageType::Fire:
-		resper = player._pFireResist;
-		break;
-	case DamageType::Lightning:
-		resper = player._pLghtResist;
-		break;
-	case DamageType::Magic:
-	case DamageType::Acid:
-		resper = player._pMagResist;
-		break;
-	default:
-		resper = 0;
-		break;
+	if (blk < blkper)
+	{
+		Direction dir = player._pdir;
+		if (monster != nullptr) {
+			dir = GetDirection(player.position.tile, monster->position.tile);
+		}
+		*blocked = true;
+		StartPlrBlock(player, dir);
+		return true;
 	}
 
-	if (hit >= hper) {
-		return false;
-	}
+
 
 	int dam;
 	if (mtype == MissileID::BoneSpirit)
@@ -1308,24 +1301,6 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 		dam = std::max(dam, 64);
 	}
 
-	if ((resper <= 0 || gbIsHellfire) && blk < blkper) {
-		Direction dir = player._pdir;
-		if (monster != nullptr) {
-			dir = GetDirection(player.position.tile, monster->position.tile);
-		}
-		*blocked = true;
-		StartPlrBlock(player, dir);
-		return true;
-	}
-
-
-
-	if (player._pSkillActiveId == SpellID::NobleSpirit) {
-		int dmgRed = 25 + player._pLevel / 2;
-		dam = dam * (100 - dmgRed);
-		dam = dam / 100;
-	}
-
 	if (monster != nullptr)
 	{
 		int level = monster->level(sgGameInitInfo.nDifficulty) * 10;
@@ -1338,10 +1313,95 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 		}
 	}
 
+	if (player._pSkillActiveId == SpellID::NobleSpirit) {
+		int dmgRed = 25 + player._pLevel / 2;
+		dam = dam * (100 - dmgRed);
+		dam = dam / 100;
+	}
 
-	if (resper > 0)
+	
+
+
+	if (damageType == DamageType::Elemental)
 	{
-		dam -= dam * resper / 100;
+		for (int i = 0; i < 3; i++)
+		{
+			int damage = dam / 3;
+			int8_t resper;
+			switch ((DamageType)((int)DamageType::Fire + i))
+			{
+			case DamageType::Physical:
+				resper = player._pPhyResist;
+				break;
+			case DamageType::Fire:
+				resper = player._pFireResist;
+				break;
+			case DamageType::Lightning:
+				resper = player._pLghtResist;
+				break;
+			case DamageType::Magic:
+			case DamageType::Acid:
+				resper = player._pMagResist;
+				break;
+			default:
+				resper = 0;
+				break;
+			}
+
+			if (mtype == MissileID::DiabloApocalypseBoom)
+			{
+				switch (sgGameInitInfo.nDifficulty)
+				{
+					case 1:
+						resper -= 10;
+						break;
+					case 2:
+						resper -= 25;
+						break;
+				}
+			}
+
+			if (resper != 0)
+			{
+				damage -= damage * resper / 100;
+			}
+
+			if (&player == MyPlayer) {
+				ApplyPlrDamage((DamageType)((int)DamageType::Fire + i), player, 0, 0, damage, deathReason);
+			}
+
+			if (player._pHitPoints >> 6 > 0) {
+				player.Say(HeroSpeech::ArghClang);
+				StartPlrHit(player, damage, false);
+			}
+		}
+
+	}
+	else
+	{
+		int8_t resper;
+		switch (damageType) {
+		case DamageType::Physical:
+			resper = player._pPhyResist;
+			break;
+		case DamageType::Fire:
+			resper = player._pFireResist;
+			break;
+		case DamageType::Lightning:
+			resper = player._pLghtResist;
+			break;
+		case DamageType::Magic:
+		case DamageType::Acid:
+			resper = player._pMagResist;
+			break;
+		default:
+			resper = 0;
+			break;
+		}
+
+		if (resper != 0) {
+			dam -= dam * resper / 100;
+		}
 
 		if (&player == MyPlayer) {
 			ApplyPlrDamage(damageType, player, 0, 0, dam, deathReason);
@@ -1349,17 +1409,10 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 
 		if (player._pHitPoints >> 6 > 0) {
 			player.Say(HeroSpeech::ArghClang);
+			StartPlrHit(player, dam, false);
 		}
-		return true;
 	}
 
-	if (&player == MyPlayer) {
-		ApplyPlrDamage(damageType, player, 0, 0, dam, deathReason);
-	}
-
-	if (player._pHitPoints >> 6 > 0) {
-		StartPlrHit(player, dam, false);
-	}
 
 	return true;
 }
@@ -3078,7 +3131,8 @@ void AddDiabloApocalypse(Missile &missile, AddMissileParameter & /*parameter*/)
 		if (!LineClearMissile(missile.position.start, player.position.future))
 			continue;
 
-		AddMissile({ 0, 0 }, player.position.future, Direction::South, MissileID::DiabloApocalypseBoom, missile._micaster, missile._misource, missile._midam, 0);
+		missile._midam += GenerateRnd(missile._midam/2);
+		AddMissile({ 0, 0 }, player.position.future, Direction::South, MissileID::DiabloApocalypseBoom, missile._micaster, missile._misource, missile._midam*3, 0);
 	}
 	missile._miDelFlag = true;
 }

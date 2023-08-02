@@ -3403,7 +3403,7 @@ void SpawnItem(Monster &monster, Point position, bool sendmsg, bool spawn /*= fa
 		if (uniqueItem != nullptr && sendmsg)
 			NetSendCmdPItem(false, CMD_DROPITEM, uniqueItem->position, *uniqueItem);
 		return;
-	} else if (monster.isUnique() || dropsSpecialTreasure) {
+	} else if (monster.isUnique() || dropsSpecialTreasure || monster.type().type == MT_DIABLO) {
 		// Unqiue monster is killed => use better item base (for example no gold)
 		idx = RndUItem(&monster);
 	} else if (dropBrain && !gbIsMultiplayer) {
