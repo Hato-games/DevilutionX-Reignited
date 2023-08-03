@@ -851,10 +851,10 @@ void DiabloDeath(Monster &diablo, bool sendmsg)
 	diablo.var3 = ViewPosition.x << 16;
 	diablo.position.temp.x = ViewPosition.y << 16;
 	diablo.position.temp.y = (int)((diablo.var3 - (diablo.position.tile.x << 16)) / (double)dist);
-	if (!gbIsMultiplayer) {
-		Player &myPlayer = *MyPlayer;
-		myPlayer.pDiabloKillLevel = std::max(myPlayer.pDiabloKillLevel, static_cast<uint8_t>(sgGameInitInfo.nDifficulty + 1));
-	}
+
+	Player &myPlayer = *MyPlayer;
+	myPlayer.pDiabloKillLevel = std::max(myPlayer.pDiabloKillLevel, static_cast<uint8_t>(sgGameInitInfo.nDifficulty + 1));
+	
 }
 
 void SpawnLoot(Monster &monster, bool sendmsg)
@@ -1853,7 +1853,7 @@ void AiAvoidance(Monster &monster)
 	monster.checkStandAnimationIsLoaded(md);
 }
 
-MissileID GetMissileType(MonsterAIID ai)
+MissileID GetMissileType(MonsterAIID ai, int specialAbilityCooldown=0, bool isFar=false)
 {
 	switch (ai) {
 	case MonsterAIID::GoatMelee:
@@ -1881,7 +1881,30 @@ MissileID GetMissileType(MonsterAIID ai)
 	case MonsterAIID::Storm:
 		return MissileID::ThinLightningControl;
 	case MonsterAIID::Diablo:
-		return MissileID::DiabloApocalypse;
+	{
+
+		int rollRange = 4;
+		if (specialAbilityCooldown <= 0)
+		{
+			rollRange++; 
+		}
+		MissileID missiles[5] = {
+			MissileID::Fireball,
+			MissileID::BloodStar,
+			MissileID::ThinLightningControl,
+			MissileID::Nova,
+			MissileID::DiabloApocalypse
+		};
+
+		int val = GenerateRnd(rollRange);
+
+		if (missiles[val] == MissileID::Nova && !isFar)
+		{
+			return MissileID::FlameWave;
+		}
+		
+		return missiles[val];
+	}
 	case MonsterAIID::BoneDemon:
 		return MissileID::BlueFlare2;
 	default:
@@ -1908,7 +1931,7 @@ void AiRanged(Monster &monster)
 		}
 		if (monster.mode == MonsterMode::Stand) {
 			if (LineClearMissile(monster.position.tile, monster.enemyPosition)) {
-				MissileID missileType = GetMissileType(monster.ai);
+				MissileID missileType = GetMissileType(monster.ai, monster.diabloApocalypseCdLeft);
 				if (monster.ai == MonsterAIID::AcidUnique)
 					StartRangedSpecialAttack(monster, missileType, 0);
 				else
@@ -1932,14 +1955,18 @@ void AiRangedAvoidance(Monster &monster)
 		return;
 	}
 
+
 	Direction md = GetDirection(monster.position.tile, monster.position.last);
 	if (IsAnyOf(monster.ai, MonsterAIID::Magma, MonsterAIID::Storm, MonsterAIID::BoneDemon) && monster.activeForTicks < UINT8_MAX)
 		MonstCheckDoors(monster);
 	int lessmissiles = (monster.ai == MonsterAIID::Acid) ? 1 : 0;
-	int dam = (monster.ai == MonsterAIID::Diablo) ? 40 : 0;
-	MissileID missileType = GetMissileType(monster.ai);
-	int v = GenerateRnd(10000);
+	int dam = (monster.ai == MonsterAIID::Diablo) ? (monster.minDamage + GenerateRnd(monster.maxDamage - monster.minDamage)) : 0;
+
 	unsigned distanceToEnemy = monster.distanceToEnemy();
+
+	MissileID missileType = GetMissileType(monster.ai, monster.diabloApocalypseCdLeft, distanceToEnemy >= 2);
+	int v = GenerateRnd(10000);
+	
 	if (distanceToEnemy >= 2 && monster.activeForTicks == UINT8_MAX && dTransVal[monster.position.tile.x][monster.position.tile.y] == dTransVal[monster.enemyPosition.x][monster.enemyPosition.y]) {
 		if (monster.goal == MonsterGoal::Move || (distanceToEnemy >= 3 && FlipCoin(4 << lessmissiles))) {
 			if (monster.goal != MonsterGoal::Move) {
@@ -1947,24 +1974,41 @@ void AiRangedAvoidance(Monster &monster)
 				monster.goalVar2 = GenerateRnd(2);
 			}
 			monster.goal = MonsterGoal::Move;
+
+
 			if (monster.goalVar1++ >= static_cast<int>(2 * distanceToEnemy) && DirOK(monster, md)) {
 				monster.goal = MonsterGoal::Normal;
-			} else if (v < (500 * (monster.intelligence + 1) >> lessmissiles)
-			    && (LineClearMissile(monster.position.tile, monster.enemyPosition))) {
+			}
+			else if (v < (500 * (monster.intelligence + 1) >> lessmissiles)
+			    && (LineClearMissile(monster.position.tile, monster.enemyPosition)))
+			{
 				StartRangedSpecialAttack(monster, missileType, dam);
-			} else {
+				if (missileType == MissileID::DiabloApocalypse)
+				{
+					monster.diabloApocalypseCdLeft = 20 * 30;
+				}
+			}
+			else
+			{
 				RoundWalk(monster, md, &monster.goalVar2);
 			}
 		}
-	} else {
+	}
+	else
+	{
 		monster.goal = MonsterGoal::Normal;
 	}
 	if (monster.goal == MonsterGoal::Normal) {
 		if (((distanceToEnemy >= 3 && v < ((500 * (monster.intelligence + 2)) >> lessmissiles))
 		        || v < ((500 * (monster.intelligence + 1)) >> lessmissiles))
-		    && LineClearMissile(monster.position.tile, monster.enemyPosition)) {
+		    && LineClearMissile(monster.position.tile, monster.enemyPosition))
+		{
 			StartRangedSpecialAttack(monster, missileType, dam);
-		} else if (distanceToEnemy >= 2) {
+			if (missileType == MissileID::DiabloApocalypse) {
+				monster.diabloApocalypseCdLeft = 20 * 30;
+			}
+		}
+		else if (distanceToEnemy >= 2) {
 			v = GenerateRnd(100);
 			if (v < 1000 * (monster.intelligence + 5)
 			    || (IsMonsterModeMove(static_cast<MonsterMode>(monster.var1))
@@ -4013,6 +4057,12 @@ void ProcessMonsters()
 			SetRndSeed(monster.aiSeed);
 			monster.aiSeed = AdvanceRndSeed();
 		}
+
+		if (monster.diabloApocalypseCdLeft > 0)
+		{
+			monster.diabloApocalypseCdLeft--;
+		}
+
 		if (monster.hitPoints < monster.maxHitPoints && monster.hitPoints >> 6 > 0) {
 			if (monster.level(sgGameInitInfo.nDifficulty) > 1) {
 				monster.hitPoints += monster.level(sgGameInitInfo.nDifficulty) / 2;

@@ -651,7 +651,7 @@ void LoadMonster(LoadHelper *file, Monster &monster)
 	monster.isInvalid = file->NextBool32();
 	monster.var1 = file->NextLENarrow<int32_t, int16_t>();
 	monster.var2 = file->NextLENarrow<int32_t, int16_t>();
-	monster.var3 = file->NextLENarrow<int32_t, int8_t>();
+	monster.var3 = file->NextLENarrow<int32_t, int16_t>();
 	monster.position.temp.x = file->NextLENarrow<int32_t, WorldTileCoord>();
 	monster.position.temp.y = file->NextLENarrow<int32_t, WorldTileCoord>();
 	file->Skip<int32_t>(2); // skip offset2;
@@ -665,7 +665,10 @@ void LoadMonster(LoadHelper *file, Monster &monster)
 	monster.flags = file->NextLE<uint32_t>();
 	monster.activeForTicks = file->NextLE<uint8_t>();
 	file->Skip(3); // Alignment
-	file->Skip(4); // Unused
+
+	monster.diabloApocalypseCdLeft = file->NextLE<uint16_t>();
+	file->Skip(2); // Unused
+	
 	monster.position.last.x = file->NextLE<int32_t>();
 	monster.position.last.y = file->NextLE<int32_t>();
 	monster.rndItemSeed = file->NextLE<uint32_t>();
@@ -1488,8 +1491,10 @@ void SaveMonster(SaveHelper *file, Monster &monster)
 	file->Skip(2); // Alignment
 	file->WriteLE<uint32_t>(monster.flags);
 	file->WriteLE<uint8_t>(monster.activeForTicks);
-	file->Skip(3); // Alignment
-	file->Skip(4); // Unused
+	file->Skip(3); // Alignm
+
+	file->WriteLE<uint16_t>(monster.diabloApocalypseCdLeft);
+	file->Skip(2); // Unused
 	file->WriteLE<int32_t>(monster.position.last.x);
 	file->WriteLE<int32_t>(monster.position.last.y);
 	file->WriteLE<uint32_t>(monster.rndItemSeed);

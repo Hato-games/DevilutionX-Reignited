@@ -1350,15 +1350,10 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 
 			if (mtype == MissileID::DiabloApocalypseBoom)
 			{
-				switch (sgGameInitInfo.nDifficulty)
-				{
-					case 1:
-						resper -= 10;
-						break;
-					case 2:
-						resper -= 25;
-						break;
-				}
+				//Less resistances you have, more penetrates
+				int multiplier = 5 - sgGameInitInfo.nDifficulty;
+				int penValue = (75 - resper) / multiplier + 25;
+				resper -= penValue;
 			}
 
 			if (resper != 0)
@@ -2165,9 +2160,20 @@ void AddNovaBall(Missile &missile, AddMissileParameter &parameter)
 	UpdateMissileVelocity(missile, parameter.dst, 16);
 	missile._miAnimFrame = GenerateRnd(8) + 1;
 	missile._mirange = 255;
-	const Point position { missile._misource < 0 ? missile.position.start : Point(Players[missile._misource].position.tile) };
-	missile.var1 = position.x;
-	missile.var2 = position.y;
+
+	if (missile._micaster == TARGET_MONSTERS)
+	{
+		const Point position { missile._misource < 0 ? missile.position.start : Point(Players[missile._misource].position.tile) };
+		missile.var1 = position.x;
+		missile.var2 = position.y;
+	}
+	else
+	{
+		const Point position { missile._misource < 0 ? missile.position.start : Point(Monsters[missile._misource].position.tile) };
+		missile.var1 = position.x;
+		missile.var2 = position.y;
+	}
+
 }
 
 void AddFireWall(Missile &missile, AddMissileParameter &parameter)
@@ -2210,6 +2216,13 @@ void AddFireball(Missile &missile, AddMissileParameter &parameter)
 		int dmg = damage.first + GenerateRnd(damage.second - damage.first);
 		missile._midam = dmg;
 	}
+	else
+	{
+		const Monster &monster = *missile.sourceMonster();
+		int dmg = monster.minDamage + GenerateRnd(monster.maxDamage - monster.minDamage);
+		missile._midam = dmg;
+	}
+
 	UpdateMissileVelocity(missile, dst, sp);
 	SetMissDir(missile, GetDirection16(missile.position.start, dst));
 	missile._mirange = 256;
@@ -2237,7 +2250,9 @@ void AddLightningControl(Missile &missile, AddMissileParameter &parameter)
 	}
 	else
 	{
-
+		const Monster &monster = *missile.sourceMonster();
+		missile._midam = clamp(monster.minDamage/16, 1 , 9999);
+		missile.var7 = monster.maxDamage/3;
 	}
 
 }
@@ -2426,13 +2441,23 @@ void AddManaShield(Missile &missile, AddMissileParameter &parameter)
 
 void AddFlameWave(Missile &missile, AddMissileParameter &parameter)
 {
-	const Player &player = *missile.sourcePlayer();
+	if (missile._micaster == TARGET_MONSTERS)
+	{
+		const Player &player = *missile.sourcePlayer();
 
-	const MissileData &missileData = GetMissileData(missile._mitype);
-	std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
+		const MissileData &missileData = GetMissileData(missile._mitype);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 
-	missile._midam = damage.first;
-	missile.var7 = damage.second;
+		missile._midam = damage.first;
+		missile.var7 = damage.second;
+	}
+	else
+	{
+		const Monster &monster = *missile.sourceMonster();
+		missile._midam = monster.minDamage*2;
+		missile.var7 = monster.maxDamage*3;
+	}
+
 
 	UpdateMissileVelocity(missile, parameter.dst, 16);
 	missile._mirange = 32;
@@ -2568,7 +2593,8 @@ void AddGenericMagicMissile(Missile &missile, AddMissileParameter &parameter)
 		SetMissDir(missile, GetDirection16(missile.position.start, dst));
 	}
 
-	if (missile._midam == 0) {
+	if (missile._midam == 0)
+	{
 		switch (missile.sourceType()) {
 		case MissileSource::Player:
 		{
@@ -2580,12 +2606,18 @@ void AddGenericMagicMissile(Missile &missile, AddMissileParameter &parameter)
 			break;
 		}
 		case MissileSource::Monster:
+		{
 			missile._midam = ProjectileMonsterDamage(missile);
+		}
 			break;
 		case MissileSource::Trap:
 			missile._midam = ProjectileTrapDamage(missile);
 			break;
 		}
+	}
+	else
+	{
+		missile._midam = missile._midam*2;
 	}
 }
 
@@ -2834,12 +2866,22 @@ void AddNova(Missile &missile, AddMissileParameter &parameter)
 	missile.var1 = parameter.dst.x;
 	missile.var2 = parameter.dst.y;
 
-	if (!missile.IsTrap()) {
-		Player &player = Players[missile._misource];
-		int dmg = GenerateRndSum(6, 5) + player._pLevel + 5;
-		missile._midam = ScaleSpellEffect(dmg / 2, missile._mispllvl);
-	} else {
+	if (missile.IsTrap())
+	{
 		missile._midam = (currlevel / 2) + GenerateRndSum(3, 3);
+	}
+	else if (missile._micaster == TARGET_MONSTERS)
+	{
+		Player &player = Players[missile._misource];
+
+		const MissileData &missileData = GetMissileData(missile._mitype);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
+		int dmg = damage.first + GenerateRnd(damage.second - damage.first);
+		missile._midam = dmg;
+	}
+	else
+	{
+		missile._midam = missile._midam; 
 	}
 
 	missile._mirange = 1;
@@ -3131,8 +3173,8 @@ void AddDiabloApocalypse(Missile &missile, AddMissileParameter & /*parameter*/)
 		if (!LineClearMissile(missile.position.start, player.position.future))
 			continue;
 
-		missile._midam += GenerateRnd(missile._midam/2);
-		AddMissile({ 0, 0 }, player.position.future, Direction::South, MissileID::DiabloApocalypseBoom, missile._micaster, missile._misource, missile._midam*3, 0);
+
+		AddMissile({ 0, 0 }, player.position.future, Direction::South, MissileID::DiabloApocalypseBoom, missile._micaster, missile._misource, missile._midam*4, 0);
 	}
 	missile._miDelFlag = true;
 }
@@ -3656,9 +3698,15 @@ void ProcessNovaCommon(Missile &missile, MissileID projectileType)
 	Point src = missile.position.tile;
 	Direction dir = Direction::South;
 	mienemy_type en = TARGET_PLAYERS;
-	if (!missile.IsTrap()) {
+
+	if (missile._micaster == TARGET_MONSTERS)
+	{
 		dir = Players[id]._pdir;
 		en = TARGET_MONSTERS;
+	}
+	else if (!missile.IsTrap())
+	{
+		dir = Monsters[id].direction;
 	}
 
 	constexpr std::array<WorldTileDisplacement, 9> quarterRadius = { { { 4, 0 }, { 4, 1 }, { 4, 2 }, { 4, 3 }, { 4, 4 }, { 3, 4 }, { 2, 4 }, { 1, 4 }, { 0, 4 } } };
@@ -3737,8 +3785,7 @@ void ProcessLightningControl(Missile &missile)
 	}
 	else
 	{
-		auto &monster = Monsters[missile._misource];
-		dam = 2 * (monster.minDamage + GenerateRnd(monster.maxDamage - monster.minDamage + 1));
+		dam = (missile._midam + GenerateRnd(missile.var7 - missile._midam)) << 6;
 	}
 
 	SpawnLightning(missile, dam);

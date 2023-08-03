@@ -231,7 +231,8 @@ struct Monster { // note: missing field _mAFNum
 
 	int16_t var1;
 	int16_t var2;
-	int8_t var3;
+	int16_t var3;
+	int16_t diabloApocalypseCdLeft = 0;
 
 	ActorPosition position;
 
@@ -270,6 +271,7 @@ struct Monster { // note: missing field _mAFNum
 	LeaderRelation leaderRelation;
 	uint8_t packSize;
 	int8_t lightId;
+
 
 	static constexpr uint8_t NoLeader = -1;
 
