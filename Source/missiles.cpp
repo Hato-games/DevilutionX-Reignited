@@ -973,7 +973,7 @@ std::string GetSpellTooltip(SpellID spellId)
 		{
 		    const int sl = myPlayer.GetSpellLevel(spellId);
 		    int bolts = (6 + (sl / 2))/2;
-		    return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Bolts: {:d}")), bolts);
+		    return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Length: {:d}")), bolts);
 	    }
 	    case SpellID::Inferno:
 		{
@@ -2242,11 +2242,22 @@ void AddLightningControl(Missile &missile, AddMissileParameter &parameter)
 	if (missile._micaster == TARGET_MONSTERS)
 	{
 		const Player &player = *missile.sourcePlayer();
-		const MissileData &missileData = GetMissileData(missile._mitype);
-		std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
 
-		missile._midam = damage.first;
-		missile.var7 = damage.second;
+		MissileID id = missile._mitype;
+		int spellLevel = missile._mispllvl;
+		if (missile.var6 = 1)
+		{
+			id = MissileID::ChainLightning;
+			spellLevel = player.GetSpellLevel(SpellID::ChainLightning);
+		}
+		const MissileData &missileData = GetMissileData(id);
+		std::pair<int, int> damage = missileData.GetSpellDamage(player.GetSpellPower(), spellLevel);
+
+		const int sl = spellLevel;
+		int length = (6 + (sl / 2)) / 2;
+
+		missile._midam = damage.first / length;
+		missile.var7 = damage.second / length;
 	}
 	else
 	{
@@ -3225,6 +3236,10 @@ Missile *AddMissile(Point src, Point dst, Direction midir, MissileID mitype,
 		PlaySfxLoc(*lSFX, missile.position.start);
 	}
 
+	if (parent != nullptr && parent->_mitype == MissileID::ChainLightning)
+	{
+		missile.var6 = 1;
+	}
 	AddMissileParameter parameter = { dst, midir, parent, false };
 	missileData.mAddProc(missile, parameter);
 	if (parameter.spellFizzled) {
@@ -4056,13 +4071,14 @@ void ProcessChainLightning(Missile &missile)
 	Point position = missile.position.tile;
 	Point dst { missile.var1, missile.var2 };
 	Direction dir = GetDirection(position, dst);
-	AddMissile(position, dst, dir, MissileID::LightningControl, TARGET_MONSTERS, id, 1, missile._mispllvl);
+	AddMissile(position, dst, dir, MissileID::LightningControl, TARGET_MONSTERS, id, 1, missile._mispllvl, &missile);
+
 	int rad = std::min<int>(missile._mispllvl + 3, MaxCrawlRadius);
 	Crawl(1, rad, [&](Displacement displacement) {
 		Point target = position + displacement;
 		if (InDungeonBounds(target) && dMonster[target.x][target.y] > 0) {
 			dir = GetDirection(position, target);
-			AddMissile(position, target, dir, MissileID::LightningControl, TARGET_MONSTERS, id, 1, missile._mispllvl);
+			AddMissile(position, target, dir, MissileID::LightningControl, TARGET_MONSTERS, id, 1, missile._mispllvl, &missile);
 		}
 		return false;
 	});
