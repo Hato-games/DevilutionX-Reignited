@@ -666,7 +666,7 @@ void LoadMonster(LoadHelper *file, Monster &monster)
 	monster.activeForTicks = file->NextLE<uint8_t>();
 	file->Skip(3); // Alignment
 
-	monster.diabloApocalypseCdLeft = file->NextLE<uint16_t>();
+	monster.specialAbilityCdLeft = file->NextLE<uint16_t>();
 	file->Skip(2); // Unused
 	
 	monster.position.last.x = file->NextLE<int32_t>();
@@ -1493,7 +1493,7 @@ void SaveMonster(SaveHelper *file, Monster &monster)
 	file->WriteLE<uint8_t>(monster.activeForTicks);
 	file->Skip(3); // Alignm
 
-	file->WriteLE<uint16_t>(monster.diabloApocalypseCdLeft);
+	file->WriteLE<uint16_t>(monster.specialAbilityCdLeft);
 	file->Skip(2); // Unused
 	file->WriteLE<int32_t>(monster.position.last.x);
 	file->WriteLE<int32_t>(monster.position.last.y);

@@ -232,7 +232,7 @@ struct Monster { // note: missing field _mAFNum
 	int16_t var1;
 	int16_t var2;
 	int16_t var3;
-	int16_t diabloApocalypseCdLeft = 0;
+	int16_t specialAbilityCdLeft = 0;
 
 	ActorPosition position;
 
