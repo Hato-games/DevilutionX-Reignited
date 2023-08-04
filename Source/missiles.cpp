@@ -226,6 +226,11 @@ bool applyMonsterHit(Monster& monster, const Player& player, const MissileData m
 		resistReduce = 50;
 	}
 
+	if (missileId == MissileID::HolyBolt && monster.data().monsterClass == MonsterClass::Undead)
+	{
+		resistReduce = 0;
+	}
+
 	if (player._pSkillActiveId == SpellID::Aetherize)
 	{
 		resistReduce -= 15 + player._pLevel / 5;
