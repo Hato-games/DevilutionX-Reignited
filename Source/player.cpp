@@ -614,6 +614,21 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 	int dam2 = dam << 6;
 	dam += player._pDamageMod;
 
+	int pierce = 100 - player._pIEnAc;
+	// monster.armorClass - player.CalculateArmorPierce(monster.armorClass, true);
+	int mac = monster.armorClass;
+	mac = mac * pierce;
+	mac = mac / 100;
+	int resistReduce = mac / 4;
+	resistReduce = clamp(resistReduce, 0, 50);
+
+	if (resistReduce != 0)
+	{
+		resistReduce = 100 - resistReduce;
+		dam = dam * resistReduce;
+		dam = dam / 100;
+	}
+
 	if (GenerateRnd(100) < player._pCriticalChance)
 	{
 		int dmgAmp = 200;
@@ -687,8 +702,7 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 			dam = monster.hitPoints; /* ensure monster is killed with one hit */
 		}
 #endif
-		int pierce = monster.armorClass - player.CalculateArmorPierce(monster.armorClass, true);
-		ApplyMonsterDamage(DamageType::Physical, monster, dam, pierce);
+		ApplyMonsterDamage(DamageType::Physical, monster, dam);
 	}
 
 	int skdam = 0;

@@ -226,12 +226,23 @@ bool applyMonsterHit(Monster& monster, const Player& player, const MissileData m
 		resistReduce = 50;
 	}
 
+	if (damageType == DamageType::Physical)
+	{
+		int pierce = 100 - player._pIEnAc;
+		//monster.armorClass - player.CalculateArmorPierce(monster.armorClass, true);
+		int mac = monster.armorClass;
+		mac = mac * pierce;
+		mac = mac / 100;
+		resistReduce = mac / 4;
+		resistReduce = clamp(resistReduce, 0, 50);
+	}
+
 	if (missileId == MissileID::HolyBolt && monster.data().monsterClass == MonsterClass::Undead)
 	{
 		resistReduce = 0;
 	}
 
-	if (player._pSkillActiveId == SpellID::Aetherize)
+	if (player._pSkillActiveId == SpellID::Aetherize && damageType != DamageType::Physical)
 	{
 		resistReduce -= 15 + player._pLevel / 5;
 	}
@@ -260,9 +271,9 @@ bool applyMonsterHit(Monster& monster, const Player& player, const MissileData m
 		dam = dam / 100;
 	}
 
-	if (&player == MyPlayer) {
-		int pierce = monster.armorClass - player.CalculateArmorPierce(monster.armorClass, true);
-		ApplyMonsterDamage(damageType, monster, dam, pierce);
+	if (&player == MyPlayer)
+	{
+		ApplyMonsterDamage(damageType, monster, dam);
 	}
 
 	if (monster.hitPoints >> 6 <= 0) {
