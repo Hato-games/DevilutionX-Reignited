@@ -34,6 +34,7 @@
 
 namespace devilution {
 
+bool gbDiabloDead = false;
 bool gbSomebodyWonGameKludge;
 TBuffer highPriorityBuffer;
 uint16_t sgwPackPlrOffsetTbl[MAX_PLRS];

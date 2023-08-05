@@ -41,6 +41,7 @@ struct GameInfo {
 	std::vector<std::string> players;
 };
 
+extern bool gbDiabloDead;
 extern bool gbSomebodyWonGameKludge;
 extern uint16_t sgwPackPlrOffsetTbl[MAX_PLRS];
 extern uint8_t gbActivePlayers;

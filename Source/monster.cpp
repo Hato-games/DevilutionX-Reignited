@@ -1498,6 +1498,7 @@ void MonsterDeath(Monster &monster)
 	monster.var1++;
 	if (monster.type().type == MT_DIABLO)
 	{
+		gbDiabloDead = true;
 		/*
 		if (monster.position.tile.x < ViewPosition.x) {
 			ViewPosition.x--;

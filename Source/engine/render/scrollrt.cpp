@@ -1133,32 +1133,26 @@ void DrawView(const Surface &out, Point startPosition)
 	CalcFirstTilePosition(startPosition, offset);
 	DrawGame(out, startPosition, offset);
 
-	switch (AutomapActive)
-	{
-		default:
-		case 0:
-			break;
-	    case 1:
-		    DrawAutomap(out.subregionY(0, gnViewportHeight));
-			break;
-		case 2:
-		{
-		    DrawMinimap(out.subregion(gnScreenWidth - gnScreenWidth / 4-8, 8, gnScreenWidth / 4, gnViewportHeight / 4));
-		}
-			break;
+	switch (AutomapActive) {
+	default:
+	case 0:
+		break;
+	case 1:
+		DrawAutomap(out.subregionY(0, gnViewportHeight));
+		break;
+	case 2: {
+		DrawMinimap(out.subregion(gnScreenWidth - gnScreenWidth / 4 - 8, 8, gnScreenWidth / 4, gnViewportHeight / 4));
+	} break;
 	}
 
-	if (AutomapActive > 0)
-	{
-		    DrawAutomapText(out.subregionY(0, gnViewportHeight));
+	if (AutomapActive > 0) {
+		DrawAutomapText(out.subregionY(0, gnViewportHeight));
 	}
 
-	if (AutomapActive == 2)
-	{
-		    DrawBuffs(out.subregion(gnScreenWidth - gnScreenWidth / 4 - 8, 8 + 4 + gnViewportHeight / 4, gnScreenWidth / 4, gnViewportHeight / 4));
-	}
-	else {
-		    DrawBuffs(out.subregion(gnScreenWidth - gnScreenWidth / 4 - 8, 8, gnScreenWidth / 4, gnViewportHeight / 4));
+	if (AutomapActive == 2) {
+		DrawBuffs(out.subregion(gnScreenWidth - gnScreenWidth / 4 - 8, 8 + 4 + gnViewportHeight / 4, gnScreenWidth / 4, gnViewportHeight / 4));
+	} else {
+		DrawBuffs(out.subregion(gnScreenWidth - gnScreenWidth / 4 - 8, 8, gnScreenWidth / 4, gnViewportHeight / 4));
 	}
 
 #ifdef _DEBUG
@@ -1282,8 +1276,12 @@ void DrawView(const Surface &out, Point startPosition)
 	control_update_life_mana(); // Update life/mana totals before rendering any portion of the flask.
 	DrawLifeFlaskUpper(out);
 	DrawManaFlaskUpper(out);
-}
 
+	if (gbDiabloDead && sgpCurrentMenu == nullptr)
+	{
+		DrawString(out, _("The dark lord is dead!\nGame will end soon\n and return to main menu without saving."), { { 0, gnScreenHeight/4 }, { gnScreenWidth, GetMainPanel().position.y } }, UiFlags::FontSize46 | UiFlags::ColorGold | UiFlags::AlignCenter, 2);
+	}
+}
 /**
  * @brief Display the current average FPS over 1 sec
  */

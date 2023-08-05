@@ -785,6 +785,7 @@ void GameEventHandler(const SDL_Event &event, uint16_t modState)
 
 void RunGameLoop(interface_mode uMsg)
 {
+	gbDiabloDead = false;
 	demo::NotifyGameLoopStart();
 
 	nthread_ignore_mutex(true);
