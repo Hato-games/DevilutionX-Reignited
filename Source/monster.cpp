@@ -828,7 +828,7 @@ void DiabloDeath(Monster &diablo, bool sendmsg)
 	if (sendmsg)
 		NetSendCmdQuest(true, quest);
 	sgbSaveSoundOn = gbSoundOn;
-	gbProcessPlayers = false;
+	//gbProcessPlayers = false;
 	for (size_t i = 0; i < ActiveMonsterCount; i++) {
 		int monsterId = ActiveMonsters[i];
 		Monster &monster = Monsters[monsterId];
@@ -1496,7 +1496,9 @@ void ShrinkLeaderPacksize(const Monster &monster)
 void MonsterDeath(Monster &monster)
 {
 	monster.var1++;
-	if (monster.type().type == MT_DIABLO) {
+	if (monster.type().type == MT_DIABLO)
+	{
+		/*
 		if (monster.position.tile.x < ViewPosition.x) {
 			ViewPosition.x--;
 		} else if (monster.position.tile.x > ViewPosition.x) {
@@ -1508,10 +1510,13 @@ void MonsterDeath(Monster &monster)
 		} else if (monster.position.tile.y > ViewPosition.y) {
 			ViewPosition.y++;
 		}
+		*/
 
-		if (monster.var1 == 140)
+		if (monster.var1 == 300)
 			PrepDoEnding();
-	} else if (monster.animInfo.isLastFrame()) {
+	}
+	else if (monster.animInfo.isLastFrame())
+	{
 		if (monster.isUnique())
 			AddCorpse(monster.position.tile, monster.corpseId, monster.direction);
 		else

@@ -261,7 +261,7 @@ bool applyMonsterHit(Monster& monster, const Player& player, const MissileData m
 	}
 
 	if (&player == MyPlayer) {
-		int pierce = player.CalculateArmorPierce(monster.armorClass, true);
+		int pierce = monster.armorClass - player.CalculateArmorPierce(monster.armorClass, true);
 		ApplyMonsterDamage(damageType, monster, dam, pierce);
 	}
 
@@ -2263,6 +2263,11 @@ void AddLightningControl(Missile &missile, AddMissileParameter &parameter)
 
 		missile._midam = damage.first / length;
 		missile.var7 = damage.second / length;
+	}
+	else if (missile.IsTrap())
+	{
+		missile._midam = 1;
+		missile.var7 = currlevel;
 	}
 	else
 	{
