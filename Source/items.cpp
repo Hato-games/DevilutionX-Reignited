@@ -2866,7 +2866,7 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 		lr = 0;
 	}
 
-	player._pPhyResist = clamp(pr, 0, MaxResistance);
+	player._pPhyResist = clamp(pr, -diffResistPenalty*2, MaxResistance);
 	player._pMagResist = clamp(mr, -diffResistPenalty*2, MaxResistance);
 	player._pFireResist = clamp(fr, -diffResistPenalty*2, MaxResistance);
 	player._pLghtResist = clamp(lr, -diffResistPenalty*2, MaxResistance);
