@@ -1231,25 +1231,22 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 	bool allocateRare = false;
 
 	//Rare try
-	int chance = 50 + (sgGameInitInfo.nDifficulty * 12) + dungeonLevel;
+	int chance = 50 + ((sgGameInitInfo.nDifficulty * 12) + dungeonLevel)*2;
 	int rareRoll = GenerateRnd(1000);
+
+	int penalty = 0;
 	if (rareRoll < chance)
 	{
+		penalty = (2 - sgGameInitInfo.nDifficulty) * 20;//Lowers quality of rares on lower diffs
+
 		allocatePrefix = true;
 		allocateSuffix = true;
 		allocateRare = true;
-
-		int penalty = (3 - sgGameInitInfo.nDifficulty) * 20;
-		minlvl = minlvl * 100;
-		minlvl = minlvl - (minlvl / (penalty * 2));
-		minlvl = minlvl / 100;
-
-		maxlvl = maxlvl * 100;
-		maxlvl = maxlvl - (maxlvl / penalty);
-		maxlvl = maxlvl / 100;
 	}
 	else
 	{
+		penalty = (2 - sgGameInitInfo.nDifficulty) * 10;//Lowers quality of magic items on lower diffs
+
 		allocatePrefix = FlipCoin(4);
 		allocateSuffix = !FlipCoin(3);
 
@@ -1262,6 +1259,11 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 		}
 	}
 
+	minlvl = minlvl * (100 - penalty);
+	minlvl = minlvl / 100;
+
+	maxlvl = maxlvl * (100 - penalty);
+	maxlvl = maxlvl / 100;
 
 	goe = GOE_ANY;
 	if (!onlygood && !FlipCoin(3))
