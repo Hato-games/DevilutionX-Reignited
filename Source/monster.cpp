@@ -1088,7 +1088,7 @@ void MonsterAttackMonster(Monster &attacker, Monster &target, int hper, int mind
 		return;
 
 	int dam = (mind + GenerateRnd(maxd - mind + 1)) << 6;
-	ApplyMonsterDamage(DamageType::Physical, target, dam);
+	ApplyMonsterDamage(DamageType::Physical, target, dam, false);
 
 	if (attacker.isPlayerMinion()) {
 		int playerId = attacker.getId();
@@ -1115,7 +1115,7 @@ int CheckReflect(Monster &monster, Player &player, int dam)
 		NetSendCmdParam1(true, CMD_SETREFLECT, 0);
 	// reflects 20-30% damage
 	int mdam = dam * RandomIntBetween(20, 30, true) / 100;
-	ApplyMonsterDamage(DamageType::Physical, monster, mdam);
+	ApplyMonsterDamage(DamageType::Physical, monster, mdam, false);
 	if (monster.hitPoints >> 6 <= 0)
 		M_StartKill(monster, player);
 	else
@@ -1228,7 +1228,7 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 	// Reflect can also kill a monster, so make sure the monster is still alive
 	if (HasAnyOf(player._pIFlags, ItemSpecialEffect::Thorns) && monster.mode != MonsterMode::Death) {
 		int mdam = (GenerateRnd(3) + 1) << 6;
-		ApplyMonsterDamage(DamageType::Physical, monster, mdam);
+		ApplyMonsterDamage(DamageType::Physical, monster, mdam, critRoll < cr);
 		if (monster.hitPoints >> 6 <= 0)
 			M_StartKill(monster, player);
 		else
@@ -3798,9 +3798,9 @@ void AddDoppelganger(Monster &monster)
 	}
 }
 
-void ApplyMonsterDamage(DamageType damageType, Monster &monster, int damage)
+void ApplyMonsterDamage(DamageType damageType, Monster &monster, int damage, bool critical)
 {
-	AddFloatingNumber(damageType, monster, damage);
+	AddFloatingNumber(damageType, monster, damage, critical);
 
 	monster.hitPoints -= damage;
 

@@ -629,8 +629,10 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 		dam = dam / 100;
 	}
 
+	bool critical = false;
 	if (GenerateRnd(100) < player._pCriticalChance)
 	{
+		critical = true;
 		int dmgAmp = 200;
 		if (player._pSkillActiveId == SpellID::Deadeye) {
 			dmgAmp += 10 + player._pLevel / 5;
@@ -702,7 +704,7 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 			dam = monster.hitPoints; /* ensure monster is killed with one hit */
 		}
 #endif
-		ApplyMonsterDamage(DamageType::Physical, monster, dam);
+		ApplyMonsterDamage(DamageType::Physical, monster, dam, critical);
 	}
 
 	int skdam = 0;
@@ -2840,11 +2842,11 @@ void StripTopGold(Player &player)
 	player._pGold = CalculateGold(player);
 }
 
-void ApplyPlrDamage(DamageType damageType, Player &player, int dam, int minHP /*= 0*/, int frac /*= 0*/, DeathReason deathReason /*= DeathReason::MonsterOrTrap*/)
+void ApplyPlrDamage(DamageType damageType, Player &player, int dam, int minHP /*= 0*/, int frac /*= 0*/, DeathReason deathReason /*= DeathReason::MonsterOrTrap*/, bool critical)
 {
 	int totalDamage = (dam << 6) + frac;
 	if (&player == MyPlayer) {
-		AddFloatingNumber(damageType, player, totalDamage);
+		AddFloatingNumber(damageType, player, totalDamage, critical);
 	}
 	if (totalDamage > 0 && player.pManaShield)
 	{

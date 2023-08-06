@@ -262,7 +262,9 @@ bool applyMonsterHit(Monster& monster, const Player& player, const MissileData m
 		dam = dam / 100;
 	}
 
+	bool critical = false;
 	if (GenerateRnd(100) < player._pCriticalChance) {
+		critical = true;
 		int dmgAmp = 200;
 		if (player._pSkillActiveId == SpellID::Deadeye) {
 			dmgAmp += 10 + player._pLevel / 5;
@@ -273,7 +275,7 @@ bool applyMonsterHit(Monster& monster, const Player& player, const MissileData m
 
 	if (&player == MyPlayer)
 	{
-		ApplyMonsterDamage(damageType, monster, dam);
+		ApplyMonsterDamage(damageType, monster, dam, critical);
 	}
 
 	if (monster.hitPoints >> 6 <= 0) {
@@ -1203,7 +1205,7 @@ bool MonsterTrapHit(int monsterId, int mindam, int maxdam, int dist, MissileID t
 		dam <<= 6;
 	if (resist)
 		dam /= 4;
-	ApplyMonsterDamage(damageType, monster, dam);
+	ApplyMonsterDamage(damageType, monster, dam, false);
 #ifdef _DEBUG
 	if (DebugGodMode)
 		monster.hitPoints = 0;
@@ -1326,12 +1328,14 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 		dam = std::max(dam, 64);
 	}
 
+	bool critical = false;
 	if (monster != nullptr)
 	{
 		int level = monster->level(sgGameInitInfo.nDifficulty) * 10;
 		int cr = level / 5;
 		int critRoll = GenerateRnd(1000);
 		if (critRoll < cr) {
+			critical = true;
 			int critDmg = 150 + sgGameInitInfo.nDifficulty * 25;
 			dam = dam * critDmg;
 			dam = dam / 100;
@@ -1387,7 +1391,7 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 			}
 
 			if (&player == MyPlayer) {
-				ApplyPlrDamage((DamageType)((int)DamageType::Fire + i), player, 0, 0, damage, deathReason);
+				ApplyPlrDamage((DamageType)((int)DamageType::Fire + i), player, 0, 0, damage, deathReason, critical);
 			}
 
 			if (player._pHitPoints >> 6 > 0) {

@@ -61,7 +61,7 @@ UiFlags GetFontSizeByDamage(int value)
 	return UiFlags::FontSize12;
 }
 
-void UpdateFloatingData(FloatingNumber &num)
+void UpdateFloatingData(FloatingNumber &num, bool critical)
 {
 	if (num.value > 0 && num.value < 64) {
 		num.text = fmt::format("{:.2f}", num.value / 64.0);
@@ -70,7 +70,16 @@ void UpdateFloatingData(FloatingNumber &num)
 	}
 
 	num.style &= ~(UiFlags::FontSize12 | UiFlags::FontSize24 | UiFlags::FontSize30);
-	num.style |= GetFontSizeByDamage(num.value);
+	if (critical)
+	{
+		num.style |= UiFlags::FontSize24;
+	}
+	else
+	{
+		num.style |= UiFlags::FontSize12;
+	}
+
+	
 
 	switch (num.type) {
 	case DamageType::Physical:
@@ -91,7 +100,7 @@ void UpdateFloatingData(FloatingNumber &num)
 	}
 }
 
-void AddFloatingNumber(Point pos, Displacement offset, DamageType type, int value, int index, bool damageToPlayer)
+void AddFloatingNumber(Point pos, Displacement offset, DamageType type, int value, int index, bool damageToPlayer, bool critical)
 {
 	// 45 deg angles to avoid jitter caused by px alignment
 	Displacement goodAngles[] = {
@@ -123,20 +132,20 @@ void AddFloatingNumber(Point pos, Displacement offset, DamageType type, int valu
 		if (num.reverseDirection == damageToPlayer && num.type == type && num.index == index && (SDL_GetTicks() - static_cast<int>(num.lastMerge)) <= 100) {
 			num.value += value;
 			num.lastMerge = SDL_GetTicks();
-			UpdateFloatingData(num);
+			UpdateFloatingData(num, critical);
 			return;
 		}
 	}
 	FloatingNumber num {
 		pos, offset, endOffset, "", SDL_GetTicks() + 2500, SDL_GetTicks(), UiFlags::Outlined, type, value, index, damageToPlayer
 	};
-	UpdateFloatingData(num);
+	UpdateFloatingData(num, critical);
 	FloatingQueue.push_back(num);
 }
 
 } // namespace
 
-void AddFloatingNumber(DamageType damageType, const Monster &monster, int damage)
+void AddFloatingNumber(DamageType damageType, const Monster &monster, int damage, bool critical)
 {
 	if (*sgOptions.Gameplay.enableFloatingNumbers == FloatingNumbers::Off)
 		return;
@@ -156,10 +165,10 @@ void AddFloatingNumber(DamageType damageType, const Monster &monster, int damage
 		offset.deltaY -= sprite.height() / 2;
 	}
 
-	AddFloatingNumber(monster.position.tile, offset, damageType, damage, monster.getId(), false);
+	AddFloatingNumber(monster.position.tile, offset, damageType, damage, monster.getId(), false, critical);
 }
 
-void AddFloatingNumber(DamageType damageType, const Player &player, int damage)
+void AddFloatingNumber(DamageType damageType, const Player &player, int damage, bool critical)
 {
 	if (*sgOptions.Gameplay.enableFloatingNumbers == FloatingNumbers::Off)
 		return;
@@ -175,7 +184,7 @@ void AddFloatingNumber(DamageType damageType, const Player &player, int damage)
 		}
 	}
 
-	AddFloatingNumber(player.position.tile, offset, damageType, damage, player.getId(), true);
+	AddFloatingNumber(player.position.tile, offset, damageType, damage, player.getId(), true, critical);
 }
 
 void DrawFloatingNumbers(const Surface &out, Point viewPosition, Displacement offset)
