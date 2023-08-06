@@ -1231,7 +1231,7 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 	bool allocateRare = false;
 
 	//Rare try
-	int chance = 30 + (sgGameInitInfo.nDifficulty * 12) + dungeonLevel;
+	int chance = 50 + (sgGameInitInfo.nDifficulty * 12) + dungeonLevel;
 	int rareRoll = GenerateRnd(1000);
 	if (rareRoll < chance)
 	{

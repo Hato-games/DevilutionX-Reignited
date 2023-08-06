@@ -583,8 +583,9 @@ void LoadPlayer(LoadHelper& file, Player& player)
 	player._pSkillCooldown = file.NextLE<int32_t>();
 	player._pSkillDurationLeft = file.NextLE<int32_t>();
 	player._apocalipseCooldownLeft = file.NextLE<int16_t>();
+	player._teleportCooldownLeft = file.NextLE<int16_t>();
 	
-	file.Skip(14-11); // Available bytes
+	file.Skip(14-13); // Available bytes
 
 
 	player.pDiabloKillLevel = file.NextLE<uint32_t>();
@@ -1413,7 +1414,8 @@ void SavePlayer(SaveHelper &file, const Player &player)
 	file.WriteLE<int32_t>(player._pSkillCooldown);
 	file.WriteLE<int32_t>(player._pSkillDurationLeft);
 	file.WriteLE<int16_t>(player._apocalipseCooldownLeft);
-	file.Skip(14-11); // Available bytes
+	file.WriteLE<int16_t>(player._teleportCooldownLeft);
+	file.Skip(14-13); // Available bytes
 
 	file.WriteLE<uint32_t>(player.pDiabloKillLevel);
 	file.WriteLE<uint32_t>(sgGameInitInfo.nDifficulty);

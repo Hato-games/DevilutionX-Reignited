@@ -301,6 +301,7 @@ struct Player {
 	int _pSkillDurationLeft = 0;
 
 	short _apocalipseCooldownLeft = 0;
+	short _teleportCooldownLeft = 0;
 	/**
 	 * @brief Contains Information for current Animation
 	 */

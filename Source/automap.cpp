@@ -1099,6 +1099,14 @@ void DrawBuffs(const Surface &out)
 		buffs.push_back(buffApo);
 	}
 
+	if (player._teleportCooldownLeft > 0) {
+		BuffInfo buffTele;
+		buffTele.spellID = SpellID::Teleport;
+		buffTele.duration = player._teleportCooldownLeft;
+		buffTele.spellType = SpellType::Invalid;
+		buffs.push_back(buffTele);
+	}
+
 	for (int i = 0; i < buffs.size(); i++)
 	{
 		SetSpellTrans(buffs[i].spellType);

@@ -1031,6 +1031,15 @@ std::string GetSpellTooltip(SpellID spellId)
 	    }
 	    case SpellID::Apocalypse:
 		    return "CD:1m Ignores 25% Res";
+	    case SpellID::Teleport:
+		{
+		    const int sl = myPlayer.GetSpellLevel(spellId);
+		    int cooldown = 10 * 5 - sl; // 5 seconds, 0.1 sec reduce per level
+		    int ms = cooldown % 10;
+		    cooldown = cooldown / 10;
+		    return fmt::format(fmt::runtime(pgettext(/* TRANSLATORS: UI constraints, keep short please.*/ "spellbook", "Cooldown: {:d}.{:d}s")), cooldown, ms);
+
+	    } break;
 	}
 
 	return "";
@@ -2154,6 +2163,9 @@ void AddMagmaBall(Missile &missile, AddMissileParameter &parameter)
 void AddTeleport(Missile &missile, AddMissileParameter &parameter)
 {
 	Player &player = Players[missile._misource];
+
+	int cooldown = 10 * 5 - missile._mispllvl;// 5 seconds, 0.1 sec reduce per level
+	player._teleportCooldownLeft = cooldown * 2; 
 
 	std::optional<Point> teleportDestination = FindClosestValidPosition(
 	    [&player](Point target) {

@@ -3720,6 +3720,9 @@ void Player::RegenTick()
 	{
 		_apocalipseCooldownLeft--;
 	}
+	if (_teleportCooldownLeft > 0) {
+		_teleportCooldownLeft--;
+	}
 }
 
 void Player::EnableSkill(SpellID sn)

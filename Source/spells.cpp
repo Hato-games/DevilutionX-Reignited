@@ -215,6 +215,10 @@ SpellCheckResult CheckSpell(const Player &player, SpellID sn, SpellType st, bool
 		return SpellCheckResult::Fail_Cooldown;
 	}
 
+	if (sn == SpellID::Teleport && player._teleportCooldownLeft > 0) {
+		return SpellCheckResult::Fail_Cooldown;
+	}
+
 	return SpellCheckResult::Success;
 }
 
