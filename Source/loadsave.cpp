@@ -285,7 +285,8 @@ void LoadItemData(LoadHelper &file, Item &item)
 	item._iPLLight = file.NextLE<int32_t>();
 	item._iSplLvlAdd = file.NextLE<int8_t>();
 	item._iRequest = file.NextBool8();
-	file.Skip(2); // Alignment
+	file.Skip(1); // Alignment
+	item.reignitedItem = file.NextBool8();
 	item._iUid = file.NextLE<int32_t>();
 	item._iFMinDam = file.NextLE<int32_t>();
 	item._iFMaxDam = file.NextLE<int32_t>();
@@ -294,7 +295,9 @@ void LoadItemData(LoadHelper &file, Item &item)
 	item._iPLEnAc = file.NextLE<int32_t>();
 	item._iPrePower = static_cast<item_effect_type>(file.NextLE<int8_t>());
 	item._iSufPower = static_cast<item_effect_type>(file.NextLE<int8_t>());
-	if (item._iMagical == ITEM_QUALITY_RARE)
+
+	item.reignitedItem |= item._iMagical == ITEM_QUALITY_RARE;
+	if (item.reignitedItem)
 	{
 		item._iRarePower = static_cast<item_effect_type>(file.NextLE<int8_t>());
 		item._iRareNamePrefId = static_cast<item_effect_type>(file.NextLE<int8_t>());
@@ -1134,7 +1137,10 @@ void SaveItem(SaveHelper &file, const Item &item)
 	file.WriteLE<int32_t>(item._iPLLight);
 	file.WriteLE<int8_t>(item._iSplLvlAdd);
 	file.WriteLE<int8_t>(item._iRequest ? 1 : 0);
-	file.Skip(2); // Alignment
+	file.Skip(1); // Alignment
+
+	file.WriteLE<int8_t>(item.reignitedItem ? 1 : 0);
+	
 	file.WriteLE<int32_t>(item._iUid);
 	file.WriteLE<int32_t>(item._iFMinDam);
 	file.WriteLE<int32_t>(item._iFMaxDam);
@@ -1143,7 +1149,7 @@ void SaveItem(SaveHelper &file, const Item &item)
 	file.WriteLE<int32_t>(item._iPLEnAc);
 	file.WriteLE<int8_t>(item._iPrePower);
 	file.WriteLE<int8_t>(item._iSufPower);
-	if (item._iMagical == ITEM_QUALITY_RARE)
+	if (item.reignitedItem)
 	{
 		file.WriteLE<int8_t>(item._iRarePower);
 		file.WriteLE<int8_t>(item._iRareNamePrefId);

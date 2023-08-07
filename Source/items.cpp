@@ -1391,7 +1391,7 @@ void GetItemPower(const Player &player, Item &item, int minlvl, int maxlvl, Affi
 
 	    }
 		);
-
+	item.reignitedItem = true;
 	CopyUtf8(item._iIName, GenerateMagicItemName(item._iName, pPrefix, pSufix, false), sizeof(item._iIName));
 	if (!StringInPanel(item._iIName)) {
 		CopyUtf8(item._iIName, GenerateMagicItemName(AllItemsList[item.IDidx].iSName, pPrefix, pSufix, false), sizeof(item._iIName));
@@ -3842,9 +3842,9 @@ bool DoOil(Player &player, int cii)
 
 [[nodiscard]] StringOrView PrintItemPower(char plidx, const Item &item, int affixType)
 {
-	if (item._iMagical == ITEM_QUALITY_RARE)
+	if (item.reignitedItem)
 	{
-		return PrintItemPowerRare(plidx, item, affixType);
+		return PrintItemPowerReignited(plidx, item, affixType);
 	}
 	switch (plidx) {
 	case IPL_TOHIT:
@@ -4043,7 +4043,7 @@ bool DoOil(Player &player, int cii)
 	}
 }
 
-[[nodiscard]] StringOrView PrintItemPowerRare(char plidx, const Item& item, int affixType)
+[[nodiscard]] StringOrView PrintItemPowerReignited(char plidx, const Item& item, int affixType)
 {
 	int val1 = 0;
 	int val2 = 0;
@@ -4342,7 +4342,14 @@ void DrawUniqueInfo(const Surface &out)
 			}
 			else
 			{
-			    AddPanelString(_("Magic item"));
+			    if (curruitem.reignitedItem)
+				{
+					AddPanelString(_("Magic item"));
+				}
+				else
+				{
+					AddPanelString(_("Legacy magic item"));
+				}
 			}
 
 			if (curruitem._iIdentified) {

@@ -249,6 +249,7 @@ struct Item {
 	ItemSpecialEffectHf _iDamAcFlags = ItemSpecialEffectHf::None;
 	uint32_t dwBuff = 0;
 
+	bool reignitedItem = false;
 	enum item_effect_type _iRarePower = IPL_INVALID;
 	uint8_t _iRareNamePrefId = 0;
 	uint8_t _iRareNameSufId = 0;
@@ -552,7 +553,7 @@ void DoRepair(Player &player, int cii);
 void DoRecharge(Player &player, int cii);
 bool DoOil(Player &player, int cii);
 [[nodiscard]] StringOrView PrintItemPower(char plidx, const Item &item, int affixType = -1);
-[[nodiscard]] StringOrView PrintItemPowerRare(char plidx, const Item &item, int affixType);
+[[nodiscard]] StringOrView PrintItemPowerReignited(char plidx, const Item &item, int affixType);
 void DrawUniqueInfo(const Surface &out);
 void PrintItemDetails(const Item &item);
 void PrintItemDur(const Item &item);

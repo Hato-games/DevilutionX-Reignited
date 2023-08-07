@@ -290,14 +290,14 @@ void PrintStoreItem(const Item &item, int l, UiFlags flags, bool cursIndent = fa
 			case ITEM_QUALITY_MAGIC:
 			{
 				if (item._iPrePower != -1) {
-					AppendStrView(productLine, PrintItemPower(item._iPrePower, item));
+					AppendStrView(productLine, PrintItemPower(item._iPrePower, item, 0));
 				}
 
 				if (item._iSufPower != -1)
 				{
 					if (!productLine.empty())
 						AppendStrView(productLine, _(",  "));
-					AppendStrView(productLine, PrintItemPower(item._iSufPower, item));
+					AppendStrView(productLine, PrintItemPower(item._iSufPower, item, 1));
 				}
 			} break;
 		    case ITEM_QUALITY_RARE:
