@@ -177,6 +177,9 @@ constexpr int ItemAnimWidth = 96;
 struct Player;
 
 struct Item {
+
+	int GetReforgeCost();
+	void AddAffix(Player& player, bool hellfireItem);
 	/** Randomly generated identifier */
 	uint32_t _iSeed = 0;
 	uint16_t _iCreateInfo = 0;
@@ -262,6 +265,12 @@ struct Item {
 
 	int32_t _iRareValue1 = 0;
 	int32_t _iRareValue2 = 0;
+
+	int8_t _ilvl = 0;
+
+	int8_t _iPrePowerIndex = -1;
+	int8_t _iSufPowerIndex = -1;
+	int8_t _iRarePowerIndex = -1;
 	/**
 	 * @brief Clears this item and returns the old value
 	 */

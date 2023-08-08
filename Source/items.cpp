@@ -721,7 +721,7 @@ int SaveItemPower(const Player &player, Item &item, ItemPower &power, int affixT
 
 	int r = RndPL(power.param1, power.param2);
 	int r2 = 0;
-	
+
 	switch (power.type) {
 	case IPL_TOHIT:
 		item._iPLToHit += r;
@@ -1073,6 +1073,31 @@ int SaveItemPower(const Player &player, Item &item, ItemPower &power, int affixT
 		break;
 	}
 
+	
+	switch (power.type)
+	{
+		case IPL_TOHIT_CURSE:
+		case IPL_DAMP_CURSE:
+		case IPL_TOHIT_DAMP_CURSE:
+		case IPL_ACP_CURSE:
+		case IPL_STR_CURSE:
+		case IPL_MAG_CURSE:
+		case IPL_DEX_CURSE:
+		case IPL_VIT_CURSE:
+		case IPL_ATTRIBS_CURSE:
+		case IPL_GETHIT_CURSE:
+		case IPL_LIFE_CURSE:
+		case IPL_MANA_CURSE:
+		case IPL_DUR_CURSE:
+		case IPL_LIGHT_CURSE:
+		case IPL_AC_CURSE:
+		case IPL_FIRERES_CURSE:
+		case IPL_LIGHTRES_CURSE:
+		case IPL_MAGICRES_CURSE:
+			r = -r;
+			r2 = -r2;
+		break;
+	}
 	switch (affixType)
 	{
 		case 0://prefix
@@ -1218,7 +1243,7 @@ std::string GenerateMagicItemName(const string_view &baseNamel, const PLStruct *
 	return std::string(baseNamel);
 }
 
-void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, bool onlygood, bool hellfireItem, int dungeonLevel, tl::function_ref<void(const PLStruct &prefix)> prefixFound, tl::function_ref<void(const PLStruct &suffix)> suffixFound, tl::function_ref<void(const PLStruct &rare)> rareFound)
+void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, bool onlygood, bool hellfireItem, int dungeonLevel, tl::function_ref<void(const PLStruct &prefix, const int index)> prefixFound, tl::function_ref<void(const PLStruct &suffix, const int index)> suffixFound, tl::function_ref<void(const PLStruct &rare, const int index)> rareFound)
 {
 	int preidx = -1;
 	int sufidx = -1;
@@ -1289,7 +1314,7 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 		if (nt != 0) {
 			preidx = l[GenerateRnd(nt)];
 			goe = ItemPrefixes[preidx].PLGOE;
-			prefixFound(ItemPrefixes[preidx]);
+			prefixFound(ItemPrefixes[preidx], preidx);
 		}
 	}
 	if (allocateSuffix) {
@@ -1305,7 +1330,7 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 		}
 		if (nl != 0) {
 			sufidx = l[GenerateRnd(nl)];
-			suffixFound(ItemSuffixes[sufidx]);
+			suffixFound(ItemSuffixes[sufidx], sufidx);
 		}
 	}
 
@@ -1334,7 +1359,7 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 			}
 			if (nt != 0) {
 				preidx = l[GenerateRnd(nt)];
-				rareFound(ItemPrefixes[preidx]);
+				rareFound(ItemPrefixes[preidx], preidx);
 			}
 		}
 		else
@@ -1351,7 +1376,7 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 			}
 			if (nl != 0) {
 				sufidx = l[GenerateRnd(nl)];
-				rareFound(ItemSuffixes[sufidx]);
+				rareFound(ItemSuffixes[sufidx], sufidx);
 			}
 		}
 	}
@@ -1365,25 +1390,27 @@ void GetItemPower(const Player &player, Item &item, int minlvl, int maxlvl, Affi
 	
 	GetItemPowerPrefixAndSuffix(
 	    minlvl, maxlvl, flgs, onlygood, gbIsHellfire, player.plrlevel,
-	    [&item, &player, &pPrefix](const PLStruct &prefix) {
+	    [&item, &player, &pPrefix](const PLStruct &prefix, const int index) {
 		    item._iMagical = ITEM_QUALITY_MAGIC;
 		    SaveItemAffix(player, item, prefix, 0);
 		    item._iPrePower = prefix.power.type;
-		    
+		    item._iPrePowerIndex = index;
 		    pPrefix = &prefix;
 	    },
-	    [&item, &player, &pSufix](const PLStruct &suffix) {
+	    [&item, &player, &pSufix](const PLStruct &suffix, const int index) {
 		    item._iMagical = ITEM_QUALITY_MAGIC;
 		    SaveItemAffix(player, item, suffix, 1);
 		    item._iSufPower = suffix.power.type;
+		    item._iSufPowerIndex = index;
 		    pSufix = &suffix;
 	    },
-	    [&item, &player, &pRare, &allowRare](const PLStruct &rare) {
+	    [&item, &player, &pRare, &allowRare](const PLStruct &rare, const int index) {
 		    if (allowRare)
 			{
 			    item._iMagical = ITEM_QUALITY_RARE;
 			    SaveItemAffix(player, item, rare, 2);
 			    item._iRarePower = rare.power.type;
+			    item._iRarePowerIndex = index;
 			    item._iRareNamePrefId = GenerateRnd(67);
 			    item._iRareNameSufId = GenerateRnd(10);
 			    pRare = &rare;
@@ -2531,34 +2558,50 @@ std::string GetTranslatedItemNameMagical(const Item &item, bool hellfireItem, bo
 		break;
 	}
 
-	if (affixItemType != AffixItemType::None) {
+	if (affixItemType != AffixItemType::None)
+	{
 		const PLStruct *pPrefix = nullptr;
 		const PLStruct *pSufix = nullptr;
 		const PLStruct *pRare = nullptr;
-		GetItemPowerPrefixAndSuffix(
-		    minlvl, maxlvl, affixItemType, onlygood, hellfireItem, 0,
-		    [&pPrefix](const PLStruct &prefix) {
-			    pPrefix = &prefix;
-			    // GenerateRnd(prefix.power.param2 - prefix.power.param2 + 1)
-			    DiscardRandomValues(1);
-			    switch (pPrefix->power.type) {
-			    case IPL_DOPPELGANGER:
-			    case IPL_TOHIT_DAMP:
-				    DiscardRandomValues(2);
-				    break;
-			    case IPL_TOHIT_DAMP_CURSE:
+
+		if (item.reignitedItem)
+		{
+			if (item._iPrePower != IPL_INVALID) {
+				pPrefix = &ItemPrefixes[item._iPrePowerIndex];
+			}
+
+			if (item._iSufPower != IPL_INVALID) {
+				pSufix = &ItemSuffixes[item._iSufPowerIndex];
+			}
+		}
+		else
+		{
+			GetItemPowerPrefixAndSuffix(
+			    minlvl, maxlvl, affixItemType, onlygood, hellfireItem, 0,
+			    [&pPrefix](const PLStruct &prefix, const int index) {
+				    pPrefix = &prefix;
+				    // GenerateRnd(prefix.power.param2 - prefix.power.param2 + 1)
 				    DiscardRandomValues(1);
-				    break;
-			    default:
-				    break;
-			    }
-		    },
-		    [&pSufix](const PLStruct &suffix) {
-			    pSufix = &suffix;
-		    },
-		    [&pRare](const PLStruct &rare) {
-			    pRare = &rare;
-		    });
+				    switch (pPrefix->power.type) {
+				    case IPL_DOPPELGANGER:
+				    case IPL_TOHIT_DAMP:
+					    DiscardRandomValues(2);
+					    break;
+				    case IPL_TOHIT_DAMP_CURSE:
+					    DiscardRandomValues(1);
+					    break;
+				    default:
+					    break;
+				    }
+			    },
+			    [&pSufix](const PLStruct &suffix, const int index) {
+				    pSufix = &suffix;
+			    },
+			    [&pRare](const PLStruct &rare, const int index) {
+				    pRare = &rare;
+			    });
+		}
+
 
 		identifiedName = GenerateMagicItemName(_(baseItemData.iName), pPrefix, pSufix, translate);
 		if (forceNameLengthCheck ? *forceNameLengthCheck : !StringInPanel(identifiedName.c_str())) {
@@ -5508,5 +5551,181 @@ void UpdateHellfireFlag(Item &item, const char *identifiedItemName)
 		item.dwBuff |= CF_HELLFIRE;
 	}
 }
+
+int Item::GetReforgeCost()
+{
+	int lvl = AllItemsList[IDidx].iMinMLvl;
+
+	if (_iPrePower != IPL_INVALID)
+	{
+		lvl += ItemPrefixes[_iPrePowerIndex].PLMinLvl;
+	}
+	if (_iSufPower != IPL_INVALID)
+	{
+		lvl += ItemSuffixes[_iSufPowerIndex].PLMinLvl;
+	}	
+
+	int value = lvl * 10000;
+	if (_iPrePower != IPL_INVALID && _iSufPower != IPL_INVALID)
+	{
+		value *= 3;
+	}
+
+	return value;
+}
+
+void Item::AddAffix(Player& player, bool hellfireItem)
+{
+	bool onlygood = false;
+
+	int lvl = AllItemsList[IDidx].iMinMLvl;
+	int minlvl = clamp(lvl / 4, 1, 20);
+	int maxlvl = clamp(lvl * 10, 1, 60);
+	uint32_t currentSeed = GetLCGEngineState();
+
+	AffixItemType flgs;
+
+	switch (_itype)
+	{
+		case ItemType::Sword:
+		case ItemType::Axe:
+		case ItemType::Mace:
+			flgs = AffixItemType::Weapon;
+			break;
+		case ItemType::Bow:
+			flgs = AffixItemType::Bow;
+			break;
+		case ItemType::Shield:
+			flgs = AffixItemType::Shield;
+			break;
+		case ItemType::LightArmor:
+		case ItemType::Helm:
+		case ItemType::MediumArmor:
+		case ItemType::HeavyArmor:
+			flgs = AffixItemType::Armor;
+			break;
+		case ItemType::Staff:
+			flgs = AffixItemType::Staff;
+			break;
+		case ItemType::Ring:
+		case ItemType::Amulet:
+			flgs = AffixItemType::Misc;
+			break;
+	}
+
+	
+	
+
+	int l[256];
+	goodorevil goe = GOE_ANY;
+
+	if (_iPrePower == IPL_INVALID)
+	{
+		SetRndSeed(_iSeed+7);
+		int nt = 0;
+		for (int j = 0; ItemPrefixes[j].power.type != IPL_INVALID; j++) {
+			if (!IsPrefixValidForItemType(j, flgs, hellfireItem))
+				continue;
+			if (ItemPrefixes[j].PLMinLvl < minlvl || ItemPrefixes[j].PLMinLvl > maxlvl)
+				continue;
+			if (onlygood && !ItemPrefixes[j].PLOk)
+				continue;
+			if (HasAnyOf(flgs, AffixItemType::Staff) && ItemPrefixes[j].power.type == IPL_CHARGES)
+				continue;
+			l[nt] = j;
+			nt++;
+			if (ItemPrefixes[j].PLDouble) {
+				l[nt] = j;
+				nt++;
+			}
+		}
+		if (nt != 0) {
+			int preidx = l[GenerateRnd(nt)];
+			goe = ItemPrefixes[preidx].PLGOE;
+
+			_iMagical = ITEM_QUALITY_MAGIC;
+			SaveItemAffix(player, *this, ItemPrefixes[preidx], 0);
+			_iPrePower = ItemPrefixes[preidx].power.type;
+			_iPrePowerIndex = preidx;
+		}
+	}
+	else if (_iSufPower == IPL_INVALID)
+	{
+		SetRndSeed(_iSeed + 7*2);
+		int nl = 0;
+		for (int j = 0; ItemSuffixes[j].power.type != IPL_INVALID; j++) {
+			if (IsSuffixValidForItemType(j, flgs, hellfireItem)
+			    && ItemSuffixes[j].PLMinLvl >= minlvl && ItemSuffixes[j].PLMinLvl <= maxlvl
+			    && !((goe == GOE_GOOD && ItemSuffixes[j].PLGOE == GOE_EVIL) || (goe == GOE_EVIL && ItemSuffixes[j].PLGOE == GOE_GOOD))
+			    && (!onlygood || ItemSuffixes[j].PLOk)) {
+				l[nl] = j;
+				nl++;
+			}
+		}
+		if (nl != 0) {
+			int sufidx = l[GenerateRnd(nl)];
+			SaveItemAffix(player, *this, ItemSuffixes[sufidx], 1);
+			_iSufPower = ItemSuffixes[sufidx].power.type;
+			_iSufPowerIndex = sufidx;
+		}
+	}
+	else //Add Rare
+	{
+		SetRndSeed(_iSeed + 7 * 3);
+
+		_iMagical = ITEM_QUALITY_RARE;
+		_iRareNamePrefId = GenerateRnd(67);
+		_iRareNameSufId = GenerateRnd(10);
+		
+		bool prefix = FlipCoin();
+
+		if (prefix) {
+			int nt = 0;
+			for (int j = 0; ItemPrefixes[j].power.type != IPL_INVALID; j++) {
+				if (!IsPrefixValidForItemType(j, flgs, hellfireItem))
+					continue;
+				if (ItemPrefixes[j].PLMinLvl < minlvl || ItemPrefixes[j].PLMinLvl > maxlvl)
+					continue;
+				if (onlygood && !ItemPrefixes[j].PLOk)
+					continue;
+				if (HasAnyOf(flgs, AffixItemType::Staff) && ItemPrefixes[j].power.type == IPL_CHARGES)
+					continue;
+				l[nt] = j;
+				nt++;
+				if (ItemPrefixes[j].PLDouble) {
+					l[nt] = j;
+					nt++;
+				}
+			}
+			if (nt != 0) {
+				int preidx = l[GenerateRnd(nt)];
+				SaveItemAffix(player, *this, ItemPrefixes[preidx], 2);
+				_iRarePower = ItemPrefixes[preidx].power.type;
+				_iRarePowerIndex = preidx;
+			}
+		} else {
+			int nl = 0;
+			for (int j = 0; ItemSuffixes[j].power.type != IPL_INVALID; j++) {
+				if (IsSuffixValidForItemType(j, flgs, hellfireItem)
+				    && ItemSuffixes[j].PLMinLvl >= minlvl && ItemSuffixes[j].PLMinLvl <= maxlvl
+				    && !((goe == GOE_GOOD && ItemSuffixes[j].PLGOE == GOE_EVIL) || (goe == GOE_EVIL && ItemSuffixes[j].PLGOE == GOE_GOOD))
+				    && (!onlygood || ItemSuffixes[j].PLOk)) {
+					l[nl] = j;
+					nl++;
+				}
+			}
+			if (nl != 0) {
+				int sufidx = l[GenerateRnd(nl)];
+				SaveItemAffix(player, *this, ItemSuffixes[sufidx], 2);
+				_iRarePower = ItemSuffixes[sufidx].power.type;
+				_iRarePowerIndex = sufidx;
+			}
+		}
+	}
+
+	SetRndSeed(currentSeed);
+
+}
+
 
 } // namespace devilution

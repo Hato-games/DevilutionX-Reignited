@@ -300,20 +300,29 @@ void LoadItemData(LoadHelper &file, Item &item)
 	if (item.reignitedItem)
 	{
 		item._iRarePower = static_cast<item_effect_type>(file.NextLE<int8_t>());
-		item._iRareNamePrefId = static_cast<item_effect_type>(file.NextLE<int8_t>());
-		item._iRareNameSufId = static_cast<item_effect_type>(file.NextLE<int8_t>());
+		file.Skip(1); // For future use
+		item._iRareNamePrefId = file.NextLE<int8_t>();
+		item._iRareNameSufId = file.NextLE<int8_t>();
 
-		item._iPrefValue1 = static_cast<item_effect_type>(file.NextLE<int32_t>());
-		item._iPrefValue2 = static_cast<item_effect_type>(file.NextLE<int32_t>());
+		item._iPrePowerIndex = file.NextLE<int8_t>();
+		item._iSufPowerIndex = file.NextLE<int8_t>();
+		item._iRarePowerIndex = file.NextLE<int8_t>();
+		
+		file.Skip(3); // For future use
 
-		item._iSufValue1 = static_cast<item_effect_type>(file.NextLE<int32_t>());
-		item._iSufValue2 = static_cast<item_effect_type>(file.NextLE<int32_t>());
+		item._iPrefValue1 = file.NextLE<int32_t>();
+		item._iPrefValue2 = file.NextLE<int32_t>();
 
-		item._iRareValue1 = static_cast<item_effect_type>(file.NextLE<int32_t>());
-		item._iRareValue2 = static_cast<item_effect_type>(file.NextLE<int32_t>());
+		item._iSufValue1 = file.NextLE<int32_t>();
+		item._iSufValue2 = file.NextLE<int32_t>();
+
+		item._iRareValue1 = file.NextLE<int32_t>();
+		item._iRareValue2 = file.NextLE<int32_t>();
 
 		item._iVAdd3 = file.NextLE<int32_t>();
 		item._iVMult3 = file.NextLE<int32_t>();
+
+		file.Skip(2); // For future use
 	}
 	file.Skip(2); // Alignment
 	item._iVAdd1 = file.NextLE<int32_t>();
@@ -1152,8 +1161,15 @@ void SaveItem(SaveHelper &file, const Item &item)
 	if (item.reignitedItem)
 	{
 		file.WriteLE<int8_t>(item._iRarePower);
+		file.Skip(1); // For future use
 		file.WriteLE<int8_t>(item._iRareNamePrefId);
 		file.WriteLE<int8_t>(item._iRareNameSufId);
+
+		file.WriteLE<int8_t>(item._iPrePowerIndex);
+		file.WriteLE<int8_t>(item._iSufPowerIndex);
+		file.WriteLE<int8_t>(item._iRarePowerIndex);
+
+		file.Skip(3); //For future use
 
 		file.WriteLE<int32_t>(item._iPrefValue1);
 		file.WriteLE<int32_t>(item._iPrefValue2);
@@ -1166,6 +1182,8 @@ void SaveItem(SaveHelper &file, const Item &item)
 
 		file.WriteLE<int32_t>(item._iVAdd3);
 		file.WriteLE<int32_t>(item._iVMult3);
+
+		file.Skip(2); // For future use
 	}
 	file.Skip(2); // Alignment
 	file.WriteLE<int32_t>(item._iVAdd1);

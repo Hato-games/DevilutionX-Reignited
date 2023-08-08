@@ -376,7 +376,8 @@ void StartSmith()
 	AddSText(0, 14, _("Buy premium items"), UiFlags::ColorWhite | UiFlags::AlignCenter, true);
 	AddSText(0, 16, _("Sell items"), UiFlags::ColorWhite | UiFlags::AlignCenter, true);
 	AddSText(0, 18, _("Repair items"), UiFlags::ColorWhite | UiFlags::AlignCenter, true);
-	AddSText(0, 20, _("Leave the shop"), UiFlags::ColorWhite | UiFlags::AlignCenter, true);
+	AddSText(0, 20, _("Reforge items"), UiFlags::ColorWhite | UiFlags::AlignCenter, true);
+	AddSText(0, 22, _("Leave the shop"), UiFlags::ColorWhite | UiFlags::AlignCenter, true);
 	AddSLine(5);
 	storenumh = 20;
 }
@@ -495,6 +496,41 @@ bool StartSmithPremiumBuy()
 	return true;
 }
 
+bool SmithReforgeOk(int i)
+{
+	Item *pI;
+
+	if (i >= 0) {
+		pI = &MyPlayer->InvList[i];
+	} else {
+		pI = &MyPlayer->SpdList[-(i + 1)];
+	}
+
+	if (pI->isEmpty())
+		return false;
+
+	if(!pI->reignitedItem)
+		return false;
+
+	if (pI->_iMagical != ITEM_QUALITY_MAGIC)
+		return false;
+
+
+	if (pI->_iMiscId > IMISC_OILFIRST && pI->_iMiscId < IMISC_OILLAST)
+		return true;
+
+	if (pI->_itype == ItemType::Misc)
+		return false;
+	if (pI->_itype == ItemType::Gold)
+		return false;
+	if (pI->_iClass == ICLASS_QUEST)
+		return false;
+	if (pI->IDidx == IDI_LAZSTAFF)
+		return false;
+
+	return true;
+}
+
 bool SmithSellOk(int i)
 {
 	Item *pI;
@@ -551,6 +587,73 @@ void ScrollSmithSell(int idx)
 	}
 
 	stextsmax = std::max(storenumh - 4, 0);
+}
+
+void StartSmithReforge()
+{
+	stextsize = true;
+	bool reforgeOk = false;
+	storenumh = 0;
+
+	for (auto &item : storehold) {
+		item.clear();
+	}
+
+	const Player &myPlayer = *MyPlayer;
+
+	for (int8_t i = 0; i < myPlayer._pNumInv; i++) {
+		if (storenumh >= 48)
+			break;
+		if (SmithReforgeOk(i)) {
+			reforgeOk = true;
+			storehold[storenumh] = myPlayer.InvList[i];
+
+			if (storehold[storenumh]._iMagical != ITEM_QUALITY_NORMAL && storehold[storenumh]._iIdentified)
+				storehold[storenumh]._ivalue = storehold[storenumh]._iIvalue;
+
+			storehold[storenumh]._ivalue = std::max(storehold[storenumh]._ivalue / 4, 1);
+			storehold[storenumh]._iIvalue = storehold[storenumh].GetReforgeCost();
+			storehidx[storenumh] = i;
+			storenumh++;
+		}
+	}
+
+	for (int i = 0; i < MaxBeltItems; i++) {
+		if (storenumh >= 48)
+			break;
+		if (SmithReforgeOk(-(i + 1))) {
+			reforgeOk = true;
+			storehold[storenumh] = myPlayer.SpdList[i];
+
+			if (storehold[storenumh]._iMagical != ITEM_QUALITY_NORMAL && storehold[storenumh]._iIdentified)
+				storehold[storenumh]._ivalue = storehold[storenumh]._iIvalue;
+
+			storehold[storenumh]._ivalue = std::max(storehold[storenumh]._ivalue / 4, 1);
+			storehold[storenumh]._iIvalue = storehold[storenumh]._ivalue;
+			storehidx[storenumh] = -(i + 1);
+			storenumh++;
+		}
+	}
+
+	if (!reforgeOk) {
+		stextscrl = false;
+
+		RenderGold = true;
+		AddSText(20, 1, _("You have nothing I can reforge."), UiFlags::ColorWhitegold, false);
+		AddSLine(3);
+		AddItemListBackButton(/*selectable=*/true);
+		return;
+	}
+
+	stextscrl = true;
+	stextsval = 0;
+	stextsmax = myPlayer._pNumInv;
+
+	RenderGold = true;
+	AddSText(20, 1, _("Which item is for reforge?"), UiFlags::ColorWhitegold, false);
+	AddSLine(3);
+	ScrollSmithSell(stextsval);
+	AddItemListBackButton();
 }
 
 void StartSmithSell()
@@ -1007,6 +1110,9 @@ void StoreConfirm(Item &item)
 	case TalkID::WitchSell:
 		prompt = _("Are you sure you want to sell this item?");
 		break;
+	case TalkID::SmithReforge:
+		prompt = _("Are you sure you want to reforge this item?");
+		break;
 	case TalkID::SmithRepair:
 		prompt = _("Are you sure you want to repair this item?");
 		break;
@@ -1371,6 +1477,9 @@ void SmithEnter()
 		StartStore(TalkID::SmithRepair);
 		break;
 	case 20:
+		StartStore(TalkID::SmithReforge);
+		break;
+	case 22:
 		stextflag = TalkID::None;
 		break;
 	}
@@ -1525,6 +1634,23 @@ void StoreSellItem()
 	myPlayer._pGold += cost;
 }
 
+/**
+ * @brief Reforge an item from the player's inventory or belt.
+ */
+void StoreReforgeItem()
+{
+	Player &myPlayer = *MyPlayer;
+
+	int idx = stextvhold + ((stextlhold - stextup) / 4);
+
+	myPlayer.InvList[storehidx[idx]];
+
+	int cost = storehold[idx].GetReforgeCost();
+	TakePlrsMoney(cost);
+
+	myPlayer.InvList[storehidx[idx]].AddAffix(myPlayer, !gbIsHellfire);
+
+}
 void SmithSellEnter()
 {
 	if (stextsel == BackButtonLine()) {
@@ -1548,7 +1674,29 @@ void SmithSellEnter()
 	StartStore(TalkID::Confirm);
 }
 
-/**
+void SmithReforgeEnter()
+{
+	if (stextsel == BackButtonLine()) {
+		StartStore(TalkID::Smith);
+		stextsel = 18;
+		return;
+	}
+
+	stextlhold = stextsel;
+	stextshold = TalkID::SmithReforge;
+	stextvhold = stextsval;
+
+	int idx = stextsval + ((stextsel - stextup) / 4);
+
+	if (!PlayerCanAfford(smithitem[idx].GetReforgeCost())) {
+		StartStore(TalkID::NoMoney);
+		return;
+	}
+
+	StoreItem = storehold[idx];
+	StartStore(TalkID::Confirm);
+}
+    /**
  * @brief Repairs an item in the player's inventory or body in the smith.
  */
 void SmithRepairItem(int price)
@@ -1892,6 +2040,9 @@ void ConfirmEnter(Item &item)
 		case TalkID::SmithSell:
 		case TalkID::WitchSell:
 			StoreSellItem();
+			break;
+		case TalkID::SmithReforge:
+			StoreReforgeItem();
 			break;
 		case TalkID::SmithRepair:
 			SmithRepairItem(item._iIvalue);
@@ -2353,6 +2504,9 @@ void StartStore(TalkID s)
 		}
 		break;
 	}
+	case TalkID::SmithReforge:
+		StartSmithReforge();
+		break;
 	case TalkID::SmithSell:
 		StartSmithSell();
 		break;
@@ -2447,6 +2601,7 @@ void DrawSText(const Surface &out)
 			ScrollSmithBuy(stextsval);
 			break;
 		case TalkID::SmithSell:
+		case TalkID::SmithReforge:
 		case TalkID::SmithRepair:
 		case TalkID::WitchSell:
 		case TalkID::WitchRecharge:
@@ -2524,6 +2679,10 @@ void StoreESC()
 	case TalkID::SmithRepair:
 		StartStore(TalkID::Smith);
 		stextsel = 18;
+		break;
+	case TalkID::SmithReforge:
+		StartStore(TalkID::Smith);
+		stextsel = 20;
 		break;
 	case TalkID::WitchBuy:
 		StartStore(TalkID::Witch);
@@ -2702,6 +2861,9 @@ void StoreEnter()
 		break;
 	case TalkID::SmithRepair:
 		SmithRepairEnter();
+		break;
+	case TalkID::SmithReforge:
+		SmithReforgeEnter();
 		break;
 	case TalkID::Witch:
 		WitchEnter();
