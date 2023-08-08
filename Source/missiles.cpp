@@ -223,7 +223,7 @@ bool applyMonsterHit(Monster& monster, const Player& player, const MissileData m
 		resistReduce = 100;
 	}
 	if (monster.isResistant(missileId, damageType)) {
-		resistReduce = 50;
+		resistReduce = 75;
 	}
 
 	if (damageType == DamageType::Physical)
