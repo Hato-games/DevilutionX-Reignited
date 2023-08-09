@@ -5554,7 +5554,7 @@ void UpdateHellfireFlag(Item &item, const char *identifiedItemName)
 
 int Item::GetReforgeCost()
 {
-	int lvl = AllItemsList[IDidx].iMinMLvl;
+	int lvl = AllItemsList[IDidx].iMinMLvl*2;
 
 	if (_iPrePower != IPL_INVALID)
 	{
@@ -5565,7 +5565,7 @@ int Item::GetReforgeCost()
 		lvl += ItemSuffixes[_iSufPowerIndex].PLMinLvl;
 	}	
 
-	int value = lvl * 10000;
+	int value = lvl * 5000;
 	if (_iPrePower != IPL_INVALID && _iSufPower != IPL_INVALID)
 	{
 		value *= 3;
@@ -5574,13 +5574,27 @@ int Item::GetReforgeCost()
 	return value;
 }
 
+int Item::GetItemLevel()
+{
+	int lvl = AllItemsList[IDidx].iMinMLvl;
+
+	if (_iPrePower != IPL_INVALID) {
+		lvl += ItemPrefixes[_iPrePowerIndex].PLMinLvl;
+	}
+	if (_iSufPower != IPL_INVALID) {
+		lvl += ItemSuffixes[_iSufPowerIndex].PLMinLvl;
+	}
+
+	return lvl;
+}
+
 void Item::AddAffix(Player& player, bool hellfireItem)
 {
 	bool onlygood = false;
 
-	int lvl = AllItemsList[IDidx].iMinMLvl;
-	int minlvl = clamp(lvl / 4, 1, 20);
-	int maxlvl = clamp(lvl * 10, 1, 60);
+	int lvl = GetItemLevel();
+	int minlvl = clamp(lvl / 2, 1, 20);
+	int maxlvl = clamp(lvl * 5, 1, 60);
 	uint32_t currentSeed = GetLCGEngineState();
 
 	AffixItemType flgs;
@@ -5723,6 +5737,7 @@ void Item::AddAffix(Player& player, bool hellfireItem)
 		}
 	}
 
+	CalcItemValue(*this);
 	SetRndSeed(currentSeed);
 
 }
