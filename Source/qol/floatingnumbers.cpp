@@ -26,6 +26,7 @@ struct FloatingNumber {
 	int value;
 	int index;
 	bool reverseDirection;
+	bool critical;
 };
 
 std::deque<FloatingNumber> FloatingQueue;
@@ -41,27 +42,26 @@ void ClearExpiredNumbers()
 	}
 }
 
-GameFontTables GetGameFontSizeByDamage(int value)
+GameFontTables GetGameFontSizeByDamage(bool critical)
 {
-	value >>= 6;
-	if (value >= 300)
-		return GameFont30;
-	if (value >= 100)
+	if (critical)
+	{
 		return GameFont24;
+	}
 	return GameFont12;
 }
 
-UiFlags GetFontSizeByDamage(int value)
+UiFlags GetFontSizeByDamage(bool critical)
 {
-	value >>= 6;
-	if (value >= 300)
-		return UiFlags::FontSize30;
-	if (value >= 100)
+	if (critical)
+	{
 		return UiFlags::FontSize24;
+	}
+
 	return UiFlags::FontSize12;
 }
 
-void UpdateFloatingData(FloatingNumber &num, bool critical)
+void UpdateFloatingData(FloatingNumber &num)
 {
 	if (num.value > 0 && num.value < 64) {
 		num.text = fmt::format("{:.2f}", num.value / 64.0);
@@ -70,14 +70,8 @@ void UpdateFloatingData(FloatingNumber &num, bool critical)
 	}
 
 	num.style &= ~(UiFlags::FontSize12 | UiFlags::FontSize24 | UiFlags::FontSize30);
-	if (critical)
-	{
-		num.style |= UiFlags::FontSize24;
-	}
-	else
-	{
-		num.style |= UiFlags::FontSize12;
-	}
+
+	num.style |= GetFontSizeByDamage(num.critical);
 
 	
 
@@ -129,17 +123,17 @@ void AddFloatingNumber(Point pos, Displacement offset, DamageType type, int valu
 		endOffset = -endOffset;
 
 	for (auto &num : FloatingQueue) {
-		if (num.reverseDirection == damageToPlayer && num.type == type && num.index == index && (SDL_GetTicks() - static_cast<int>(num.lastMerge)) <= 100) {
+		if (num.reverseDirection == damageToPlayer && num.type == type && num.index == index && (SDL_GetTicks() - static_cast<int>(num.lastMerge)) <= 100 && num.critical == critical) {
 			num.value += value;
 			num.lastMerge = SDL_GetTicks();
-			UpdateFloatingData(num, critical);
+			UpdateFloatingData(num);
 			return;
 		}
 	}
 	FloatingNumber num {
-		pos, offset, endOffset, "", SDL_GetTicks() + 2500, SDL_GetTicks(), UiFlags::Outlined, type, value, index, damageToPlayer
+		pos, offset, endOffset, "", SDL_GetTicks() + 2500, SDL_GetTicks(), UiFlags::Outlined, type, value, index, damageToPlayer, critical
 	};
-	UpdateFloatingData(num, critical);
+	UpdateFloatingData(num);
 	FloatingQueue.push_back(num);
 }
 
@@ -202,7 +196,7 @@ void DrawFloatingNumbers(const Surface &out, Point viewPosition, Displacement of
 
 		Point screenPosition { worldOffset.deltaX, worldOffset.deltaY };
 
-		int lineWidth = GetLineWidth(floatingNum.text, GetGameFontSizeByDamage(floatingNum.value));
+		int lineWidth = GetLineWidth(floatingNum.text, GetGameFontSizeByDamage(floatingNum.critical));
 		screenPosition.x -= lineWidth / 2;
 		uint32_t timeLeft = floatingNum.time - SDL_GetTicks();
 		float mul = 1 - (timeLeft / 2500.0f);
