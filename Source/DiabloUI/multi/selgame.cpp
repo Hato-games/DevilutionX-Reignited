@@ -32,6 +32,7 @@ int *gdwPlayerId;
 _difficulty nDifficulty;
 int nTickRate;
 int heroLevel;
+int diabloKillFlag;
 
 static GameData *m_game_data;
 extern int provider;
@@ -283,7 +284,10 @@ void selgame_GameSelection_Focus(int value)
 bool UpdateHeroLevel(_uiheroinfo *pInfo)
 {
 	if (pInfo->saveNumber == gSaveNumber)
+	{
 		heroLevel = pInfo->level;
+		diabloKillFlag = pInfo->diabloKillFlag;
+	}
 
 	return true;
 }
@@ -403,16 +407,17 @@ void selgame_Diff_Focus(int value)
 
 bool IsDifficultyAllowed(int value)
 {
-	if (value == 0 || (value == 1 && heroLevel >= 20) || (value == 2 && heroLevel >= 30)) {
+	if (value == 0 || (value == 1 && diabloKillFlag >= 1) || (value == 2 && diabloKillFlag >= 2))
+	{
 		return true;
 	}
 
 	selgame_Free();
 
 	if (value == 1)
-		UiSelOkDialog(title, _("Your character must reach level 20 before you can enter a multiplayer game of Nightmare difficulty.").data(), false);
+		UiSelOkDialog(title, _("Your character must defeat Diablo on Normal difficulty before you can enter a game of Nightmare difficulty.").data(), false);
 	if (value == 2)
-		UiSelOkDialog(title, _("Your character must reach level 30 before you can enter a multiplayer game of Hell difficulty.").data(), false);
+		UiSelOkDialog(title, _("Your character must defeat Diablo on Nightmare difficulty before you can enter a game of Hell difficulty.").data(), false);
 
 	selgame_Init();
 
@@ -421,7 +426,7 @@ bool IsDifficultyAllowed(int value)
 
 void selgame_Diff_Select(int value)
 {
-	if (selhero_isMultiPlayer && !IsDifficultyAllowed(vecSelGameDlgItems[value]->m_value)) {
+	if (!IsDifficultyAllowed(vecSelGameDlgItems[value]->m_value)) {
 		selgame_GameSelection_Select(0);
 		return;
 	}

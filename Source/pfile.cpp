@@ -648,6 +648,7 @@ bool pfile_ui_set_hero_infos(bool (*uiAddHeroInfo)(_uiheroinfo *))
 				RemoveEmptyInventory(player);
 				CalcPlrInv(player, false);
 
+				uihero.diabloKillFlag = player.pDiabloKillLevel;
 				Game2UiPlayer(player, &uihero, hasSaveGame);
 				uiAddHeroInfo(&uihero);
 			}

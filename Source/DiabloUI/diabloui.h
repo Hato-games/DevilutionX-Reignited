@@ -62,6 +62,7 @@ struct _uiheroinfo {
 	uint16_t vitality;
 	bool hassaved;
 	bool spawned;
+	uint8_t diabloKillFlag=0;
 };
 
 extern OptionalOwnedClxSpriteList ArtLogo;
