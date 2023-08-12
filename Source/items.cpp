@@ -5554,16 +5554,7 @@ void UpdateHellfireFlag(Item &item, const char *identifiedItemName)
 
 int Item::GetReforgeCost()
 {
-	int lvl = AllItemsList[IDidx].iMinMLvl*2;
-
-	if (_iPrePower != IPL_INVALID)
-	{
-		lvl += ItemPrefixes[_iPrePowerIndex].PLMinLvl;
-	}
-	if (_iSufPower != IPL_INVALID)
-	{
-		lvl += ItemSuffixes[_iSufPowerIndex].PLMinLvl;
-	}	
+	int lvl = GetItemLevel();	
 
 	int value = lvl * 5000;
 	if (_iPrePower != IPL_INVALID && _iSufPower != IPL_INVALID)

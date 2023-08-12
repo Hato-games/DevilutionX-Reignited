@@ -608,29 +608,9 @@ void StartSmithReforge()
 			reforgeOk = true;
 			storehold[storenumh] = myPlayer.InvList[i];
 
-			if (storehold[storenumh]._iMagical != ITEM_QUALITY_NORMAL && storehold[storenumh]._iIdentified)
-				storehold[storenumh]._ivalue = storehold[storenumh]._iIvalue;
-
-			storehold[storenumh]._ivalue = std::max(storehold[storenumh]._ivalue / 4, 1);
+			storehold[storenumh]._ivalue = storehold[storenumh].GetReforgeCost();
 			storehold[storenumh]._iIvalue = storehold[storenumh].GetReforgeCost();
 			storehidx[storenumh] = i;
-			storenumh++;
-		}
-	}
-
-	for (int i = 0; i < MaxBeltItems; i++) {
-		if (storenumh >= 48)
-			break;
-		if (SmithReforgeOk(-(i + 1))) {
-			reforgeOk = true;
-			storehold[storenumh] = myPlayer.SpdList[i];
-
-			if (storehold[storenumh]._iMagical != ITEM_QUALITY_NORMAL && storehold[storenumh]._iIdentified)
-				storehold[storenumh]._ivalue = storehold[storenumh]._iIvalue;
-
-			storehold[storenumh]._ivalue = std::max(storehold[storenumh]._ivalue / 4, 1);
-			storehold[storenumh]._iIvalue = storehold[storenumh]._ivalue;
-			storehidx[storenumh] = -(i + 1);
 			storenumh++;
 		}
 	}
@@ -1643,12 +1623,11 @@ void StoreReforgeItem()
 
 	int idx = stextvhold + ((stextlhold - stextup) / 4);
 
-	myPlayer.InvList[storehidx[idx]];
+	myPlayer.InvList[storehidx[idx]].AddAffix(myPlayer, !gbIsHellfire);
 
 	int cost = storehold[idx].GetReforgeCost();
 	TakePlrsMoney(cost);
 
-	myPlayer.InvList[storehidx[idx]].AddAffix(myPlayer, !gbIsHellfire);
 
 }
 void SmithSellEnter()
