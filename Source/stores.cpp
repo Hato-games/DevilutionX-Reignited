@@ -515,6 +515,8 @@ bool SmithReforgeOk(int i)
 	if (pI->_iMagical != ITEM_QUALITY_MAGIC)
 		return false;
 
+	if (!pI->_iIdentified)
+		return false;
 
 	if (pI->_iMiscId > IMISC_OILFIRST && pI->_iMiscId < IMISC_OILLAST)
 		return true;
