@@ -295,7 +295,7 @@ const PLStruct ItemPrefixes[] = {
 { N_("Silver"),         { IPL_TOHIT,                16,     20 },        12, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow | AffixItemType::Misc,                                                GOE_GOOD, true,      true,     1600,    2000,        7 },
 { N_("Gold"),           { IPL_TOHIT,                21,     30 },        18, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow | AffixItemType::Misc,                                                GOE_GOOD, true,      true,     2100,    3000,        9 },
 { N_("Platinum"),       { IPL_TOHIT,                31,     40 },        22, AffixItemType::Weapon |                        AffixItemType::Bow | AffixItemType::Misc,                                                GOE_GOOD, true,      true,     3100,    4000,       11 },
-{ N_("Mithril"),        { IPL_TOHIT,                41,     60 },        30, AffixItemType::Weapon |                        AffixItemType::Bow, | AffixItemType::Misc,                                               GOE_GOOD, true,      true,     4100,    6000,       13 },
+{ N_("Mithril"),        { IPL_TOHIT,                41,     60 },        30, AffixItemType::Weapon |                        AffixItemType::Bow | AffixItemType::Misc,                                                GOE_GOOD, true,      true,     4100,    6000,       13 },
 { N_("Meteoric"),       { IPL_TOHIT,                61,     80 },        37, AffixItemType::Weapon |                        AffixItemType::Bow,                                                                      GOE_ANY,  true,      true,     6100,   10000,       15 },
 { N_("Weird"),          { IPL_TOHIT,                81,    100 },        50, AffixItemType::Weapon |                        AffixItemType::Bow,                                                                      GOE_ANY,  true,      true,    10100,   14000,       17 },
 { N_("Strange"),        { IPL_TOHIT,               101,    150 },        60, AffixItemType::Weapon |                        AffixItemType::Bow,                                                                      GOE_ANY,  true,      true,    14100,   20000,       20 },
@@ -374,6 +374,19 @@ const PLStruct ItemPrefixes[] = {
 { N_("Crystalline"),    { IPL_CRYSTALLINE,          30,     70 },         5, AffixItemType::Weapon,                                                                                                                  GOE_ANY,  false,     true,     1000,    3000,        3 },
 	// TRANSLATORS: Item prefix section end.
 { N_("Doppelganger's"), { IPL_DOPPELGANGER,         81,     95 },        11, AffixItemType::Weapon | AffixItemType::Staff,                                                                                           GOE_ANY,  false,     true,     2000,    2400,       10 },
+
+{ "Damaged",           { IPL_CRITICAL_CURSE,         5,     20 },        15, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow | AffixItemType::Misc,                                                GOE_ANY,  true,      false,       0,       0,       -8 },
+{ "Harmful",           { IPL_CRITICAL,               5,     15 },        15, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow | AffixItemType::Misc,                                                GOE_ANY,  true,      true,     1200,    1500,        9 },
+{ "Pernicious",        { IPL_CRITICAL,              10,     25 },        30, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow | AffixItemType::Misc,                                                GOE_ANY,  true,      true,     2000,    2450,       13 },
+{ "Leathal",           { IPL_CRITICAL,              20,     30 },        45, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow,                                                                      GOE_ANY,  true,      true,     9500,   12000,       16 },
+{ "Fatal",             { IPL_CRITICAL,              30,     40 },        60, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow,                                                                      GOE_ANY,  true,      true,    15000,   20000,       20 },
+
+{ "Silent",             { IPL_SPELLPOW_CURSE,        10,     30 },       15, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow | AffixItemType::Misc,                                                GOE_ANY,  true,      false,       0,       0,       -8 },
+{ "Infusing",           { IPL_SPELLPOW,              10,     20 },       15, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow | AffixItemType::Misc,                                                GOE_ANY,  true,      true,     1200,    1500,        9 },
+{ "Empowering",         { IPL_SPELLPOW,              20,     30 },       30, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow | AffixItemType::Misc,                                                GOE_ANY,  true,      true,     2000,    2450,       13 },
+{ "Unleashed",          { IPL_SPELLPOW,              30,     50 },       45, AffixItemType::Staff,                                                                                                                   GOE_ANY,  true,      true,     9500,   12000,       16 },
+{ "Overpowering",       { IPL_SPELLPOW,              50,     75 },       60, AffixItemType::Staff,                                                                                                                   GOE_ANY,  true,      true,    15000,   20000,       20 },
+
 { "",                   { IPL_INVALID,               0,      0 },         0, AffixItemType::None,                                                                                                                    GOE_ANY,  false,     false,       0,       0,        0 },
 	// clang-format on
 };
@@ -482,6 +495,9 @@ const PLStruct ItemSuffixes[] = {
 { N_("decay"),         { IPL_DECAY,             150,      250 },         1, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow,                                                                      GOE_ANY,  false,     true,      200,     200,        2 },
 	// TRANSLATORS: Item suffix section end.
 { N_("peril"),         { IPL_PERIL,               1,        1 },         5, AffixItemType::Weapon | AffixItemType::Staff | AffixItemType::Bow,                                                                      GOE_ANY,  false,     true,      500,     500,        1 },
+
+
+
 { "",                  {                                      },         0, AffixItemType::None,                                                                                                                    GOE_ANY,  false,     false,       0,       0,        0 },
 	// clang-format on
 };

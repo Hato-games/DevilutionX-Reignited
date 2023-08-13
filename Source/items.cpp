@@ -359,7 +359,7 @@ bool IsPrefixValidForItemType(int i, AffixItemType flgs, bool hellfireItem)
 	AffixItemType itemTypes = ItemPrefixes[i].PLIType;
 
 	if (!hellfireItem) {
-		if (i > 82)
+		if (i > 82 && i < 82+3)
 			return false;
 
 		if (i >= 12 && i <= 20)
@@ -722,7 +722,20 @@ int SaveItemPower(const Player &player, Item &item, ItemPower &power, int affixT
 	int r = RndPL(power.param1, power.param2);
 	int r2 = 0;
 
-	switch (power.type) {
+	switch (power.type)
+	{
+	case IPL_CRITICAL:
+		item._iPLCrit += r;
+		break;
+	case IPL_CRITICAL_CURSE:
+		item._iPLCrit -= r;
+		break;
+	case IPL_SPELLPOW:
+		item._iPLSpellPw += r;
+		break;
+	case IPL_SPELLPOW_CURSE:
+		item._iPLSpellPw -= r;
+		break;
 	case IPL_TOHIT:
 		item._iPLToHit += r;
 		break;
@@ -1563,8 +1576,8 @@ _item_indexes GetItemIndexForDroppableItem(bool considerDropRate, tl::function_r
 		}
 	}
 
-	return (_item_indexes)218;
-	//return ril[GenerateRnd(static_cast<int>(ri))];
+	//return (_item_indexes)218;
+	return ril[GenerateRnd(static_cast<int>(ri))];
 }
 
 _item_indexes RndUItem(Monster *monster)
@@ -2735,6 +2748,8 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 	int btohit = 0; // bonus chance to hit
 	int bac = 0;    // bonus armor class
 
+	int bcrit = 0;
+	int bspellpow = 0;
 	ItemSpecialEffect iflgs = ItemSpecialEffect::None; // item_special_effect flags
 
 	ItemSpecialEffectHf pDamAcFlags = ItemSpecialEffectHf::None;
@@ -2781,6 +2796,8 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 			if (item._iMagical == ITEM_QUALITY_NORMAL || item._iIdentified) {
 				bdam += item._iPLDam;
 				btohit += item._iPLToHit;
+				bcrit += item._iPLCrit;
+				bspellpow += item._iPLSpellPw;
 				if (item._iPLAC != 0) {
 					int tmpac = item._iAC;
 					tmpac *= item._iPLAC;
@@ -2940,10 +2957,10 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 
 	player._pInfraFlag = false;
 
-	int cr = player._pDexterity / (10 - player._pLevel/10) + btohit / 4;
+	int cr = player._pDexterity / (10 - player._pLevel / 10) + bcrit;
 	if (player.InvBody[INVLOC_HAND_LEFT]._itype != ItemType::None && (player.InvBody[INVLOC_HAND_LEFT]._iLoc == item_equip_type::ILOC_TWOHAND || player.InvBody[INVLOC_HAND_RIGHT]._iLoc == item_equip_type::ILOC_TWOHAND))
 	{
-		cr += btohit / 8;
+		cr += bcrit / 4;
 	}
 
 	if (player._pSkillActiveId == SpellID::Deadeye) {
@@ -2952,6 +2969,11 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 
 	cr = clamp(cr, 1, 100);
 	player._pCriticalChance = cr;
+
+
+
+	player._pSpellPower = player._pMagic / 2 + player._pLevel / 5 + bspellpow;
+	
 
 	player._pBlockFlag = false;
 	if (player._pClass == HeroClass::Monk) {
@@ -3894,14 +3916,14 @@ bool DoOil(Player &player, int cii)
 	case IPL_TOHIT:
 	case IPL_TOHIT_CURSE:
 	{
-		return fmt::format(fmt::runtime(_("{:+d}% to hit, {:+d}% crit")), item._iPLToHit, item._iPLToHit/4);
+		return fmt::format(fmt::runtime(_("{:+d}% to hit")), item._iPLToHit, item._iPLToHit/4);
 	}
 	case IPL_DAMP:
 	case IPL_DAMP_CURSE:
 		return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% damage")), item._iPLDam);
 	case IPL_TOHIT_DAMP:
 	case IPL_TOHIT_DAMP_CURSE:
-		return fmt::format(fmt::runtime(_("{:+d}% to hit, {:+d}% crit, {:+d}% dmg")), item._iPLToHit, item._iPLToHit / 4, item._iPLDam);
+		return fmt::format(fmt::runtime(_("{:+d}% to hit and {:+d}% dmg")), item._iPLToHit, item._iPLToHit / 4, item._iPLDam);
 	case IPL_ACP:
 	case IPL_ACP_CURSE:
 		return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% armor")), item._iPLAC);
@@ -4082,6 +4104,7 @@ bool DoOil(Player &player, int cii)
 		return _("50% Mana moved to Health");
 	case IPL_LIFETOMANA:
 		return _("40% Health moved to Mana");
+
 	default:
 		return _("Another ability (NW)");
 	}
@@ -4109,15 +4132,23 @@ bool DoOil(Player &player, int cii)
 
 	switch (plidx)
 	{
+	case IPL_CRITICAL:
+		    return fmt::format(fmt::runtime(_("+{:d}% critical")), val1);
+		case IPL_CRITICAL_CURSE:
+		    return fmt::format(fmt::runtime(_("-{:d}% critical")), val1);
+	    case IPL_SPELLPOW:
+		    return fmt::format(fmt::runtime(_("+{:d}% spell power")), val1);
+	    case IPL_SPELLPOW_CURSE:
+		    return fmt::format(fmt::runtime(_("-{:d}% spell power")), val1);
 		case IPL_TOHIT:
 	case IPL_TOHIT_CURSE:
-		    return fmt::format(fmt::runtime(_("{:+d}% to hit, {:+d}% crit")), val1, val1 / 4);
+		    return fmt::format(fmt::runtime(_("{:+d}% to hit")), val1);
 		case IPL_DAMP:
 		case IPL_DAMP_CURSE:
 		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% damage")), val1);
 		case IPL_TOHIT_DAMP:
 	    case IPL_TOHIT_DAMP_CURSE:
-		    return fmt::format(fmt::runtime(_("{:+d}% to hit, {:+d}% crit, {:+d}% dmg")), val1, val1 / 4, val2);
+		    return fmt::format(fmt::runtime(_("{:+d}% to hit and {:+d}% dmg")), val1, val2);
 		case IPL_ACP:
 		case IPL_ACP_CURSE:
 		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% armor")), val1);

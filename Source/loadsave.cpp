@@ -307,8 +307,9 @@ void LoadItemData(LoadHelper &file, Item &item)
 		item._iPrePowerIndex = file.NextLE<int8_t>();
 		item._iSufPowerIndex = file.NextLE<int8_t>();
 		item._iRarePowerIndex = file.NextLE<int8_t>();
-		
-		file.Skip(3); // For future use
+
+		item._iPLCrit = file.NextLE<int8_t>();
+		item._iPLSpellPw = file.NextLE<int16_t>();
 
 		item._iPrefValue1 = file.NextLE<int32_t>();
 		item._iPrefValue2 = file.NextLE<int32_t>();
@@ -1169,7 +1170,8 @@ void SaveItem(SaveHelper &file, const Item &item)
 		file.WriteLE<int8_t>(item._iSufPowerIndex);
 		file.WriteLE<int8_t>(item._iRarePowerIndex);
 
-		file.Skip(3); //For future use
+		file.WriteLE<int8_t>(item._iPLCrit);
+		file.WriteLE<int16_t>(item._iPLSpellPw);
 
 		file.WriteLE<int32_t>(item._iPrefValue1);
 		file.WriteLE<int32_t>(item._iPrefValue2);

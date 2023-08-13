@@ -3747,6 +3747,6 @@ void Player::DisableSkill()
 
 int Player::GetSpellPower() const
 {
-	return _pMagic / 2 + _pLevel / 5;
+	return _pSpellPower;
 }
 } // namespace devilution

@@ -295,6 +295,7 @@ struct Player {
 	int destParam4;
 	int _pGold;
 	int _pCriticalChance;
+	int _pSpellPower;
 
 	SpellID _pSkillActiveId = SpellID::Null;
 	int _pSkillCooldown = 0;
