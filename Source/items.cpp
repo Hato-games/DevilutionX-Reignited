@@ -1563,7 +1563,8 @@ _item_indexes GetItemIndexForDroppableItem(bool considerDropRate, tl::function_r
 		}
 	}
 
-	return ril[GenerateRnd(static_cast<int>(ri))];
+	return (_item_indexes)218;
+	//return ril[GenerateRnd(static_cast<int>(ri))];
 }
 
 _item_indexes RndUItem(Monster *monster)
@@ -1587,7 +1588,7 @@ _item_indexes RndAllItems()
 	if (GenerateRnd(100) > 25)
 		return IDI_GOLD;
 
-	int itemMaxLevel = ItemsGetCurrlevel() * 2;
+	int itemMaxLevel = sgGameInitInfo.nDifficulty*12 + ItemsGetCurrlevel() * 2;
 	return GetItemIndexForDroppableItem(false, [&itemMaxLevel](const ItemData &item) {
 		if (itemMaxLevel < item.iMinMLvl)
 			return false;
@@ -4323,8 +4324,25 @@ void DrawUniqueInfo(const Surface &out)
 	{
 		case ITEM_QUALITY_NORMAL:
 		case ITEM_QUALITY_MAGIC:
-		case ITEM_QUALITY_RARE: 
+		case ITEM_QUALITY_RARE:
+		{
 			InfoString = curruitem.getName();
+
+			int ilvl = curruitem.GetItemLevel();
+		    int blvl = curruitem.GetItemBaseLevel();
+
+			std::string ilvlString;
+		    if (!curruitem._iIdentified || !curruitem.reignitedItem)
+			{
+				ilvlString = fmt::format(fmt::runtime(_("ilvl: {:d}")), blvl);
+			}
+			else
+			{
+			    ilvlString = fmt::format(fmt::runtime(_("ilvl: {:d} ({:d})")), blvl, ilvl);
+			}
+			Rectangle rect2 { position + Displacement { 32, 56 + 20 }, { 257, 0 } };
+			DrawString(out, ilvlString, rect2, UiFlags::AlignCenter | fontColor);
+		}
 			break;
 
 		case ITEM_QUALITY_UNIQUE:
@@ -4343,6 +4361,8 @@ void DrawUniqueInfo(const Surface &out)
 	}
 
 	DrawString(out, InfoString, rect, UiFlags::AlignCenter | fontColor);
+
+
 
 	const Rectangle dividerLineRect { position + Displacement { 26, 25 }, { 267, 3 } };
 	out.BlitFrom(out, MakeSdlRect(dividerLineRect), dividerLineRect.position + Displacement { 0, 5 * 12 + 13 });
@@ -5563,6 +5583,12 @@ int Item::GetReforgeCost()
 	}
 
 	return value;
+}
+
+int Item::GetItemBaseLevel()
+{
+	int lvl = AllItemsList[IDidx].iMinMLvl;
+	return lvl;
 }
 
 int Item::GetItemLevel()

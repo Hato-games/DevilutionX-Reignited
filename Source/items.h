@@ -178,6 +178,7 @@ struct Player;
 
 struct Item {
 
+	int GetItemBaseLevel();
 	int GetItemLevel();
 	int GetReforgeCost();
 	void AddAffix(Player& player, bool hellfireItem);
