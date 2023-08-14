@@ -359,7 +359,7 @@ bool IsPrefixValidForItemType(int i, AffixItemType flgs, bool hellfireItem)
 	AffixItemType itemTypes = ItemPrefixes[i].PLIType;
 
 	if (!hellfireItem) {
-		if (i > 82 && i < 82+3)
+		if (i > IPL_LASTDIABLO)
 			return false;
 
 		if (i >= 12 && i <= 20)
