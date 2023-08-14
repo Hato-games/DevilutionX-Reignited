@@ -2171,11 +2171,12 @@ void SpawnOnePremium(Item &premiumItem, int plvl, const Player &player)
 	dexterity += dexterity / 5;
 	magic += magic / 5;
 
-	plvl = clamp(plvl, 1, 30);
+	plvl = clamp(plvl, 1, 25 + sgGameInitInfo.nDifficulty*10);
 
 	int maxCount = 150;
 	const bool unlimited = !gbIsHellfire; // TODO: This could lead to an infinite loop if a suitable item can never be generated
-	for (int count = 0; unlimited || count < maxCount; count++) {
+	for (int count = 0; unlimited || count < maxCount; count++)
+	{
 		premiumItem = {};
 		premiumItem._iSeed = AdvanceRndSeed();
 		SetRndSeed(premiumItem._iSeed);
@@ -2184,9 +2185,7 @@ void SpawnOnePremium(Item &premiumItem, int plvl, const Player &player)
 		GetItemBonus(player, premiumItem, plvl / 2, plvl, true, !gbIsHellfire, false);
 
 		if (!gbIsHellfire) {
-			if (premiumItem._iIvalue <= 140000) {
 				break;
-			}
 		} else {
 			int itemValue = 0;
 			switch (premiumItem._itype) {
