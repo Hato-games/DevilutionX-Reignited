@@ -752,13 +752,16 @@ int SaveItemPower(const Player &player, Item &item, ItemPower &power, int affixT
 		item._iDamAcFlags |= ItemSpecialEffectHf::Doppelganger;
 		[[fallthrough]];
 	case IPL_TOHIT_DAMP:
-		r2 = RndPL(power.param1, power.param2);
+		r2 = r;
+		r = CalculateToHitBonus(power.param1);
 		item._iPLDam += r2;
-		item._iPLToHit += CalculateToHitBonus(power.param1);
+		item._iPLToHit += r;
 		break;
 	case IPL_TOHIT_DAMP_CURSE:
-		item._iPLDam -= r;
-		item._iPLToHit += CalculateToHitBonus(-power.param1);
+		r2 = r;
+		r = CalculateToHitBonus(power.param1);
+		item._iPLDam -= r2;
+		item._iPLToHit += r;
 		break;
 	case IPL_ACP:
 		item._iPLAC += r;
@@ -3457,7 +3460,7 @@ Item *SpawnUnique(_unique_items uid, Point position, std::optional<int> level /*
 	return &item;
 }
 
-void SpawnItem(Monster &monster, Point position, bool sendmsg, bool spawn /*= false*/)
+void SpawnItem(Monster &monster, Point position, bool sendmsg, bool spawn /*= false*/, bool allowUnique /*=true*/)
 {
 	_item_indexes idx;
 	bool onlygood = true;
@@ -3465,7 +3468,7 @@ void SpawnItem(Monster &monster, Point position, bool sendmsg, bool spawn /*= fa
 	bool dropsSpecialTreasure = (monster.data().treasure & T_UNIQ) != 0;
 	bool dropBrain = Quests[Q_MUSHROOM]._qactive == QUEST_ACTIVE && Quests[Q_MUSHROOM]._qvar1 == QS_MUSHGIVEN;
 
-	if (dropsSpecialTreasure && !UseMultiplayerQuests()) {
+	if (allowUnique && dropsSpecialTreasure && !UseMultiplayerQuests()) {
 		Item *uniqueItem = SpawnUnique(static_cast<_unique_items>(monster.data().treasure & T_MASK), position, std::nullopt, false);
 		if (uniqueItem != nullptr && sendmsg)
 			NetSendCmdPItem(false, CMD_DROPITEM, uniqueItem->position, *uniqueItem);

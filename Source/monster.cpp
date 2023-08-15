@@ -857,7 +857,7 @@ void DiabloDeath(Monster &diablo, bool sendmsg)
 	
 }
 
-void SpawnLoot(Monster &monster, bool sendmsg)
+void SpawnLoot(Monster &monster, bool sendmsg, bool allowUnique)
 {
 	if (monster.type().type == MT_HORKSPWN) {
 		return;
@@ -889,7 +889,7 @@ void SpawnLoot(Monster &monster, bool sendmsg)
 		CreateMagicWeapon(monster.position.tile, ItemType::Bow, ICURS_LONG_WAR_BOW, sendmsg, false);
 		CreateSpellBook(monster.position.tile, SpellID::Nova, sendmsg, false);
 	} else if (!monster.isPlayerMinion()) {
-		SpawnItem(monster, monster.position.tile, sendmsg);
+		SpawnItem(monster, monster.position.tile, sendmsg, false, allowUnique);
 	}
 }
 
@@ -1201,10 +1201,12 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 	dam = dam / 100;
 
 	int level = monster.level(sgGameInitInfo.nDifficulty)*10;
-	int cr = level / 3;
+	int cr = 50 + level / 4;
 	int critRoll = GenerateRnd(1000);
+	bool critical = false;
 	if (critRoll < cr)
 	{
+		critical = true;
 		int critDmg = 150 + sgGameInitInfo.nDifficulty * 25;
 		dam = dam * critDmg;
 		dam = dam / 100;
@@ -1222,7 +1224,7 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 			int reflectedDamage = CheckReflect(monster, player, dam);
 			dam = std::max(dam - reflectedDamage, 0);
 		}
-		ApplyPlrDamage(DamageType::Physical, player, 0, 0, dam);
+		ApplyPlrDamage(DamageType::Physical, player, 0, 0, dam, DeathReason::MonsterOrTrap, critical);
 	}
 
 	// Reflect can also kill a monster, so make sure the monster is still alive
@@ -3911,6 +3913,8 @@ void MonsterDeath(Monster &monster, Direction md, bool sendmsg)
 		}
 	}
 
+	bool allowUnique = true;
+
 	int itemCount = 0;
 	if (monster.type().type == MT_DIABLO)
 	{
@@ -3927,7 +3931,8 @@ void MonsterDeath(Monster &monster, Direction md, bool sendmsg)
 	for(; dropChance >= 100; dropChance -= 100)
 	{
 		SetRndSeed(monster.rndItemSeed + itemCount);
-		SpawnLoot(monster, sendmsg);
+		SpawnLoot(monster, sendmsg, allowUnique);
+		allowUnique = false;
 		itemCount++;
 	}
 
@@ -3938,7 +3943,7 @@ void MonsterDeath(Monster &monster, Direction md, bool sendmsg)
 		if (extraItemRoll < dropChance)
 		{
 			SetRndSeed(monster.rndItemSeed + itemCount);
-			SpawnLoot(monster, sendmsg);
+			SpawnLoot(monster, sendmsg, allowUnique);
 		}
 	}
 

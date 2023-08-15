@@ -1329,10 +1329,10 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 	}
 
 	bool critical = false;
-	if (monster != nullptr)
+	if (monster != nullptr && mtype != MissileID::DiabloApocalypseBoom)
 	{
 		int level = monster->level(sgGameInitInfo.nDifficulty) * 10;
-		int cr = level / 5;
+		int cr = 50 + level / 6;
 		int critRoll = GenerateRnd(1000);
 		if (critRoll < cr) {
 			critical = true;
@@ -1428,7 +1428,7 @@ bool PlayerMHit(int pnum, Monster *monster, int dist, int mind, int maxd, Missil
 		}
 
 		if (&player == MyPlayer) {
-			ApplyPlrDamage(damageType, player, 0, 0, dam, deathReason);
+			ApplyPlrDamage(damageType, player, 0, 0, dam, deathReason, critical);
 		}
 
 		if (player._pHitPoints >> 6 > 0) {
