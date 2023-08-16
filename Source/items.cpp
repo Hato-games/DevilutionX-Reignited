@@ -4856,7 +4856,8 @@ void SpawnWitch(int lvl)
 			continue;
 		}
 
-		if (gbIsHellfire) {
+		if (gbIsHellfire)
+		{
 			if (i < PinnedItemCount + MaxPinnedBookCount && bookCount < pinnedBookCount) {
 				_item_indexes bookType = PinnedBookTypes[i - PinnedItemCount];
 				if (lvl >= AllItemsList[bookType].iMinMLvl) {
@@ -4877,20 +4878,64 @@ void SpawnWitch(int lvl)
 			continue;
 		}
 
-		do {
+		int plvl = MyPlayer->_pLevel;
+		plvl = clamp(plvl, 1, 25 + sgGameInitInfo.nDifficulty * 10);
+
+		bool allowedItem = true;
+		do
+		{
+			allowedItem = true;
 			item = {};
 			item._iSeed = AdvanceRndSeed();
 			SetRndSeed(item._iSeed);
 			_item_indexes itemData = RndWitchItem(*MyPlayer, lvl);
-			GetItemAttrs(item, itemData, lvl);
-			int maxlvl = -1;
+
+			GetItemAttrs(item, itemData, plvl);
+
+			
+			if (item._iMiscId == IMISC_BOOK)
+			{
+				switch (item._iSpell)
+				{
+					//Allowed spellbooks in shop
+					//Page1
+					case SpellID::Firebolt:
+					case SpellID::ChargedBolt:
+					case SpellID::Healing:
+				    case SpellID::HealOther:
+				    case SpellID::HolyBolt:
+				    case SpellID::Inferno:
+					//Page2
+				    case SpellID::Resurrect:
+				    case SpellID::FireWall:
+				    case SpellID::Telekinesis:
+				    case SpellID::Lightning:
+				    case SpellID::TownPortal:
+				    case SpellID::Flash:
+				    case SpellID::StoneCurse:
+					//Page3
+				    case SpellID::Phasing:
+						break;
+				    default:
+						allowedItem = false;
+						continue;
+					break;
+
+				}
+
+			}
+			int maxlvl = plvl;
+
+
+
 			if (GenerateRnd(100) <= 5)
-				maxlvl = 2 * lvl;
-			if (maxlvl == -1 && item._iMiscId == IMISC_STAFF)
-				maxlvl = 2 * lvl;
-			if (maxlvl != -1)
-				GetItemBonus(*MyPlayer, item, maxlvl / 2, maxlvl, true, true, false);
-		} while (item._iIvalue > maxValue);
+			{
+				maxlvl += 4;
+			}
+
+			GetItemBonus(*MyPlayer, item, maxlvl / 2, maxlvl, true, true, false);
+			
+		} while (!allowedItem);
 
 		item._iCreateInfo = lvl | CF_WITCH;
 		item._iIdentified = true;

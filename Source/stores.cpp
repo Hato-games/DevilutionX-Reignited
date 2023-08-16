@@ -2336,7 +2336,10 @@ void SetupTownStores()
 			if (myPlayer._pLvlVisited[i])
 				l = i;
 		}
-	} else {
+	}
+	else
+	{
+		l = clamp(l, 1, 25 + sgGameInitInfo.nDifficulty * 10);
 		SetRndSeed(glSeedTbl[currlevel] * SDL_GetTicks());
 	}
 
