@@ -1836,19 +1836,66 @@ void Player::RestorePartialLife()
 	int l = std::max(flatVal, wholeHitpoints / 4);
 	l = l << 6;
 
+	int penalty = GetHealPenalty();
+	if (penalty > 0)
+	{
+		penalty = GetHealPenalty() * l;
+		penalty = penalty / 100;
+		l -= penalty;
+	}
+
+	_pHitPoints = std::min(_pHitPoints + l, _pMaxHP);
+	_pHPBase = std::min(_pHPBase + l, _pMaxHPBase);
+
+}
+void Player::RestoreFullLife()
+{
+	int l = _pMaxHP;
+	int penalty = GetHealPenalty();
+	if (penalty > 0) {
+		penalty = GetHealPenalty() * l;
+		penalty = penalty / 100;
+		l -= penalty;
+	}
+
 	_pHitPoints = std::min(_pHitPoints + l, _pMaxHP);
 	_pHPBase = std::min(_pHPBase + l, _pMaxHPBase);
 }
 
 void Player::RestorePartialMana()
 {
-	int wholeManaPoints = _pMaxMana >> 6;
+	if (HasNoneOf(_pIFlags, ItemSpecialEffect::NoMana))
+	{
+		int wholeManaPoints = _pMaxMana >> 6;
 
-	int flatVal = (IsAnyOf(_pClass, HeroClass::Sorcerer)) ? 75 : 40;
-	int l = std::max(flatVal, wholeManaPoints / 4);
-	l = l << 6;
+		int flatVal = (IsAnyOf(_pClass, HeroClass::Sorcerer)) ? 75 : 40;
+		int l = std::max(flatVal, wholeManaPoints / 4);
+		l = l << 6;
 
+		int penalty = GetHealPenalty();
+		if (penalty > 0)
+		{
+			penalty = GetHealPenalty() * l;
+			penalty = penalty / 100;
+			l -= penalty;
+		}
+
+		_pMana = std::min(_pMana + l, _pMaxMana);
+		_pManaBase = std::min(_pManaBase + l, _pMaxManaBase);
+	}
+}
+
+void Player::RestoreFullMana()
+{
 	if (HasNoneOf(_pIFlags, ItemSpecialEffect::NoMana)) {
+		int l = _pMaxMana;
+		int penalty = GetHealPenalty();
+		if (penalty > 0) {
+			penalty = GetHealPenalty() * l;
+			penalty = penalty / 100;
+			l -= penalty;
+		}
+
 		_pMana = std::min(_pMana + l, _pMaxMana);
 		_pManaBase = std::min(_pManaBase + l, _pMaxManaBase);
 	}
@@ -3725,6 +3772,34 @@ void Player::RegenTick()
 	if (_teleportCooldownLeft > 0) {
 		_teleportCooldownLeft--;
 	}
+
+	if (_healPenaltyDurationLeft > 0)
+	{
+		_healPenaltyDurationLeft--;
+		if (_healPenaltyDurationLeft <= 0)
+		{
+			_healPenaltyStacks--;
+			if (_healPenaltyStacks > 0)
+			{
+				_healPenaltyDurationLeft = 20 * 5;
+			}
+		}
+	}
+}
+
+void Player::AddHealPenaltyStack()
+{
+	if (_healPenaltyStacks < 3)
+	{
+		_healPenaltyStacks++;
+	}
+
+	_healPenaltyDurationLeft = 20 * 5;
+}
+
+int Player::GetHealPenalty()
+{
+	return 25 * _healPenaltyStacks;
 }
 
 void Player::EnableSkill(SpellID sn)

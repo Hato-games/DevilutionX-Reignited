@@ -48,6 +48,7 @@ struct BuffInfo
 {
 	SpellID spellID = SpellID::Null;
 	int duration = 0;
+	int stacks = 0;
 	SpellType spellType;
 };
 /**

@@ -227,6 +227,8 @@ struct SpellCastInfo {
 
 struct Player {
 
+	void AddHealPenaltyStack();
+	int GetHealPenalty();
 	std::pair<int, int> GetDamage() const;
 	void CalculateBaseDamage();
 	void RegenTick();
@@ -303,6 +305,9 @@ struct Player {
 
 	short _apocalipseCooldownLeft = 0;
 	short _teleportCooldownLeft = 0;
+
+	char _healPenaltyStacks = 0;
+	short _healPenaltyDurationLeft = 0;
 	/**
 	 * @brief Contains Information for current Animation
 	 */
@@ -692,11 +697,7 @@ struct Player {
 	/**
 	 * @brief Resets hp to maxHp
 	 */
-	void RestoreFullLife()
-	{
-		_pHitPoints = _pMaxHP;
-		_pHPBase = _pMaxHPBase;
-	}
+	void RestoreFullLife();
 
 	/**
 	 * @brief Restores between 1/8 (inclusive) and 1/4 (exclusive) of the players max Mana (further adjusted by class).
@@ -711,13 +712,7 @@ struct Player {
 	/**
 	 * @brief Resets mana to maxMana (if the player can use magic)
 	 */
-	void RestoreFullMana()
-	{
-		if (HasNoneOf(_pIFlags, ItemSpecialEffect::NoMana)) {
-			_pMana = _pMaxMana;
-			_pManaBase = _pMaxManaBase;
-		}
-	}
+	void RestoreFullMana();
 	/**
 	 * @brief Sets the readied spell to the spell in the specified equipment slot. Does nothing if the item does not have a valid spell.
 	 * @param bodyLocation - the body location whose item will be checked for the spell.

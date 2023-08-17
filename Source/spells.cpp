@@ -295,26 +295,28 @@ void DoHealOther(const Player &caster, Player &target)
 		return;
 	}
 
-	int hp = (GenerateRnd(10) + 1) << 6;
-	for (int i = 0; i < caster._pLevel; i++) {
-		hp += (GenerateRnd(4) + 1) << 6;
-	}
-	for (int i = 0; i < caster.GetSpellLevel(SpellID::HealOther); i++) {
-		hp += (GenerateRnd(6) + 1) << 6;
-	}
 
-	if (caster._pClass == HeroClass::Warrior || caster._pClass == HeroClass::Barbarian) {
-		hp *= 2;
-	} else if (caster._pClass == HeroClass::Rogue || caster._pClass == HeroClass::Bard) {
-		hp += hp / 2;
-	} else if (caster._pClass == HeroClass::Monk) {
-		hp *= 3;
+	const MissileData &missileData = GetMissileData(MissileID::HealOther);
+	std::pair<int, int> heal = missileData.GetSpellDamage(caster.GetSpellPower(), caster.GetSpellLevel(SpellID::HealOther));
+	int healValue = heal.first + GenerateRnd(heal.second - heal.first);
+	
+	healValue <<= 6;
+	int penalty = target.GetHealPenalty();
+
+	if (penalty > 0)
+	{
+		penalty = target.GetHealPenalty() * healValue;
+		penalty = penalty / 100;
+		healValue -= penalty;
 	}
+	
+	target.AddHealPenaltyStack();
 
-	target._pHitPoints = std::min(target._pHitPoints + hp, target._pMaxHP);
-	target._pHPBase = std::min(target._pHPBase + hp, target._pMaxHPBase);
+	target._pHitPoints = std::min(target._pHitPoints + healValue, target._pMaxHP);
+	target._pHPBase = std::min(target._pHPBase + healValue, target._pMaxHPBase);
 
-	if (&target == MyPlayer) {
+	if (&target == MyPlayer)
+	{
 		RedrawComponent(PanelDrawComponent::Health);
 	}
 }

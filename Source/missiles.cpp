@@ -2111,7 +2111,7 @@ void AddFirebolt(Missile &missile, AddMissileParameter &parameter)
 	}
 	UpdateMissileVelocity(missile, dst, sp);
 	SetMissDir(missile, GetDirection16(missile.position.start, dst));
-	missile._mirange = 256;
+	missile._mirange = 64;
 	missile.var1 = missile.position.start.x;
 	missile.var2 = missile.position.start.y;
 	missile._mlid = AddLight(missile.position.start, 8);
@@ -2797,19 +2797,24 @@ void AddHealing(Missile &missile, AddMissileParameter & /*parameter*/)
 {
 	Player &player = Players[missile._misource];
 
-	int hp = GenerateRnd(10) + 1;
-	hp += GenerateRndSum(4, player._pLevel) + player._pLevel;
-	hp += GenerateRndSum(6, missile._mispllvl) + missile._mispllvl;
-	hp <<= 6;
+	const MissileData &missileData = GetMissileData(missile._mitype);
+	std::pair<int, int> heal = missileData.GetSpellDamage(player.GetSpellPower(), missile._mispllvl);
+	int healValue = heal.first + GenerateRnd(heal.second - heal.first);
 
-	if (player._pClass == HeroClass::Warrior || player._pClass == HeroClass::Barbarian || player._pClass == HeroClass::Monk) {
-		hp *= 2;
-	} else if (player._pClass == HeroClass::Rogue || player._pClass == HeroClass::Bard) {
-		hp += hp / 2;
+	healValue <<= 6;
+	int penalty = player.GetHealPenalty();
+
+	if (penalty > 0)
+	{
+		penalty = player.GetHealPenalty() * healValue;
+		penalty = penalty / 100;
+		healValue -= penalty;
 	}
 
-	player._pHitPoints = std::min(player._pHitPoints + hp, player._pMaxHP);
-	player._pHPBase = std::min(player._pHPBase + hp, player._pMaxHPBase);
+	player.AddHealPenaltyStack();
+
+	player._pHitPoints = std::min(player._pHitPoints + healValue, player._pMaxHP);
+	player._pHPBase = std::min(player._pHPBase + healValue, player._pMaxHPBase);
 
 	missile._miDelFlag = true;
 	RedrawComponent(PanelDrawComponent::Health);

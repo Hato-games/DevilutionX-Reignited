@@ -1066,7 +1066,7 @@ void DrawBuffs(const Surface &out)
 		BuffInfo buffInfra;
 		buffInfra.spellID = SpellID::Infravision;
 		buffInfra.duration = 0;
-		buffInfra.spellType = SpellType::Scroll;
+		buffInfra.spellType = SpellType::Spell;
 		buffs.push_back(buffInfra);
 	}
 
@@ -1107,30 +1107,56 @@ void DrawBuffs(const Surface &out)
 		buffs.push_back(buffTele);
 	}
 
+	
+	if (player._healPenaltyStacks > 0)
+	{
+		BuffInfo debuffHeal;
+		debuffHeal.spellID = SpellID::Healing;
+		debuffHeal.stacks = player._healPenaltyStacks;
+		debuffHeal.duration = player._healPenaltyDurationLeft;
+		debuffHeal.spellType = SpellType::Scroll;
+		buffs.push_back(debuffHeal);
+	}
+
 	for (int i = 0; i < buffs.size(); i++)
 	{
 		SetSpellTrans(buffs[i].spellType);
 		Point pos(gnScreenWidth / 4 - ((i+1)*44) - 4, 4 + 38);
 		DrawSmallSpellIcon(out, pos, buffs[i].spellID);
 
-		std::string text = "";
 		if (buffs[i].duration > 0)
 		{
+			std::string text = "";
 			int duration = buffs[i].duration / 2;
 			int secs = duration / 10;
-			if (secs > 60) {
-			int mins = secs / 60;
-			secs = secs % 60;
-			text = fmt::format(fmt::runtime(_("{:d}m{:d}s")), mins, secs);
-			} else {
-			text = fmt::format(fmt::runtime(_("{:d}s")), secs);
-
-			pos.x += 8;
-			if (text.length() == 2) {
-				pos.x += 4;
+			if (secs > 60)
+			{
+				int mins = secs / 60;
+				secs = secs % 60;
+				text = fmt::format(fmt::runtime(_("{:d}m{:d}s")), mins, secs);
 			}
+			else
+			{
+				text = fmt::format(fmt::runtime(_("{:d}s")), secs);
+
+			
+				pos.x += 8;
+				if (text.length() == 2)
+				{
+					pos.x += 4;
+				}
+			
 			}
 
+
+			DrawString(out, text, pos);
+		}
+
+		if (buffs[i].stacks > 0)
+		{
+			Point pos(gnScreenWidth / 4 - ((i + 1) * 44) + 24, 4 + 38-12);
+			std::string text = fmt::format(fmt::runtime(_("{:d}")), buffs[i].stacks);
+			
 			DrawString(out, text, pos);
 		}
 

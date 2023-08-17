@@ -4582,24 +4582,28 @@ void UseItem(size_t pnum, item_misc_id mid, SpellID spellID, int spellFrom)
 	switch (mid) {
 	case IMISC_HEAL:
 		player.RestorePartialLife();
+		player.AddHealPenaltyStack();
 		if (&player == MyPlayer) {
 			RedrawComponent(PanelDrawComponent::Health);
 		}
 		break;
 	case IMISC_FULLHEAL:
 		player.RestoreFullLife();
+		player.AddHealPenaltyStack();
 		if (&player == MyPlayer) {
 			RedrawComponent(PanelDrawComponent::Health);
 		}
 		break;
 	case IMISC_MANA:
 		player.RestorePartialMana();
+		player.AddHealPenaltyStack();
 		if (&player == MyPlayer) {
 			RedrawComponent(PanelDrawComponent::Mana);
 		}
 		break;
 	case IMISC_FULLMANA:
 		player.RestoreFullMana();
+		player.AddHealPenaltyStack();
 		if (&player == MyPlayer) {
 			RedrawComponent(PanelDrawComponent::Mana);
 		}
@@ -4611,6 +4615,7 @@ void UseItem(size_t pnum, item_misc_id mid, SpellID spellID, int spellFrom)
 		ModifyPlrMag(player, 1);
 		if (gbIsHellfire) {
 			player.RestoreFullMana();
+			player.AddHealPenaltyStack();
 			if (&player == MyPlayer) {
 				RedrawComponent(PanelDrawComponent::Mana);
 			}
@@ -4623,6 +4628,7 @@ void UseItem(size_t pnum, item_misc_id mid, SpellID spellID, int spellFrom)
 		ModifyPlrVit(player, 1);
 		if (gbIsHellfire) {
 			player.RestoreFullLife();
+			player.AddHealPenaltyStack();
 			if (&player == MyPlayer) {
 				RedrawComponent(PanelDrawComponent::Health);
 			}
@@ -4631,6 +4637,7 @@ void UseItem(size_t pnum, item_misc_id mid, SpellID spellID, int spellFrom)
 	case IMISC_REJUV: {
 		player.RestorePartialLife();
 		player.RestorePartialMana();
+		player.AddHealPenaltyStack();
 		if (&player == MyPlayer) {
 			RedrawComponent(PanelDrawComponent::Health);
 			RedrawComponent(PanelDrawComponent::Mana);
@@ -4640,6 +4647,7 @@ void UseItem(size_t pnum, item_misc_id mid, SpellID spellID, int spellFrom)
 	case IMISC_ARENAPOT:
 		player.RestoreFullLife();
 		player.RestoreFullMana();
+		player.AddHealPenaltyStack();
 		if (&player == MyPlayer) {
 			RedrawComponent(PanelDrawComponent::Health);
 			RedrawComponent(PanelDrawComponent::Mana);
