@@ -2556,7 +2556,14 @@ void AddPlrMonstExper(int lvl, int exp, char pmask)
 		}
 	}
 
-	if (totplrs != 0) {
+	if (totplrs != 0)
+	{
+		if (totplrs > 1)
+		{
+			int multiplier = 100 + totplrs * 25;
+			exp = exp * multiplier;
+			exp = exp / 100;
+		}
 		int e = exp / totplrs;
 		if ((pmask & (1 << MyPlayerId)) != 0)
 			AddPlrExperience(*MyPlayer, lvl, e);
