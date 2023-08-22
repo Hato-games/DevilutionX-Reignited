@@ -606,13 +606,12 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 		int midam = player._pIFMinDam + GenerateRnd(player._pIFMaxDam - player._pIFMinDam);
 		AddMissile(player.position.tile, player.position.temp, player._pdir, MissileID::SpectralArrow, TARGET_MONSTERS, player.getId(), midam, 0);
 	}
-	int mind = player._pIMinDam;
-	int maxd = player._pIMaxDam;
-	int dam = GenerateRnd(maxd - mind + 1) + mind;
-	dam += dam * player._pIBonusDam / 100;
-	dam += player._pIBonusDamMod;
-	int dam2 = dam << 6;
-	dam += player._pDamageMod;
+
+	std::pair<int, int> damage = player.GetDamage();
+
+
+	int dam = GenerateRnd(damage.second - damage.first + 1) + damage.first;
+	dam = dam << 6;
 
 	int pierce = 100 - player._pIEnAc;
 	// monster.armorClass - player.CalculateArmorPierce(monster.armorClass, true);
@@ -680,7 +679,7 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 		AddDoppelganger(monster);
 	}
 
-	dam <<= 6;
+
 	if (HasAnyOf(player.pDamAcFlags, ItemSpecialEffectHf::Jesters)) {
 		int r = GenerateRnd(201);
 		if (r >= 100)
@@ -693,9 +692,9 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 
 	if (&player == MyPlayer) {
 		if (HasAnyOf(player.pDamAcFlags, ItemSpecialEffectHf::Peril)) {
-			dam2 += player._pIGetHit << 6;
-			if (dam2 >= 0) {
-				ApplyPlrDamage(DamageType::Physical, player, 0, 1, dam2);
+
+			if (dam >= 0) {
+				ApplyPlrDamage(DamageType::Physical, player, 0, 1, dam/2);
 			}
 			dam *= 2;
 		}
@@ -3617,17 +3616,63 @@ std::pair<int, int> Player::GetDamage() const
 	int weapMin = _pIMinDam + _pIBonusDam * _pIMinDam / 100 + _pIBonusDamMod;
 	int weapMax = _pIMaxDam + _pIBonusDam * _pIMaxDam / 100 + _pIBonusDamMod;
 
-	int scaling = 10 + _pDamageMod / 2;
+	int scaling = 100;
+
+	switch (this->_pClass)
+	{
+		case HeroClass::Warrior:
+		{
+			 if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Mace || this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Axe || this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Sword
+				 || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Mace || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Axe || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Sword)
+			 {
+				scaling += _pStrength / 2; //+50% str bonus for melee weapon
+			 }
+			 else
+			 {
+			    scaling += (_pStrength + _pDexterity) / 6; //For other weapons
+			 }
+		}
+			break;
+	    case HeroClass::Rogue:
+		{
+
+		     if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Bow)
+			 {
+			    scaling += _pDexterity / 2; //+50% dex bonus for bow weapon
+		     }
+			 else
+			 {
+			    scaling += (_pStrength + _pDexterity) / 6; // For other weapons
+		     }
+	    }
+			break;
+	    case HeroClass::Sorcerer:
+		{
+		     if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Staff || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Staff)
+			 {
+			    scaling += _pMagic / 5; // Give some magic and love to Sorc melee with staff (+20% mag)
+			 }
+			 else
+			 {
+			    scaling += (_pStrength + _pDexterity) / 6; // For other weapons
+			 }
+			
+	    }
+			break;
+	}
+
 	weapMin = weapMin * scaling;
 	weapMax = weapMax * scaling;
 
-	int mindam = _pDamageMod + weapMin / 10;
-	int maxdam = _pDamageMod + weapMax / 10;
+	int mindam = _pDamageMod + weapMin / 100;
+	int maxdam = _pDamageMod + weapMax / 100;
 	return { mindam, maxdam };
 }
 
 void Player::CalculateBaseDamage()
 {
+	int value = _pStrength / 10; // 10% str into base dmg
+	value += _pLevel / 10;//+1 per 10 levels;
 	switch (this->_pClass)
 	{
 		case HeroClass::Warrior:
@@ -3637,16 +3682,13 @@ void Player::CalculateBaseDamage()
 			this->_pDamageMod = this->_pLevel * this->_pStrength / 100;
 			*/
 
-			int value = (_pStrength/2 + _pDexterity / 4) * 10;
 			if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Mace || this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Axe || this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Sword
 		        || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Mace || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Axe || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Sword)
 			{
-				value += _pStrength / 2 * 10; // Doubles str bonus when mace/axe/sword is equipped
+				value += _pStrength / 20;//+5% str bonus for melee weapon
 			}
-			int levelScale = 100 - _pLevel;
-			value = value / levelScale;
-			_pDamageMod = value;
 
+			_pDamageMod = value;
 		}
 		break;
 		case HeroClass::Rogue:
@@ -3656,14 +3698,11 @@ void Player::CalculateBaseDamage()
 			this->_pDamageMod = this->_pLevel * (this->_pStrength + this->_pDexterity) / 200;
 			*/
 
-			int value = (_pStrength / 4 + _pDexterity/2) * 10;
 		    if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Bow)
 			{
-				value += _pDexterity/2 * 10;//Doubles dex bonus when bow is equipped
+				value += _pDexterity / 20;//+5% dex bonus for bow weapon
 		    }
 
-			int levelScale = 100 - _pLevel;
-			value = value / levelScale;
 			_pDamageMod = value;
 		}
 		break;
@@ -3674,14 +3713,11 @@ void Player::CalculateBaseDamage()
 			this->_pDamageMod = this->_pLevel * this->_pStrength / 100;
 			*/
 
-			int value = (_pStrength / 4 + _pDexterity / 4) * 10;
 		    if (this->InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Staff || this->InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Staff)
 			{
-				value += _pMagic;//Give some magic and love to Sorc melee with staff
+				value += _pMagic / 20;//Give some magic and love to Sorc melee with staff (+5% mag)
 			}
 
-		    int levelScale = 100 - _pLevel;
-		    value = value / levelScale;
 		    _pDamageMod = value;
 	    }
 			break;
