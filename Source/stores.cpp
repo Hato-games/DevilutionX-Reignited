@@ -353,6 +353,11 @@ bool StoreAutoPlace(Item &item, bool persistItem)
 {
 	Player &player = *MyPlayer;
 
+	if (item.IsStackable() && StackableAutoPlace(player, item, persistItem))
+	{
+		return true;
+	}
+
 	if (AutoEquipEnabled(player, item) && AutoEquip(player, item, persistItem)) {
 		return true;
 	}
@@ -922,7 +927,7 @@ void StartWitchSell()
 			if (storehold[storenumh]._iMagical != ITEM_QUALITY_NORMAL && storehold[storenumh]._iIdentified)
 				storehold[storenumh]._ivalue = storehold[storenumh]._iIvalue;
 
-			storehold[storenumh]._ivalue = std::max(storehold[storenumh]._ivalue / 4, 1);
+			storehold[storenumh]._ivalue = std::max(storehold[storenumh]._ivalue * storehold[storenumh]._iStacks / 4, 1);
 			storehold[storenumh]._iIvalue = storehold[storenumh]._ivalue;
 			storehidx[storenumh] = i;
 			storenumh++;
@@ -939,7 +944,7 @@ void StartWitchSell()
 			if (storehold[storenumh]._iMagical != ITEM_QUALITY_NORMAL && storehold[storenumh]._iIdentified)
 				storehold[storenumh]._ivalue = storehold[storenumh]._iIvalue;
 
-			storehold[storenumh]._ivalue = std::max(storehold[storenumh]._ivalue / 4, 1);
+			storehold[storenumh]._ivalue = std::max(storehold[storenumh]._ivalue * storehold[storenumh]._iStacks / 4, 1);
 			storehold[storenumh]._iIvalue = storehold[storenumh]._ivalue;
 			storehidx[storenumh] = -(i + 1);
 			storenumh++;

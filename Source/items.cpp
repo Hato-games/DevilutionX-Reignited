@@ -60,6 +60,7 @@ bool ShowUniqueItemInfoBox;
 CornerStoneStruct CornerStone;
 bool UniqueItemFlags[128];
 int MaxGold = GOLD_MAX_LIMIT;
+int MaxItemStack = 16;
 
 /** Maps from item_cursor_graphic to in-memory item type. */
 int8_t ItemCAnimTbl[] = {
@@ -5100,6 +5101,38 @@ void SpawnHealer(int lvl)
 	SortVendor(healitem + PinnedItemCount);
 }
 
+void MakeStackableStack(Item &item, int stacks, item_misc_id id)
+{
+	_item_indexes index;
+
+	switch (id)
+	{
+		case item_misc_id::IMISC_HEAL:
+			index = IDI_HEAL;
+			break;
+	    case item_misc_id::IMISC_MANA:
+		    index = IDI_MANA;
+		    break;
+	    case item_misc_id::IMISC_FULLHEAL:
+		    index = IDI_FULLHEAL;
+		    break;
+	    case item_misc_id::IMISC_FULLMANA:
+		    index = IDI_FULLMANA;
+		    break;
+	    case item_misc_id::IMISC_REJUV:
+		    index = (_item_indexes)81;
+		    break;
+	    case item_misc_id::IMISC_FULLREJUV:
+		    index = (_item_indexes)82;
+		    break;
+	}
+	InitializeItem(item, index);
+	GenerateNewSeed(item);
+	item._iStatFlag = true;
+	item._iStacks = stacks;
+
+}
+
 void MakeGoldStack(Item &goldItem, int value)
 {
 	InitializeItem(goldItem, IDI_GOLD);
@@ -5669,6 +5702,21 @@ int Item::GetReforgeCost()
 	}
 
 	return value;
+}
+
+bool Item::IsStackable() const
+{
+	switch (_iMiscId)
+	{
+		case item_misc_id::IMISC_HEAL:
+		case item_misc_id::IMISC_MANA:
+		case item_misc_id::IMISC_FULLHEAL:
+		case item_misc_id::IMISC_FULLMANA:
+		case item_misc_id::IMISC_REJUV:
+		case item_misc_id::IMISC_FULLREJUV:
+			return true;
+	}
+	return false;
 }
 
 int Item::GetItemBaseLevel()

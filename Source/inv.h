@@ -107,7 +107,8 @@ void DrawInv(const Surface &out);
 
 void DrawInvBelt(const Surface &out);
 
-/**
+bool StackableAutoPlace(Player &player, Item &item, bool persistItem);
+    /**
  * @brief Removes equipment from the specified location on the player's body.
  * @param player The player from which equipment will be removed.
  * @param bodyLocation The location from which equipment will be removed.

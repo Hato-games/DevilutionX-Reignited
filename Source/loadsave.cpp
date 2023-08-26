@@ -246,7 +246,14 @@ void LoadItemData(LoadHelper &file, Item &item)
 	file.Skip(8); // Skip _iAnimWidth and _iAnimWidth2
 	file.Skip(4); // Unused since 1.02
 	item._iSelFlag = file.NextLE<uint8_t>();
-	file.Skip(3); // Alignment
+
+	file.Skip(2); // Alignment
+	item._iStacks = file.NextLE<uint8_t>();
+	if(item._iStacks == 0)
+	{
+		item._iStacks = 1;
+	}
+
 	item._iPostDraw = file.NextBool32();
 	item._iIdentified = file.NextBool32();
 	item._iMagical = static_cast<item_quality>(file.NextLE<int8_t>());
@@ -1112,7 +1119,10 @@ void SaveItem(SaveHelper &file, const Item &item)
 	file.WriteLE<int32_t>(CalculateWidth2(ItemAnimWidth));
 	file.Skip<uint32_t>(); // _delFlag, unused since 1.02
 	file.WriteLE<uint8_t>(item._iSelFlag);
-	file.Skip(3); // Alignment
+
+	file.Skip(2); // Alignment
+	file.WriteLE<int8_t>(item._iStacks);
+
 	file.WriteLE<uint32_t>(item._iPostDraw ? 1 : 0);
 	file.WriteLE<uint32_t>(item._iIdentified ? 1 : 0);
 	file.WriteLE<int8_t>(item._iMagical);

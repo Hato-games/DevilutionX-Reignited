@@ -344,39 +344,79 @@ void CheckInvPaste(Player &player, Point cursorPosition)
 		il = ILOC_TWOHAND;
 
 	int8_t it = 0;
-	if (il == ILOC_UNEQUIPABLE) {
+	if (il == ILOC_UNEQUIPABLE)
+	{
 		int ii = slot - SLOTXY_INV_FIRST;
-		if (player.HoldItem._itype == ItemType::Gold) {
-			if (player.InvGrid[ii] != 0) {
+		if (player.HoldItem.IsStackable())
+		{
+			if (player.InvGrid[ii] != 0)
+			{
 				int8_t iv = player.InvGrid[ii];
-				if (iv > 0) {
-					if (player.InvList[iv - 1]._itype != ItemType::Gold) {
+				if (iv > 0)
+				{
+					if (player.InvList[iv - 1]._itype != player.HoldItem._itype)
+					{
 						it = iv;
 					}
-				} else {
+				}
+				else
+				{
 					it = -iv;
 				}
 			}
-		} else {
+		}
+		else if (player.HoldItem._itype == ItemType::Gold)
+		{
+			if (player.InvGrid[ii] != 0)
+			{
+				int8_t iv = player.InvGrid[ii];
+				if (iv > 0)
+				{
+					if (player.InvList[iv - 1]._itype != ItemType::Gold)
+					{
+						it = iv;
+					}
+				}
+				else
+				{
+					it = -iv;
+				}
+			}
+		}
+		else
+		{
 			int yy = std::max(INV_ROW_SLOT_SIZE * ((ii / INV_ROW_SLOT_SIZE) - ((itemSize.height - 1) / 2)), 0);
-			for (int j = 0; j < itemSize.height; j++) {
+
+			for (int j = 0; j < itemSize.height; j++)
+			{
 				if (yy >= InventoryGridCells)
+				{
 					return;
+				}
+
 				int xx = std::max((ii % INV_ROW_SLOT_SIZE) - ((itemSize.width - 1) / 2), 0);
-				for (int i = 0; i < itemSize.width; i++) {
+				for (int i = 0; i < itemSize.width; i++)
+				{
 					if (xx >= INV_ROW_SLOT_SIZE)
 						return;
-					if (player.InvGrid[xx + yy] != 0) {
+					if (player.InvGrid[xx + yy] != 0)
+					{
 						int8_t iv = abs(player.InvGrid[xx + yy]);
-						if (it != 0) {
+						if (it != 0)
+						{
 							if (it != iv)
+							{
 								return;
-						} else {
+							}
+						}
+						else
+						{
 							it = iv;
 						}
 					}
 					xx++;
 				}
+
 				yy += INV_ROW_SLOT_SIZE;
 			}
 		}
@@ -477,18 +517,60 @@ void CheckInvPaste(Player &player, Point cursorPosition)
 		}
 		break;
 	case ILOC_UNEQUIPABLE:
-		if (player.HoldItem._itype == ItemType::Gold && it == 0) {
+
+		if (player.HoldItem.IsStackable() && it == 0)
+		{
 			int ii = slot - SLOTXY_INV_FIRST;
-			if (player.InvGrid[ii] > 0) {
+			if (player.InvGrid[ii] > 0)
+			{
+				int invIndex = player.InvGrid[ii] - 1;
+				int stacks = player.InvList[invIndex]._iStacks;
+				int newStacks = player.HoldItem._iStacks + stacks;
+				if (newStacks <= 16)
+				{
+					player.InvList[invIndex]._iStacks = newStacks;
+					player.HoldItem.clear();
+
+				}
+				else
+				{
+					newStacks = 16 - stacks;
+					player.HoldItem._iStacks -= newStacks;
+					player.InvList[invIndex]._iStacks = 16;
+				}
+
+			}
+			else
+			{
+				int invIndex = player._pNumInv;
+				player.InvList[invIndex] = player.HoldItem.pop();
+				player._pNumInv++;
+				player.InvGrid[ii] = player._pNumInv;
+			}
+
+			if (&player == MyPlayer)
+			{
+				NetSendCmdChInvItem(false, ii);
+			}
+		}
+
+		else if (player.HoldItem._itype == ItemType::Gold && it == 0)
+		{
+			int ii = slot - SLOTXY_INV_FIRST;
+			if (player.InvGrid[ii] > 0)
+			{
 				int invIndex = player.InvGrid[ii] - 1;
 				int gt = player.InvList[invIndex]._ivalue;
 				int ig = player.HoldItem._ivalue + gt;
-				if (ig <= MaxGold) {
+				if (ig <= MaxGold)
+				{
 					player.InvList[invIndex]._ivalue = ig;
 					SetPlrHandGoldCurs(player.InvList[invIndex]);
 					player._pGold += player.HoldItem._ivalue;
 					player.HoldItem.clear();
-				} else {
+				}
+				else
+				{
 					ig = MaxGold - gt;
 					player._pGold += ig;
 					player.HoldItem._ivalue -= ig;
@@ -496,22 +578,30 @@ void CheckInvPaste(Player &player, Point cursorPosition)
 					player.InvList[invIndex]._ivalue = MaxGold;
 					player.InvList[invIndex]._iCurs = ICURS_GOLD_LARGE;
 				}
-			} else {
+			}
+			else
+			{
 				int invIndex = player._pNumInv;
 				player._pGold += player.HoldItem._ivalue;
 				player.InvList[invIndex] = player.HoldItem.pop();
 				player._pNumInv++;
 				player.InvGrid[ii] = player._pNumInv;
 			}
-			if (&player == MyPlayer) {
+			if (&player == MyPlayer)
+			{
 				NetSendCmdChInvItem(false, ii);
 			}
-		} else {
-			if (it == 0) {
+		}
+		else
+		{
+			if (it == 0)
+			{
 				player.InvList[player._pNumInv] = player.HoldItem.pop();
 				player._pNumInv++;
 				it = player._pNumInv;
-			} else {
+			}
+			else
+			{
 				int invIndex = it - 1;
 				if (player.HoldItem._itype == ItemType::Gold)
 					player._pGold += player.HoldItem._ivalue;
@@ -536,9 +626,27 @@ void CheckInvPaste(Player &player, Point cursorPosition)
 		break;
 	case ILOC_BELT: {
 		int ii = slot - SLOTXY_BELT_FIRST;
-		if (player.SpdList[ii].isEmpty()) {
+		if (player.SpdList[ii].isEmpty())
+		{
 			player.SpdList[ii] = player.HoldItem.pop();
-		} else {
+		}
+		else if (player.HoldItem.IsStackable() && player.SpdList[ii]._iMiscId == player.HoldItem._iMiscId && player.SpdList[ii]._iStacks < MaxItemStack)
+		{
+			int stacksToMax = MaxItemStack - player.SpdList[ii]._iStacks;
+
+			if (player.HoldItem._iStacks <= stacksToMax)
+			{
+				player.SpdList[ii]._iStacks += player.HoldItem._iStacks;
+				player.HoldItem.pop();
+			}
+			else
+			{
+				player.SpdList[ii]._iStacks += stacksToMax;
+				player.HoldItem._iStacks -= stacksToMax;
+			}
+		}
+		else
+		{
 			std::swap(player.SpdList[ii], player.HoldItem);
 			if (player.HoldItem._itype == ItemType::Gold)
 				player._pGold = CalculateGold(player);
@@ -1025,8 +1133,8 @@ void InvDrawSlotBack(const Surface &out, Point targetPosition, Size size, item_q
 					pix -= PAL16_GRAY - (!IsInspectingPlayer() ? PAL16_ORANGE : PAL16_ORANGE) - 1;
 					break;
 				default:
-					//Just keep it gray
-					//pix -= PAL16_GRAY - (!IsInspectingPlayer() ? PAL16_BEIGE : PAL16_ORANGE) - 1;
+					// Just keep it gray
+					// pix -= PAL16_GRAY - (!IsInspectingPlayer() ? PAL16_BEIGE : PAL16_ORANGE) - 1;
 					break;
 				case ITEM_QUALITY_RARE:
 					pix -= PAL16_GRAY - (!IsInspectingPlayer() ? PAL16_YELLOW : PAL16_ORANGE) - 1;
@@ -1157,6 +1265,13 @@ void DrawInv(const Surface &out)
 			}
 
 			DrawItem(myPlayer.InvList[ii], out, position, sprite);
+
+			if (myPlayer.InvList[ii].isUsable() && myPlayer.InvList[ii]._itype != ItemType::Gold) {
+
+				if (myPlayer.InvList[ii].IsStackable()) {
+					DrawString(out, StrCat(myPlayer.InvList[ii]._iStacks), { position - Displacement { -2, 12 }, InventorySlotSizeInPixels }, UiFlags::ColorWhitegold);
+				}
+			}
 		}
 	}
 }
@@ -1192,9 +1307,14 @@ void DrawInvBelt(const Surface &out)
 
 		DrawItem(myPlayer.SpdList[i], out, position, sprite);
 
-		if (myPlayer.SpdList[i].isUsable()
-		    && myPlayer.SpdList[i]._itype != ItemType::Gold) {
+		if (myPlayer.SpdList[i].isUsable() && myPlayer.SpdList[i]._itype != ItemType::Gold)
+		{
 			DrawString(out, StrCat(i + 1), { position - Displacement { 0, 12 }, InventorySlotSizeInPixels }, UiFlags::ColorWhite | UiFlags::AlignRight);
+
+			if (myPlayer.SpdList[i].IsStackable())
+			{
+				DrawString(out, StrCat(myPlayer.SpdList[i]._iStacks), { position - Displacement { -2, 12 }, InventorySlotSizeInPixels }, UiFlags::ColorWhitegold);
+			}
 		}
 	}
 }
@@ -1434,6 +1554,167 @@ bool GoldAutoPlace(Player &player, Item &goldStack)
 	return goldStack._ivalue == 0;
 }
 
+
+int CreateStackableItemInInventorySlot(Player &player, int slotIndex, int stacks, item_misc_id id)
+{
+	if (player.InvGrid[slotIndex] != 0)
+	{
+		return stacks;
+	}
+
+	Item &item = player.InvList[player._pNumInv];
+	MakeStackableStack(item, std::min(stacks, MaxItemStack), id);
+
+	player._pNumInv++;
+	player.InvGrid[slotIndex] = player._pNumInv;
+	if (&player == MyPlayer) {
+		NetSendCmdChInvItem(false, slotIndex);
+	}
+
+	stacks -= item._iStacks;
+
+	return stacks;
+}
+
+int CreateStackableItemInBeltSlot(Player &player, int slotIndex, int stacks, item_misc_id id)
+{
+	if (!player.SpdList[slotIndex].isEmpty()) {
+		return stacks;
+	}
+
+	Item &item = player.SpdList[slotIndex];
+	MakeStackableStack(item, std::min(stacks, MaxItemStack), id);
+
+	if (&player == MyPlayer)
+	{
+		NetSendCmdChInvItem(false, slotIndex);
+	}
+
+	stacks -= item._iStacks;
+
+	return stacks;
+}
+
+int AddStackableToInventory(Player &player, Item &item)
+{
+	int stacks = item._iStacks;
+
+	int index = 0;
+	for (auto &beltItem : player.SpdList)
+	{
+		if (beltItem.isEmpty() || beltItem._iMiscId != item._iMiscId || beltItem._iStacks >= MaxItemStack)
+		{
+			continue;
+		}
+
+		if (beltItem._iStacks + stacks > MaxItemStack)
+		{
+			stacks -= MaxItemStack - beltItem._iStacks;
+			beltItem._iStacks = MaxItemStack;
+		}
+		else
+		{
+			beltItem._iStacks += stacks;
+			stacks = 0;
+		}
+
+		NetSyncInvItem(player, SLOTXY_BELT_FIRST+index);
+		index++;
+	}
+	// Top off existing piles
+	for (int i = 0; i < player._pNumInv && stacks > 0; i++)
+	{
+		Item &itemStacked = player.InvList[i];
+		if (itemStacked._iMiscId != item._iMiscId || itemStacked._iStacks >= MaxItemStack)
+		{
+			continue;
+		}
+
+		if (itemStacked._iStacks + stacks > MaxItemStack)
+		{
+			stacks -= MaxItemStack - itemStacked._iStacks;
+			itemStacked._iStacks = MaxItemStack;
+		}
+		else
+		{
+			itemStacked._iStacks += stacks;
+			stacks = 0;
+		}
+
+		NetSyncInvItem(player, i);
+	}
+
+
+	int i = 0;
+	for (auto &beltItem : player.SpdList)
+	{
+		if (stacks > 0)
+		{
+			stacks = CreateStackableItemInBeltSlot(player, i, stacks, item._iMiscId);
+		}
+		i++;
+	}
+	// Last row right to left
+	for (int i = 39; i >= 30 && stacks > 0; i--)
+	{
+		if (stacks > 0)
+		{
+			stacks = CreateStackableItemInInventorySlot(player, i, stacks, item._iMiscId);
+		}
+	}
+
+	// Remaining inventory in columns, bottom to top, right to left
+	for (int x = 9; x >= 0 && stacks > 0; x--)
+	{
+		for (int y = 2; y >= 0 && stacks > 0; y--)
+		{
+			if (stacks > 0)
+			{
+				stacks = CreateStackableItemInInventorySlot(player, 10 * y + x, stacks, item._iMiscId);
+			}
+		}
+	}
+
+	return stacks;
+}
+
+int CanStackableBePutToInventory(Player &player, const Item &item)
+{
+	int stacks = 1;
+
+	int index = 0;
+	for (auto &beltItem : player.SpdList) {
+		if (beltItem.isEmpty() || beltItem._iMiscId != item._iMiscId || beltItem._iStacks >= MaxItemStack) {
+			continue;
+		}
+
+		return true;
+	}
+
+	// Top off existing piles
+	for (int i = 0; i < player._pNumInv && stacks > 0; i++) {
+		Item &itemStacked = player.InvList[i];
+		if (itemStacked._iMiscId != item._iMiscId || itemStacked._iStacks >= MaxItemStack) {
+			continue;
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+bool StackableAutoPlace(Player &player, Item &item, bool persistItem)
+{
+	if (persistItem)
+	{
+		item._iStacks = AddStackableToInventory(player, item);
+		return item._iStacks == 0;
+	}
+
+	return CanStackableBePutToInventory(player, item);
+}
+
 void CheckInvSwap(Player &player, inv_body_loc bLoc)
 {
 	Item &item = player.InvBody[bLoc];
@@ -1642,12 +1923,20 @@ void AutoGetItem(Player &player, Item *itemPointer, int ii)
 	bool done;
 	bool autoEquipped = false;
 
-	if (item._itype == ItemType::Gold) {
+	if (item._itype == ItemType::Gold)
+	{
 		done = GoldAutoPlace(player, item);
-		if (!done) {
+		if (!done)
+		{
 			SetPlrHandGoldCurs(item);
 		}
-	} else {
+	}
+	else if (item.IsStackable())
+	{
+		done = StackableAutoPlace(player, item, true);
+	}
+	else
+	{
 		done = AutoEquipEnabled(player, item) && AutoEquip(player, item);
 		if (done) {
 			autoEquipped = true;
@@ -1882,11 +2171,19 @@ int8_t CheckInvHLight()
 		InfoString = fmt::format(fmt::runtime(ngettext("{:s} gold piece", "{:s} gold pieces", nGold)), FormatInteger(nGold));
 	} else {
 		InfoColor = pi->getTextColor();
-		InfoString = pi->getName();
 
-
-		if (pi->_iClass == ICLASS_WEAPON || pi->_iClass == ICLASS_ARMOR || (pi->_iClass == ICLASS_MISC && (pi->_iLoc == ILOC_RING || pi->_iLoc == ILOC_AMULET))) 
+		if (pi->IsStackable() && pi->_iStacks > 1)
 		{
+			std::string name = static_cast<std::string>(pi->getName());
+			std::string str = fmt::format("{:d}x", pi->_iStacks);
+			InfoString = str + name;
+		}
+		else
+		{
+			InfoString = pi->getName();
+		}
+
+		if (pi->_iClass == ICLASS_WEAPON || pi->_iClass == ICLASS_ARMOR || (pi->_iClass == ICLASS_MISC && (pi->_iLoc == ILOC_RING || pi->_iLoc == ILOC_AMULET))) {
 			PrintItemDetails(*pi);
 		} else {
 			PrintItemDur(*pi);
@@ -2011,7 +2308,7 @@ bool UseInvItem(int cii)
 			for (int i = INVITEM_BELT_LAST - INVITEM_BELT_FIRST; i > c; i--) {
 				Item &candidate = player.SpdList[i];
 
-				if (!candidate.isEmpty() && candidate._iMiscId == item->_iMiscId && candidate._iSpell == item->_iSpell) {
+				if (!candidate.isEmpty() && candidate._iMiscId == item->_iMiscId && candidate._iSpell == item->_iSpell && item->_iStacks == 1) {
 					c = i;
 					item = &candidate;
 					break;
@@ -2091,7 +2388,17 @@ bool UseInvItem(int cii)
 			return true;
 		}
 		if (!item->isScroll() && !item->isRune())
-			player.RemoveSpdBarItem(c);
+		{
+			if (item->_iStacks > 1)
+			{
+				item->_iStacks--;
+			}
+			else
+			{
+				player.RemoveSpdBarItem(c);
+			}
+		}
+			
 		return true;
 	}
 	if (player.InvList[c]._iMiscId == IMISC_MAPOFDOOM)
@@ -2101,8 +2408,13 @@ bool UseInvItem(int cii)
 		CloseInventory();
 		return true;
 	}
-	if (!item->isScroll() && !item->isRune())
-		player.RemoveInvItem(c);
+	if (!item->isScroll() && !item->isRune()) {
+		if (item->_iStacks > 1) {
+			item->_iStacks--;
+		} else {
+			player.RemoveInvItem(c);
+		}
+	}
 
 	return true;
 }

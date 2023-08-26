@@ -178,6 +178,7 @@ struct Player;
 
 struct Item {
 
+	bool IsStackable() const;
 	int GetItemBaseLevel();
 	int GetItemLevel();
 	int GetReforgeCost();
@@ -276,6 +277,8 @@ struct Item {
 	int8_t _iPrePowerIndex = -1;
 	int8_t _iSufPowerIndex = -1;
 	int8_t _iRarePowerIndex = -1;
+
+	int16_t _iStacks = 1;
 	/**
 	 * @brief Clears this item and returns the old value
 	 */
@@ -580,6 +583,7 @@ void SpawnWitch(int lvl);
 void SpawnBoy(int lvl);
 void SpawnHealer(int lvl);
 void MakeGoldStack(Item &goldItem, int value);
+void MakeStackableStack(Item &item, int stacks, item_misc_id id);
 int ItemNoFlippy();
 void CreateSpellBook(Point position, SpellID ispell, bool sendmsg, bool delta, bool allowApocalypse=false);
 void CreateMagicArmor(Point position, ItemType itemType, int icurs, bool sendmsg, bool delta);
@@ -609,6 +613,7 @@ std::string DebugSpawnUniqueItem(std::string itemName);
 /* data */
 
 extern int MaxGold;
+extern int MaxItemStack;
 
 extern int8_t ItemCAnimTbl[];
 extern _sfx_id ItemInvSnds[];

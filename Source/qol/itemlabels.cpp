@@ -101,9 +101,18 @@ void AddItemToLabelQueue(int id, Point position)
 	Item &item = Items[id];
 
 	StringOrView textOnGround;
-	if (item._itype == ItemType::Gold) {
+	if (item._itype == ItemType::Gold)
+	{
 		textOnGround = fmt::format(fmt::runtime(_("{:s} gold")), FormatInteger(item._ivalue));
-	} else {
+	}
+	else if (item.IsStackable() && item._iStacks > 1)
+	{
+		std::string name = static_cast<std::string>(item.getName());
+		std::string str = fmt::format("{:d}x", item._iStacks);
+		textOnGround = str + name;
+	}
+	else
+	{
 		textOnGround = item.getName();
 	}
 

@@ -1179,39 +1179,71 @@ void DrawInfoBox(const Surface &out)
 		InfoColor = UiFlags::ColorWhite;
 	}
 	Player &myPlayer = *MyPlayer;
-	if (spselflag || trigflag) {
+	if (spselflag || trigflag)
+	{
 		InfoColor = UiFlags::ColorWhite;
-	} else if (!myPlayer.HoldItem.isEmpty()) {
-		if (myPlayer.HoldItem._itype == ItemType::Gold) {
+	}
+	else if (!myPlayer.HoldItem.isEmpty())
+	{
+		if (myPlayer.HoldItem._itype == ItemType::Gold)
+		{
 			int nGold = myPlayer.HoldItem._ivalue;
 			InfoString = fmt::format(fmt::runtime(ngettext("{:s} gold piece", "{:s} gold pieces", nGold)), FormatInteger(nGold));
-		} else if (!myPlayer.CanUseItem(myPlayer.HoldItem)) {
+		}
+		else if (!myPlayer.CanUseItem(myPlayer.HoldItem))
+		{
 			InfoString = _("Requirements not met");
-		} else {
-			InfoString = myPlayer.HoldItem.getName();
+		}
+		else
+		{
+			if (myPlayer.HoldItem.IsStackable() && myPlayer.HoldItem._iStacks > 1)
+			{
+				std::string name = static_cast<std::string>(myPlayer.HoldItem.getName());
+				std::string str = fmt::format("{:d}x", myPlayer.HoldItem._iStacks);
+				InfoString = str + name;
+			}
+			else
+			{
+				InfoString = myPlayer.HoldItem.getName();
+			}
 			InfoColor = myPlayer.HoldItem.getTextColor();
 		}
-	} else {
+	}
+	else
+	{
 		if (pcursitem != -1)
+		{
 			GetItemStr(Items[pcursitem]);
+		}
 		else if (ObjectUnderCursor != nullptr)
+		{
 			GetObjectStr(*ObjectUnderCursor);
-		if (pcursmonst != -1) {
-			if (leveltype != DTYPE_TOWN) {
+		}
+
+		if (pcursmonst != -1)
+		{
+			if (leveltype != DTYPE_TOWN)
+			{
 				const auto &monster = Monsters[pcursmonst];
 				InfoColor = UiFlags::ColorWhite;
 				InfoString = monster.name();
-				if (monster.isUnique()) {
+				if (monster.isUnique())
+				{
 					InfoColor = UiFlags::ColorWhitegold;
 					PrintUniqueHistory();
-				} else {
+				}
+				else
+				{
 					PrintMonstHistory(monster.type().type);
 				}
-			} else if (pcursitem == -1) {
+			}
+			else if (pcursitem == -1)
+			{
 				InfoString = string_view(Towners[pcursmonst].name);
 			}
 		}
-		if (pcursplr != -1) {
+		if (pcursplr != -1)
+		{
 			InfoColor = UiFlags::ColorWhitegold;
 			auto &target = Players[pcursplr];
 			InfoString = string_view(target._pName);
@@ -1220,7 +1252,9 @@ void DrawInfoBox(const Surface &out)
 		}
 	}
 	if (!InfoString.empty())
+	{
 		PrintInfo(out);
+	}
 }
 
 void CheckLvlBtn()
