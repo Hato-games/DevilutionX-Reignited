@@ -76,7 +76,11 @@ struct PlayerPack {
 	uint32_t pDiabloKillLevel;
 	uint32_t pDifficulty;
 	uint32_t pDamAcFlags;  // `ItemSpecialEffectHf` is 1 byte but this is 4 bytes.
-	uint8_t reserved3[20]; // For future use
+
+	int16_t pTownWarpsNew;
+	uint8_t pElixirsConsumed;
+
+	uint8_t reserved3[17]; // For future use
 };
 
 union ItemNetPack {

@@ -1150,7 +1150,7 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 	if (DebugGodMode)
 		hper = 1000;
 #endif
-	int ac = player.GetArmor();
+	int ac = player.GetArmor()/2;
 	if (HasAnyOf(player.pDamAcFlags, ItemSpecialEffectHf::ACAgainstDemons) && monster.data().monsterClass == MonsterClass::Demon)
 		ac += 40;
 	if (HasAnyOf(player.pDamAcFlags, ItemSpecialEffectHf::ACAgainstUndead) && monster.data().monsterClass == MonsterClass::Undead)
@@ -1160,21 +1160,107 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 	    - ac;
 	int minhit = GetMinHit();
 	hit = std::max(hit, minhit);
+
+	if (hper >= hit)
+		return;
+
 	int blkper = 100;
 	if ((player._pmode == PM_STAND || player._pmode == PM_ATTACK) && player._pBlockFlag) {
 		blkper = GenerateRnd(100);
 	}
-	int blk = player.GetBlockChance() - (monster.level(sgGameInitInfo.nDifficulty) * 2);
+	int blk = player.GetBlockChance();
 	blk = clamp(blk, 0, 100);
-	if (hper >= hit)
-		return;
-	if (blkper < blk) {
+
+	int dam = (minDam << 6) + GenerateRnd(((maxDam - minDam) << 6) + 1);
+	if (blkper < blk)
+	{
 		Direction dir = GetDirection(player.position.tile, monster.position.tile);
 		StartPlrBlock(player, dir);
-		if (&player == MyPlayer && player.wReflections > 0) {
-			int dam = GenerateRnd(((maxDam - minDam) << 6) + 1) + (minDam << 6);
-			dam = std::max(dam + (player._pIGetHit << 6), 64);
-			CheckReflect(monster, player, dam);
+		if (&player == MyPlayer)
+		{
+			player._pBlockStaminaCurrent -= (dam >> 6)*100;
+			if (player._pBlockStaminaCurrent < 0)
+			{
+				player._pBlockStaminaCurrent = 0;
+			}
+
+			if (player.wReflections > 0)
+			{
+				int dam = GenerateRnd(((maxDam - minDam) << 6) + 1) + (minDam << 6);
+				dam = std::max(dam + (player._pIGetHit << 6), 64);
+				CheckReflect(monster, player, dam);
+			}
+
+			if (HasAnyOf(player._pIFlagsRe, ItemReignitedEffect::Envy) && monster.mode != MonsterMode::Death)
+			{
+				int mdam = dam;
+				dam = std::max(dam + (player._pIGetHit << 6), 64);
+
+
+				int level = monster.level(sgGameInitInfo.nDifficulty) * 10;
+				int cr = 50 + level / 4;
+				int critRoll = GenerateRnd(1000);
+				bool critical = false;
+				if (critRoll < cr)
+				{
+					critical = true;
+					int critDmg = 150 + sgGameInitInfo.nDifficulty * 25;
+					dam = dam * critDmg;
+					dam = dam / 100;
+
+					mdam = mdam * critDmg;
+					mdam = mdam / 100;
+				}
+
+				if (HasAnyOf(player._pIFlagsRe, ItemReignitedEffect::Greed)) {
+					int value = (player._pHitPoints * 100) / player._pMaxHP;
+
+					dam = dam * (100 + value / 2);
+					dam = dam / 100;
+				}
+
+				if (player._pSkillActiveId == SpellID::NobleSpirit) {
+					int dmgRed = 25 + player._pLevel / 2;
+					dam = dam * (100 - dmgRed);
+					dam = dam / 100;
+				}
+
+
+				int mac = monster.armorClass;
+				int resistReduce = mac / 4;
+				resistReduce = clamp(resistReduce, 0, 50);
+				if (resistReduce != 0)
+				{
+					resistReduce = 100 - resistReduce;
+					mdam = mdam * resistReduce;
+					mdam = mdam / 100;
+				}
+
+				ApplyMonsterDamage(DamageType::Physical, monster, mdam, critical);
+
+
+				dam = dam * (100 - player._pPhyResist);
+				dam = dam / 100;
+				dam = dam / 4;
+
+				if (player._pSkillActiveId == SpellID::NobleSpirit)
+				{
+					int dmgRed = 25 + player._pLevel / 2;
+					dam = dam * (100 - dmgRed);
+					dam = dam / 100;
+				}
+
+				if (monster.hitPoints >> 6 <= 0)
+				{
+					M_StartKill(monster, player);
+				}
+				else
+				{
+					M_StartHit(monster, player, dam);
+				}
+
+				ApplyPlrDamage(DamageType::Physical, player, 0, 0, dam, DeathReason::MonsterOrTrap, critical);
+			}
 		}
 		return;
 	}
@@ -1194,7 +1280,6 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 		}
 	}
 	*/
-	int dam = (minDam << 6) + GenerateRnd(((maxDam - minDam) << 6) + 1);
 	dam = std::max(dam + (player._pIGetHit << 6), 64);
 	
 	dam = dam * (100-player._pPhyResist);
@@ -1212,6 +1297,13 @@ void MonsterAttackPlayer(Monster &monster, Player &player, int hit, int minDam, 
 		dam = dam / 100;
 	}
 
+	if (HasAnyOf(player._pIFlagsRe, ItemReignitedEffect::Greed))
+	{
+		int value = (player._pHitPoints * 100) / player._pMaxHP;
+
+		dam = dam * (100 + value / 2);
+		dam = dam / 100;
+	}
 	if (player._pSkillActiveId == SpellID::NobleSpirit)
 	{
 		int dmgRed = 25 + player._pLevel / 2;
@@ -3889,7 +3981,7 @@ void M_StartHit(Monster &monster, const Player &player, int dam)
 	M_StartHit(monster, dam);
 }
 
-void MonsterDeath(Monster &monster, Direction md, bool sendmsg)
+void MonsterDeath(Monster &monster, Direction md, bool sendmsg, const Player* player)
 {
 	if (!monster.isPlayerMinion())
 		AddPlrMonstExper(monster.level(sgGameInitInfo.nDifficulty), monster.exp(sgGameInitInfo.nDifficulty), monster.whoHit);
@@ -3899,6 +3991,11 @@ void MonsterDeath(Monster &monster, Direction md, bool sendmsg)
 	monster.flags &= ~MFLAG_HIDDEN;
 
 	int dropChance = 100;//Each 100 is a guaranted item drop, modulo from it is chance for last item
+
+	if (player != nullptr)
+	{
+		dropChance += player->_pDropChance;
+	}
 	if (monster.type().type == MT_DIABLO)
 	{
 		dropChance = 300;//Diablo drop at least 3 items (1 is added in isUnique
@@ -3976,7 +4073,7 @@ void StartMonsterDeath(Monster &monster, const Player &player, bool sendmsg)
 {
 	monster.tag(player);
 	Direction md = GetDirection(monster.position.tile, player.position.tile);
-	MonsterDeath(monster, md, sendmsg);
+	MonsterDeath(monster, md, sendmsg, &player);
 }
 
 void KillMyGolem()
@@ -4968,8 +5065,7 @@ bool Monster::isPossibleToHit() const
 	return !(hitPoints >> 6 <= 0
 	    || talkMsg != TEXT_NONE
 	    || (type().type == MT_ILLWEAV && goal == MonsterGoal::Retreat)
-	    || mode == MonsterMode::Charge
-	    || (IsAnyOf(type().type, MT_COUNSLR, MT_MAGISTR, MT_CABALIST, MT_ADVOCATE) && goal != MonsterGoal::Normal));
+	    || mode == MonsterMode::Charge);
 }
 
 void Monster::tag(const Player &tagger)

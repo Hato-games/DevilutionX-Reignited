@@ -320,15 +320,30 @@ void PrintStoreItem(const Item &item, int l, UiFlags flags, bool cursIndent = fa
 		productLine.clear();
 	}
 
-	if (item._itype != ItemType::Misc) {
+	if (item._itype != ItemType::Misc)
+	{
 		if (item._iClass == ICLASS_WEAPON)
-			productLine = fmt::format(fmt::runtime(_("Damage: {:d}-{:d}  ")), item._iMinDam, item._iMaxDam);
+		{
+			productLine = fmt::format(fmt::runtime(_("Damage: {:d}-{:d} ")), item._iMinDam, item._iMaxDam);
+		}
 		else if (item._iClass == ICLASS_ARMOR)
-			productLine = fmt::format(fmt::runtime(_("Armor: {:d}  ")), item._iAC);
+		{
+			productLine = fmt::format(fmt::runtime(_("Armor: {:d} ")), item._iAC);
+		}
+
+		if (item._iBlockChanceBase > 0)
+		{
+			productLine += fmt::format(fmt::runtime(_(" Block: {:d}% ")), item._iBlockChanceBase);
+		}
+
 		if (item._iMaxDur != DUR_INDESTRUCTIBLE && item._iMaxDur != 0)
-			productLine += fmt::format(fmt::runtime(_("Dur: {:d}/{:d},  ")), item._iDurability, item._iMaxDur);
+		{
+			productLine += fmt::format(fmt::runtime(_("Dur: {:d}/{:d}, ")), item._iDurability, item._iMaxDur);
+		}
 		else
+		{
 			AppendStrView(productLine, _("Indestructible,  "));
+		}
 	}
 
 	int8_t str = item._iMinStr;
@@ -336,9 +351,9 @@ void PrintStoreItem(const Item &item, int l, UiFlags flags, bool cursIndent = fa
 	int8_t dex = item._iMinDex;
 
 	if (str == 0 && mag == 0 && dex == 0) {
-		AppendStrView(productLine, _("No required attributes"));
+		
 	} else {
-		AppendStrView(productLine, _("Required:"));
+		AppendStrView(productLine, _("Req:"));
 		if (str != 0)
 			productLine.append(fmt::format(fmt::runtime(_(" {:d} Str")), str));
 		if (mag != 0)
@@ -1629,10 +1644,10 @@ void StoreReforgeItem()
 	Player &myPlayer = *MyPlayer;
 
 	int idx = stextvhold + ((stextlhold - stextup) / 4);
+	int cost = storehold[idx].GetReforgeCost();
 
 	myPlayer.InvList[storehidx[idx]].AddAffix(myPlayer, !gbIsHellfire);
 
-	int cost = storehold[idx].GetReforgeCost();
 	TakePlrsMoney(cost);
 
 
@@ -1674,7 +1689,7 @@ void SmithReforgeEnter()
 
 	int idx = stextsval + ((stextsel - stextup) / 4);
 
-	if (!PlayerCanAfford(smithitem[idx].GetReforgeCost())) {
+	if (!PlayerCanAfford(storehold[idx].GetReforgeCost())) {
 		StartStore(TalkID::NoMoney);
 		return;
 	}

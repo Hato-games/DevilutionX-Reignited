@@ -47,6 +47,7 @@ inline int AmLine(int x)
 struct BuffInfo
 {
 	SpellID spellID = SpellID::Null;
+	int percentage = -1;
 	int duration = 0;
 	int stacks = 0;
 	SpellType spellType;

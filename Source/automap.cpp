@@ -1107,6 +1107,13 @@ void DrawBuffs(const Surface &out)
 		buffs.push_back(buffTele);
 	}
 
+	if (player._guardianCooldownLeft > 0) {
+		BuffInfo buffTele;
+		buffTele.spellID = SpellID::Guardian;
+		buffTele.duration = player._guardianCooldownLeft;
+		buffTele.spellType = SpellType::Invalid;
+		buffs.push_back(buffTele);
+	}
 	
 	if (player._healPenaltyStacks > 0)
 	{
@@ -1117,6 +1124,18 @@ void DrawBuffs(const Surface &out)
 		debuffHeal.spellType = SpellType::Scroll;
 		buffs.push_back(debuffHeal);
 	}
+	if (player._pBlockStaminaCurrent < player._pBlockStaminaMax)
+	{
+		BuffInfo blockStamina;
+		blockStamina.spellID = SpellID::BloodRitual;
+		blockStamina.spellType = SpellType::Scroll;
+		 
+		blockStamina.percentage = player._pBlockStaminaCurrent * 100;
+		blockStamina.percentage /= player._pBlockStaminaMax;
+
+		buffs.push_back(blockStamina);
+	}
+
 
 	for (int i = 0; i < buffs.size(); i++)
 	{
@@ -1151,6 +1170,17 @@ void DrawBuffs(const Surface &out)
 
 			DrawString(out, text, pos);
 		}
+		else if (buffs[i].percentage > -1)
+		{
+			std::string text = fmt::format(fmt::runtime(_("{:d}%")), buffs[i].percentage);
+
+			pos.x += 8;
+			if (text.length() == 2) {
+				pos.x += 4;
+			}
+			DrawString(out, text, pos);
+		}
+
 
 		if (buffs[i].stacks > 0)
 		{

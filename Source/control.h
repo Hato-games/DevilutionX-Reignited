@@ -193,6 +193,9 @@ bool control_presskeys(SDL_Keycode vkey);
 void DiabloHotkeyMsg(uint32_t dwMsg);
 void CloseGoldDrop();
 void GoldDropNewText(string_view text);
+
+void DrawPartyPanel(const Surface &out);
+
 extern Rectangle ChrBtnsRect[4];
 
 } // namespace devilution

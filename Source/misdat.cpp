@@ -33,12 +33,12 @@ const MissileData MissilesData[] = {
 // id                      mAddProc,                mProc,                        mlSFX,       miSFX,       mFileNum,                               flags,                 MovementDistribution;
 /*Arrow*/                { &AddArrow,               &ProcessArrow,                SFX_NONE,    SFX_NONE,    MissileGraphicID::Arrow,                Physical | Arrow,      MissileMovementDistribution::Blockable   },
 /*Firebolt*/             { &AddFirebolt,            &ProcessGenericProjectile,    LS_FBOLT1,   LS_FIRIMP2,  MissileGraphicID::Fireball,             Fire,                  MissileMovementDistribution::Blockable	, 40, 70, 5, 10},
-/*Guardian*/             { &AddGuardian,            &ProcessGuardian,             LS_GUARD,    LS_GUARDLAN, MissileGraphicID::Guardian,             Physical,              MissileMovementDistribution::Disabled    , 40, 70, 5, 10},
+/*Guardian*/             { &AddGuardian,            &ProcessGuardian,             LS_GUARD,    LS_GUARDLAN, MissileGraphicID::Guardian,             Physical,              MissileMovementDistribution::Disabled    , 30, 55, 3, 6},
 /*Phasing*/              { &AddPhasing,             &ProcessTeleport,             LS_TELEPORT, SFX_NONE,    MissileGraphicID::None,                 Physical | Invisible,  MissileMovementDistribution::Disabled    },
 /*NovaBall*/             { &AddNovaBall,            &ProcessNovaBall,             SFX_NONE,    SFX_NONE,    MissileGraphicID::Lightning,            Lightning,             MissileMovementDistribution::Unblockable },
 /*FireWall*/             { &AddFireWall,            &ProcessFireWall,             LS_WALLLOOP, LS_FIRIMP2,  MissileGraphicID::FireWall,             Fire,                  MissileMovementDistribution::Disabled    , 160, 200, 10, 15},
 /*Fireball*/             { &AddFireball,            &ProcessFireball,             LS_FBOLT1,   LS_FIRIMP2,  MissileGraphicID::Fireball,             Fire,                  MissileMovementDistribution::Blockable   , 100, 140, 10, 15},
-/*LightningControl*/     { &AddLightningControl,    &ProcessLightningControl,     SFX_NONE,    SFX_NONE,    MissileGraphicID::Lightning,            Lightning | Invisible, MissileMovementDistribution::Disabled    , 10, 140, 3 , 18},
+/*LightningControl*/     { &AddLightningControl,    &ProcessLightningControl,     SFX_NONE,    SFX_NONE,    MissileGraphicID::Lightning,            Lightning | Invisible, MissileMovementDistribution::Disabled    , 30, 140, 2 , 18},
 /*Lightning*/            { &AddLightning,           &ProcessLightning,            LS_LNING1,   LS_ELECIMP1, MissileGraphicID::Lightning,            Lightning,             MissileMovementDistribution::Disabled    },
 /*MagmaBallExplosion*/   { &AddMissileExplosion,    &ProcessMissileExplosion,     SFX_NONE,    SFX_NONE,    MissileGraphicID::MagmaBallExplosion,   Physical,              MissileMovementDistribution::Disabled    },
 /*TownPortal*/           { &AddTownPortal,          &ProcessTownPortal,           LS_SENTINEL, LS_ELEMENTL, MissileGraphicID::TownPortal,           Magic,                 MissileMovementDistribution::Disabled    },
@@ -144,6 +144,8 @@ const MissileData MissilesData[] = {
 /*NobleSpirit*/           { &AddDeadeye,          nullptr,                     SFX_NONE,    SFX_NONE,    MissileGraphicID::None,					Physical | Invisible,  MissileMovementDistribution::Disabled    },
 /*NobleSpirit*/           { &AddAetherize,          nullptr,                     SFX_NONE,    SFX_NONE,    MissileGraphicID::None,					Physical | Invisible,  MissileMovementDistribution::Disabled    },
 
+/*FireLightArrow*/       { &AddElementalArrow,      &ProcessElementalArrow,       SFX_NONE,    SFX_NONE,    MissileGraphicID::LightningArrow,       Fire | Arrow,          MissileMovementDistribution::Blockable   },
+/*FireLightArrow*/       { &AddElementalArrow,      &ProcessElementalArrow,       SFX_NONE,    SFX_NONE,    MissileGraphicID::LightningArrow,       Fire | Arrow,          MissileMovementDistribution::Blockable   },
 
 	// clang-format on
 };

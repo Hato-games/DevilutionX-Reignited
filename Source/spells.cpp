@@ -102,45 +102,27 @@ bool TargetsMonster(SpellID id)
 
 int GetManaAmount(const Player &player, SpellID sn)
 {
-	int ma; // mana amount
-
-	// mana adjust
-	int adj = 0;
-
-	// spell level
 	int sl = std::max(player.GetSpellLevel(sn) - 1, 0);
 
-	if (sl > 0) {
-		adj = sl * GetSpellData(sn).sManaAdj;
-	}
-	if (sn == SpellID::Firebolt) {
-		adj /= 2;
-	}
-	if (sn == SpellID::Resurrect && sl > 0) {
-		adj = sl * (GetSpellData(SpellID::Resurrect).sManaCost / 8);
+	int ma = GetSpellData(sn).sManaCost;
+	int adjust = (GetSpellData(sn).sManaAdj * sl);
+	ma = ma + adjust/10;
+
+	if (ma < GetSpellData(sn).sMinMana)
+	{
+		ma = GetSpellData(sn).sMinMana;
 	}
 
-	if (sn == SpellID::Healing || sn == SpellID::HealOther) {
-		ma = (GetSpellData(SpellID::Healing).sManaCost + 2 * player._pLevel - adj);
-	} else if (GetSpellData(sn).sManaCost == 255) {
-		ma = (player._pMaxManaBase >> 6) - adj;
-	} else {
-		ma = (GetSpellData(sn).sManaCost - adj);
+	if (HasAnyOf(player._pIFlagsRe, ItemReignitedEffect::Pride))
+	{
+		int manaCost = sl;
+		manaCost = 1 + manaCost / 4;
+		manaCost = 100 + manaCost * 25;
+		ma = ma * manaCost;
+		ma = ma / 100;
 	}
 
-	ma = std::max(ma, 0);
 	ma <<= 6;
-
-	if (gbIsHellfire && player._pClass == HeroClass::Sorcerer) {
-		ma /= 2;
-	} else if (player._pClass == HeroClass::Rogue || player._pClass == HeroClass::Monk || player._pClass == HeroClass::Bard) {
-		ma -= ma / 4;
-	}
-
-	if (GetSpellData(sn).sMinMana > ma >> 6) {
-		ma = GetSpellData(sn).sMinMana << 6;
-	}
-
 	return ma;
 }
 
@@ -216,6 +198,10 @@ SpellCheckResult CheckSpell(const Player &player, SpellID sn, SpellType st, bool
 	}
 
 	if (sn == SpellID::Teleport && player._teleportCooldownLeft > 0) {
+		return SpellCheckResult::Fail_Cooldown;
+	}
+
+	if (sn == SpellID::Guardian && player._guardianCooldownLeft > 0) {
 		return SpellCheckResult::Fail_Cooldown;
 	}
 
@@ -301,19 +287,8 @@ void DoHealOther(const Player &caster, Player &target)
 	int healValue = heal.first + GenerateRnd(heal.second - heal.first);
 	
 	healValue <<= 6;
-	int penalty = target.GetHealPenalty();
 
-	if (penalty > 0)
-	{
-		penalty = target.GetHealPenalty() * healValue;
-		penalty = penalty / 100;
-		healValue -= penalty;
-	}
-	
-	target.AddHealPenaltyStack();
-
-	target._pHitPoints = std::min(target._pHitPoints + healValue, target._pMaxHP);
-	target._pHPBase = std::min(target._pHPBase + healValue, target._pMaxHPBase);
+	target.restoreHp(healValue);
 
 	if (&target == MyPlayer)
 	{

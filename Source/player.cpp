@@ -163,8 +163,13 @@ void HandleWalkMode(Player &player, Direction dir)
 void StartWalkAnimation(Player &player, Direction dir, bool pmWillBeCalled)
 {
 	int8_t skippedFrames = -2;
+
+	if (player._pSkillActiveId == SpellID::NobleSpirit)
+		skippedFrames = 1;
+
 	if (leveltype == DTYPE_TOWN && sgGameInitInfo.bRunInTown != 0)
 		skippedFrames = 2;
+
 	if (pmWillBeCalled)
 		skippedFrames += 1;
 	NewPlrAnim(player, player_graphic::Walk, dir, AnimationDistributionFlags::ProcessAnimationPending, skippedFrames);
@@ -585,12 +590,21 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 	}
 
 	int hit = GenerateRnd(100);
-	if (monster.mode == MonsterMode::Petrified) {
+	if (monster.mode == MonsterMode::Petrified)
+	{
 		hit = 0;
 	}
 
 	hper += player.GetMeleePiercingToHit() - player.CalculateArmorPierce(monster.armorClass, true);
-	hper = clamp(hper, 5, 95);
+
+	int maxHit = 95;
+	if ((IsAnyOf(monster.type().type, MT_COUNSLR, MT_MAGISTR, MT_CABALIST, MT_ADVOCATE) && monster.goal != MonsterGoal::Normal))
+	{
+		maxHit = 60;
+	}
+	hper = clamp(hper, 5, maxHit);
+
+
 
 	if (monster.tryLiftGargoyle())
 		return true;
@@ -614,12 +628,14 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 	dam = dam << 6;
 
 	int pierce = 100 - player._pIEnAc;
-	// monster.armorClass - player.CalculateArmorPierce(monster.armorClass, true);
+
 	int mac = monster.armorClass;
 	mac = mac * pierce;
 	mac = mac / 100;
 	int resistReduce = mac / 4;
 	resistReduce = clamp(resistReduce, 0, 50);
+	
+
 
 	if (resistReduce != 0)
 	{
@@ -632,10 +648,7 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 	if (GenerateRnd(100) < player._pCriticalChance)
 	{
 		critical = true;
-		int dmgAmp = 200;
-		if (player._pSkillActiveId == SpellID::Deadeye) {
-			dmgAmp += 10 + player._pLevel / 5;
-		}
+		int dmgAmp = player.GetCriticalDamage();
 		dam = dam * dmgAmp;
 		dam = dam / 100;
 	}
@@ -736,12 +749,17 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 		}
 		RedrawComponent(PanelDrawComponent::Mana);
 	}
-	if (HasAnyOf(player._pIFlags, ItemSpecialEffect::StealLife3 | ItemSpecialEffect::StealLife5)) {
+	if (HasAnyOf(player._pIFlags, ItemSpecialEffect::StealLife3 | ItemSpecialEffect::StealLife5) || HasAnyOf(player._pIFlagsRe, ItemReignitedEffect::Gluttony)) {
 		if (HasAnyOf(player._pIFlags, ItemSpecialEffect::StealLife3)) {
 			skdam = 3 * dam / 100;
 		}
 		if (HasAnyOf(player._pIFlags, ItemSpecialEffect::StealLife5)) {
 			skdam = 5 * dam / 100;
+		}
+		if (HasAnyOf(player._pIFlagsRe, ItemReignitedEffect::Gluttony))
+		{
+			int val = 5 + GenerateRnd(5);
+			skdam = val * dam / 100;
 		}
 		player._pHitPoints += skdam;
 		if (player._pHitPoints > player._pMaxHP) {
@@ -753,9 +771,31 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 		}
 		RedrawComponent(PanelDrawComponent::Health);
 	}
-	if ((monster.hitPoints >> 6) <= 0) {
+
+
+	player.applyGreed(0);
+
+
+	if ((monster.hitPoints >> 6) <= 0)
+	{
+		if(HasAnyOf(player._pIFlagsRe, ItemReignitedEffect::Lust))
+		{
+			int missingHp = player._pMaxHP - player._pHitPoints;
+			missingHp = missingHp / 20;//5%
+
+			player._pHitPoints += missingHp;
+			if (player._pHitPoints > player._pMaxHP) {
+				player._pHitPoints = player._pMaxHP;
+			}
+			player._pHPBase += missingHp;
+			if (player._pHPBase > player._pMaxHPBase) {
+				player._pHPBase = player._pMaxHPBase;
+			}
+		}
 		M_StartKill(monster, player);
-	} else {
+	}
+	else
+	{
 		if (monster.mode != MonsterMode::Petrified && HasAnyOf(player._pIFlags, ItemSpecialEffect::Knockback))
 			M_GetKnockback(monster);
 		M_StartHit(monster, player, dam);
@@ -783,7 +823,7 @@ bool PlrHitPlr(Player &attacker, Player &target)
 		blk = GenerateRnd(100);
 	}
 
-	int blkper = target.GetBlockChance() - (attacker._pLevel * 2);
+	int blkper = target.GetBlockChance();
 	blkper = clamp(blkper, 0, 100);
 
 	if (hit >= hper) {
@@ -791,6 +831,7 @@ bool PlrHitPlr(Player &attacker, Player &target)
 	}
 
 	if (blk < blkper) {
+		//TODO: Add target block stamina change
 		Direction dir = GetDirection(target.position.tile, attacker.position.tile);
 		StartPlrBlock(target, dir);
 		return true;
@@ -802,6 +843,7 @@ bool PlrHitPlr(Player &attacker, Player &target)
 	dam += (dam * attacker._pIBonusDam) / 100;
 	dam += attacker._pIBonusDamMod + attacker._pDamageMod;
 
+	//TODO: Update critical damage
 	if (attacker._pClass == HeroClass::Warrior || attacker._pClass == HeroClass::Barbarian) {
 		if (GenerateRnd(100) < attacker._pLevel) {
 			dam *= 2;
@@ -949,16 +991,37 @@ bool DoRangeAttack(Player &player)
 
 		int dmg = 4;
 		MissileID mistype = MissileID::Arrow;
-		if (HasAnyOf(player._pIFlags, ItemSpecialEffect::FireArrows)) {
+		if (HasAnyOf(player._pIFlagsRe, ItemReignitedEffect::Wrath))
+		{
+			int cost = (player._pCriticalDamage - 100) / 20;
+			cost <<= 6;
+
+			if (player._pMana >= cost)
+			{
+				player._pMana -= cost;
+				player._pManaBase -= cost;
+
+				mistype = MissileID::WrathArrow;
+			}
+		}
+		else if (HasAllOf(player._pIFlags, ItemSpecialEffect::FireArrows | ItemSpecialEffect::LightningArrows))
+		{
+			if (gbIsHellfire) {
+				dmg = player._pIFMinDam + GenerateRnd(player._pIFMaxDam - player._pIFMinDam);
+				mistype = MissileID::SpectralArrow;
+			} else {
+				mistype = MissileID::LightFireArrow;
+			}
+		}
+		else if (HasAnyOf(player._pIFlags, ItemSpecialEffect::FireArrows)) {
 			mistype = MissileID::FireArrow;
 		}
-		if (HasAnyOf(player._pIFlags, ItemSpecialEffect::LightningArrows)) {
+		else if (HasAnyOf(player._pIFlags, ItemSpecialEffect::LightningArrows)) {
 			mistype = MissileID::LightningArrow;
 		}
-		if (HasAllOf(player._pIFlags, ItemSpecialEffect::FireArrows | ItemSpecialEffect::LightningArrows)) {
-			dmg = player._pIFMinDam + GenerateRnd(player._pIFMaxDam - player._pIFMinDam);
-			mistype = MissileID::SpectralArrow;
-		}
+
+
+
 
 		AddMissile(
 		    player.position.tile,
@@ -1843,8 +1906,7 @@ void Player::RestorePartialLife()
 		l -= penalty;
 	}
 
-	_pHitPoints = std::min(_pHitPoints + l, _pMaxHP);
-	_pHPBase = std::min(_pHPBase + l, _pMaxHPBase);
+	restoreHp(l);
 
 }
 void Player::RestoreFullLife()
@@ -1857,8 +1919,7 @@ void Player::RestoreFullLife()
 		l -= penalty;
 	}
 
-	_pHitPoints = std::min(_pHitPoints + l, _pMaxHP);
-	_pHPBase = std::min(_pHPBase + l, _pMaxHPBase);
+	restoreHp(l);
 }
 
 void Player::RestorePartialMana()
@@ -3001,7 +3062,7 @@ StartNewLvl(Player &player, interface_mode fom, int lvl)
 		player.setLevel(setlvlnum);
 		break;
 	case WM_DIABTWARPUP:
-		MyPlayer->pTownWarps |= 1 << (leveltype - 2);
+		MyPlayer->pTownWarps |= 1 << (sgGameInitInfo.nDifficulty*3 + leveltype - 2);
 		player.setLevel(lvl);
 		break;
 	case WM_DIABRETOWN:
@@ -3116,9 +3177,6 @@ void ProcessPlayers()
 			{
 				player.RegenTick();
 
-				if (HasAnyOf(player._pIFlags, ItemSpecialEffect::DrainLife) && leveltype != DTYPE_TOWN) {
-					ApplyPlrDamage(DamageType::Physical, player, 0, 0, 4);
-				}
 				if (HasAnyOf(player._pIFlags, ItemSpecialEffect::NoMana) && player._pManaBase > 0) {
 					player._pManaBase -= player._pMana;
 					player._pMana = 0;
@@ -3407,13 +3465,18 @@ void CheckStats(Player &player)
 	}
 }
 
-void ModifyPlrStr(Player &player, int l)
+void ModifyPlrStr(Player &player, int l, bool elixir)
 {
 	l = clamp(l, 0 - player._pBaseStr, player.GetMaximumAttributeValue(CharacterAttribute::Strength) - player._pBaseStr);
 
 	player._pStrength += l;
 	player._pBaseStr += l;
 
+	if (elixir)
+	{
+		player._pElixirsConsumed += l;
+	}
+	
 	CalcPlrInv(player, true);
 
 	if (&player == MyPlayer) {
@@ -3421,12 +3484,16 @@ void ModifyPlrStr(Player &player, int l)
 	}
 }
 
-void ModifyPlrMag(Player &player, int l)
+void ModifyPlrMag(Player &player, int l, bool elixir)
 {
 	l = clamp(l, 0 - player._pBaseMag, player.GetMaximumAttributeValue(CharacterAttribute::Magic) - player._pBaseMag);
 
 	player._pMagic += l;
 	player._pBaseMag += l;
+	if (elixir)
+	{
+		player._pElixirsConsumed += l;
+	}
 
 	int ms = l;
 	ms *= PlayersData[static_cast<size_t>(player._pClass)].chrMana;
@@ -3445,12 +3512,17 @@ void ModifyPlrMag(Player &player, int l)
 	}
 }
 
-void ModifyPlrDex(Player &player, int l)
+void ModifyPlrDex(Player &player, int l, bool elixir)
 {
 	l = clamp(l, 0 - player._pBaseDex, player.GetMaximumAttributeValue(CharacterAttribute::Dexterity) - player._pBaseDex);
 
 	player._pDexterity += l;
 	player._pBaseDex += l;
+	if (elixir)
+	{
+		player._pElixirsConsumed += l;
+	}
+
 	CalcPlrInv(player, true);
 
 	if (&player == MyPlayer) {
@@ -3458,12 +3530,16 @@ void ModifyPlrDex(Player &player, int l)
 	}
 }
 
-void ModifyPlrVit(Player &player, int l)
+void ModifyPlrVit(Player &player, int l, bool elixir)
 {
 	l = clamp(l, 0 - player._pBaseVit, player.GetMaximumAttributeValue(CharacterAttribute::Vitality) - player._pBaseVit);
 
 	player._pVitality += l;
 	player._pBaseVit += l;
+	if (elixir)
+	{
+		player._pElixirsConsumed += l;
+	}
 
 	int ms = l;
 	ms *= PlayersData[static_cast<size_t>(player._pClass)].chrLife;
@@ -3478,6 +3554,43 @@ void ModifyPlrVit(Player &player, int l)
 	if (&player == MyPlayer) {
 		NetSendCmdParam1(false, CMD_SETVIT, player._pBaseVit);
 	}
+}
+void UseSpecElixir(Player &player)
+{
+	int seed = player._pLevel * ((int)player._pClass + 7);
+	SetRndSeed(seed);
+
+	for(int i=0; i < 3; i++)
+	{
+		int roll = GenerateRnd(4);
+
+		for (int j = 0; j < 4; j++)
+		{
+			CharacterAttribute attribute = (CharacterAttribute)((roll+j)%4);
+			if (player.GetBaseAttributeValue(attribute) <= player.GetMaximumAttributeValue(attribute))
+			{
+				switch (attribute)
+				{
+					case CharacterAttribute::Strength:
+						ModifyPlrStr(player, 1, true);
+						break;
+				    case CharacterAttribute::Magic:
+					    ModifyPlrMag(player, 1, true);
+						break;
+				    case CharacterAttribute::Dexterity:
+					    ModifyPlrDex(player, 1, true);
+					    break;
+				    case CharacterAttribute::Vitality:
+					    ModifyPlrVit(player, 1, true);
+						break;
+				}
+
+				break;
+			}
+		}
+	}
+
+
 }
 
 void SetPlayerHitPoints(Player &player, int val)
@@ -3671,7 +3784,7 @@ std::pair<int, int> Player::GetDamage() const
 
 void Player::CalculateBaseDamage()
 {
-	int value = _pStrength / 10; // 10% str into base dmg
+	int value = _pStrength / 20; // 5% str into base dmg
 	value += _pLevel / 10;//+1 per 10 levels;
 	switch (this->_pClass)
 	{
@@ -3776,26 +3889,82 @@ void Player::RegenTick()
 	regenTickCurrent++;
 	regenTickCurrent = regenTickCurrent % (20 / 4);
 
-	if (regenTickCurrent == 0) {
-		    if (HasNoneOf(_pIFlags, ItemSpecialEffect::NoMana)) {
+	if (regenTickCurrent == 0)
+	{
+		    if (healBuffer > 0)
+			{
+			    int value = _pMaxHP / (4 * 4);//25% per second
+
+				int healVal = std::min(healBuffer, value);
+			    healBuffer -= healVal;
+
+				_pHitPoints = std::min(_pHitPoints + healVal, _pMaxHP);
+			    _pHPBase = std::min(_pHPBase + healVal, _pMaxHPBase);
+			}
+
+		    if (HasNoneOf(_pIFlags, ItemSpecialEffect::NoMana))
+			{
 			    int manaRefill = _pMaxMana / (100 * 4); // 1.0% per second
 			    _pMana = std::min(_pMana + manaRefill, _pMaxMana);
 			    _pManaBase = std::min(_pManaBase + manaRefill, _pMaxManaBase);
 		    }
+		    RedrawComponent(PanelDrawComponent::Mana);
 
-		    int hpRefill = _pMaxHP / (100 * 4); // 1.0% per second
-			if (_pSkillActiveId == SpellID::NobleSpirit)
+
+		    int increase = 100;//1%
+		    if ((HasAnyOf(_pIFlagsRe, ItemReignitedEffect::Sloth)))
 			{
-			    int increase = 100 + _pLevel * 2;
-			    hpRefill = hpRefill * increase;
-			    hpRefill = hpRefill  / 100;
+			    increase += 200;
+		    }
+		    else if ((HasAnyOf(_pIFlags, ItemSpecialEffect::FastestHitRecovery)))
+			{
+			    increase += 75;
+			}
+			else if ((HasAnyOf(_pIFlags, ItemSpecialEffect::FastestHitRecovery)))
+			{
+			    increase += 50;
+		    }
+			else if ((HasAnyOf(_pIFlags, ItemSpecialEffect::FastestHitRecovery)))
+			{
+			    increase += 25;
+		    }
+
+		    if (_pSkillActiveId == SpellID::NobleSpirit)
+			{
+			    increase += 50 + _pLevel * 2;
+		    }
+
+			
+			if (HasAnyOf(_pIFlags, ItemSpecialEffect::DrainLife) || HasAnyOf(_pIFlagsRe, ItemReignitedEffect::Gluttony))
+			{
+			    if(leveltype == DTYPE_TOWN)
+				{
+					increase = 0;
+				}
+				else
+				{
+				    increase -= 200;//-2%
+				}
+		    }
+
+			if (increase != 0)
+			{
+			    int hpRefill = _pMaxHP / (100 * 4); // 1.0% per second
+
+
+			    if (increase != 0) {
+				    hpRefill = hpRefill * increase;
+				    hpRefill = hpRefill / 100;
+			    }
+
+			    _pHitPoints = std::min(_pHitPoints + hpRefill, _pMaxHP);
+			    _pHitPoints = std::max(_pHitPoints, 1 << 6);
+			    _pHPBase = std::min(_pHPBase + hpRefill, _pMaxHPBase);
+			    _pHPBase = std::max(_pHPBase, 1 << 6);
+
+			    RedrawComponent(PanelDrawComponent::Health);
 			}
 
-		    _pHitPoints = std::min(_pHitPoints + hpRefill, _pMaxHP);
-		    _pHPBase = std::min(_pHPBase + hpRefill, _pMaxHPBase);
-
-		    RedrawComponent(PanelDrawComponent::Health);
-		    RedrawComponent(PanelDrawComponent::Mana);
 	}
 
 	if (_pSkillDurationLeft > 0) {
@@ -3815,7 +3984,9 @@ void Player::RegenTick()
 	if (_teleportCooldownLeft > 0) {
 		_teleportCooldownLeft--;
 	}
-
+	if (_guardianCooldownLeft > 0) {
+		_guardianCooldownLeft--;
+	}
 	if (_healPenaltyDurationLeft > 0)
 	{
 		_healPenaltyDurationLeft--;
@@ -3828,11 +3999,50 @@ void Player::RegenTick()
 			}
 		}
 	}
+
+	if (_pBlockStaminaCurrent < _pBlockStaminaMax)
+	{
+		int value = _pBlockStaminaMax;
+
+		if (HasAnyOf(_pIFlags, ItemSpecialEffect::FastBlock))
+		{
+			value = value / 200;
+		}
+		else
+		{
+			value = value / 250;
+		}
+
+		_pBlockStaminaCurrent += value;
+		if (_pBlockStaminaCurrent > _pBlockStaminaMax)
+		{
+			_pBlockStaminaCurrent = _pBlockStaminaMax;
+		}
+	}
 }
 
+int Player::GetElixirConsumeLimit() const
+{
+	int limit = 30;
+
+	switch (pDiabloKillLevel)
+	{
+		case 1://Normal kill
+			limit += 10;
+			break;
+		case 2:
+		    limit += 10 + 15;
+			break;
+	    case 4:
+		    limit += 10 + 15 + 20;
+			break;
+	}
+
+	return limit;
+}
 void Player::AddHealPenaltyStack()
 {
-	if (_healPenaltyStacks < 3)
+	if (_healPenaltyStacks < 5)
 	{
 		_healPenaltyStacks++;
 	}
@@ -3842,12 +4052,13 @@ void Player::AddHealPenaltyStack()
 
 int Player::GetHealPenalty()
 {
-	return 25 * _healPenaltyStacks;
+	return 20 * _healPenaltyStacks;
 }
 
 void Player::EnableSkill(SpellID sn)
 {
-	_pSkillDurationLeft = 20 * 5 + (2 * _pLevel); // 5 sec +0.1 per level
+	_pSkillDuration = 20 * 10 + (4 * _pLevel); // 10 sec +0.2 per level
+	_pSkillDurationLeft = _pSkillDuration;
 
 	_pSkillCooldown = 20 * 30; // 30 second cooldown
 	_pSkillActiveId = sn;
@@ -3866,5 +4077,99 @@ void Player::DisableSkill()
 int Player::GetSpellPower() const
 {
 	return _pSpellPower;
+}
+
+int Player::GetCriticalDamage() const
+{
+	int dmgAmp = _pCriticalDamage;
+	if (_pSkillActiveId == SpellID::Deadeye)
+	{
+		dmgAmp += 50 + _pLevel;
+	}
+	return dmgAmp;
+}
+
+int Player::GetBlockChance() const
+{
+	int blockChance = _pBlockChance;
+
+	blockChance = blockChance * _pBlockStaminaCurrent;
+	blockChance = blockChance / _pBlockStaminaMax;
+
+	return blockChance;
+}
+
+int Player::GetBlockChanceBase() const
+{
+	
+
+	if (InvBody[INVLOC_HAND_RIGHT]._itype != ItemType::Shield)
+	{
+		return 0;
+	}
+	int blockChanceMin = 5 + PlayersData[static_cast<std::uint8_t>(InspectPlayer->_pClass)].blockBonus + InvBody[INVLOC_HAND_RIGHT]._iBlockChanceBase;
+	
+	return blockChanceMin;
+}
+
+void Player::restoreHp(int value)
+{
+	if(HasAnyOf(_pIFlagsRe, ItemReignitedEffect::Sloth))
+	{
+		healBuffer += value;
+	}
+	else
+	{
+		_pHitPoints = std::min(_pHitPoints + value, _pMaxHP);
+		_pHPBase = std::min(_pHPBase + value, _pMaxHPBase);
+		RedrawComponent(PanelDrawComponent::Health);
+	}
+}
+
+void Player::applyGreed(int type)
+{
+	if(!HasAnyOf(_pIFlagsRe, ItemReignitedEffect::Greed))
+	{
+		return;
+	}
+
+	int hpRatio = 100;//1%
+	int manaRatio = 100;//1%
+	switch(type)
+	{
+		case 0://melee
+			hpRatio = 100;// 1%
+			manaRatio = 100; // 1%
+			break;
+		case 1: // ranged
+		    hpRatio = 200;//0.5%
+		    manaRatio = 200; //0.5%
+			break;
+	}
+
+	int valHp = 1 + (_pMaxHP - _pHitPoints) / hpRatio; // 1%
+
+	_pHitPoints += valHp;
+	if (_pHitPoints > _pMaxHP) {
+		_pHitPoints = _pMaxHP;
+	}
+	_pHPBase += valHp;
+	if (_pHPBase > _pMaxHPBase) {
+		_pHPBase = _pMaxHPBase;
+	}
+	RedrawComponent(PanelDrawComponent::Health);
+	int valMana = 1 + (_pMaxMana - _pMana) / manaRatio; // 1%
+
+	_pMana += valMana;
+	if (_pMana > _pMaxMana) {
+		_pMana = _pMaxMana;
+	}
+	_pManaBase += valMana;
+	if (_pManaBase > _pMaxManaBase)
+	{
+		_pManaBase = _pMaxManaBase;
+	}
+	RedrawComponent(PanelDrawComponent::Mana);
+	
 }
 } // namespace devilution

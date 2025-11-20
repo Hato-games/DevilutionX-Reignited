@@ -895,7 +895,11 @@ void InitControlPan()
 		InitSpellBook();
 		pQLogCel = LoadCel("data\\quest", static_cast<uint16_t>(SidePanelSize.width));
 		pGBoxBuff = LoadCel("ctrlpan\\golddrop", 261);
+
+		LoadCharPanel();
 	}
+
+
 	CloseGoldDrop();
 	dropGoldValue = 0;
 	initialDropGoldValue = 0;
@@ -915,7 +919,9 @@ void DrawCtrlPan(const Surface &out)
 
 void DrawCtrlBtns(const Surface &out)
 {
+	
 	const Point mainPanelPosition = GetMainPanel().position;
+	
 	for (int i = 0; i < 6; i++) {
 		if (!PanelButtons[i]) {
 			DrawPanelBox(out, MakeSdlRect(PanBtnPos[i].x, PanBtnPos[i].y + 16, 71, 20), mainPanelPosition + Displacement { PanBtnPos[i].x, PanBtnPos[i].y });
@@ -925,6 +931,7 @@ void DrawCtrlBtns(const Surface &out)
 			RenderClxSprite(out, (*PanelButtonDown)[i], position + Displacement { 4, -18 });
 		}
 	}
+	
 
 	if (PanelButtonIndex == 8) {
 		ClxDraw(out, mainPanelPosition + Displacement { 87, 122 }, (*multiButtons)[PanelButtons[6] ? 1 : 0]);
@@ -1288,19 +1295,20 @@ void DrawLevelUpIcon(const Surface &out)
 
 void CheckChrBtns()
 {
-	/*
-	Rectangle tabArea = { GetPanelPosition(UiPanels::Character, { 7, 320 }), Size { 305, 29 } };
-	if (tabArea.contains(MousePosition)) {
-		int hitColumn = MousePosition.x - tabArea.position.x;
-		// Clicking on the gutter currently activates tab 3. Could make it do nothing by checking for == here and return early.
-		if (!gbIsHellfire && hitColumn > 76 * 2) {
-			// Subtract 1 pixel to account for the gutter between buttons 2/3
-			hitColumn--;
-		}
-		cpaneltab = hitColumn / 76;
+	
+	Rectangle rectBasicArea = { GetPanelPosition(UiPanels::Character, { 7, 325 }), Size { 62, 16 } };
+	if (rectBasicArea.contains(MousePosition))
+	{
+		cpaneltab = 0;
 		LoadCharPanel();
 	}
-	*/
+
+	Rectangle rectDetailArea = { GetPanelPosition(UiPanels::Character, { 251, 325 }), Size { 62, 16 } };
+	if (rectDetailArea.contains(MousePosition)) {
+		cpaneltab = 1;
+		LoadCharPanel();
+	}
+
 	Player &myPlayer = *MyPlayer;
 
 	if (chrbtnactive || myPlayer._pStatPts == 0)
@@ -1322,6 +1330,10 @@ void CheckChrBtns()
 
 void ReleaseChrBtns(bool addAllStatPoints)
 {
+	if(cpaneltab != 0)
+	{
+		return;
+	}
 	chrbtnactive = false;
 	for (auto attribute : enum_values<CharacterAttribute>()) {
 		auto buttonId = static_cast<size_t>(attribute);
@@ -1506,6 +1518,48 @@ void DrawTalkPan(const Surface &out)
 		}
 
 		talkBtn++;
+	}
+}
+
+constexpr int BarWidth = 200;
+constexpr int BarHeight = 7;
+
+void DrawBar(const Surface &out, Point screenPosition, int hpLength)
+{
+	UnsafeDrawVerticalLine(out, screenPosition + Displacement { -1, 0 }, BarHeight+2, 0xC6);
+	UnsafeDrawVerticalLine(out, screenPosition + Displacement { BarWidth, 0 }, BarHeight+2, 0xC6);
+
+	UnsafeDrawHorizontalLine(out, screenPosition + Displacement { 0, 0 }, BarWidth, 0xC6);
+	UnsafeDrawHorizontalLine(out, screenPosition + Displacement { 0, BarHeight + 1 }, BarWidth, 0xC6);
+
+	for (int i = 0; i < BarHeight; i++)
+	{
+		UnsafeDrawHorizontalLine(out, screenPosition + Displacement { 0, 1 + i }, hpLength, 0xD9 + i / 3);
+		UnsafeDrawHorizontalLine(out, screenPosition + Displacement { hpLength, 1 + i }, BarWidth - hpLength, 0xFD - i / 2);
+	}
+}
+
+void DrawPartyPanel(const Surface &out)
+{
+	for (int i = 0; i < Players.size(); i++)
+	{
+		Player &player = Players[i];
+		
+		if (&player == MyPlayer)
+			continue;
+
+		if (strcmp(player._pName, "") == 0)
+			continue;
+
+
+		DrawString(out, player._pName, Point { 8, 100 + 30*i }, UiFlags::ColorBlue);
+
+		float diff = player._pHitPoints;
+		diff = diff / player._pMaxHP;
+
+		int length = diff * BarWidth;
+
+		DrawBar(out, Point { 8, 100 + 16 + 30*i }, length);
 	}
 }
 

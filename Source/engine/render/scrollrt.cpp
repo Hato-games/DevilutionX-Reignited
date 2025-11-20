@@ -1700,6 +1700,9 @@ void DrawAndBlit()
 	if (drawChatInput) {
 		DrawTalkPan(out);
 	}
+
+	DrawPartyPanel(out);
+
 	DrawXPBar(out);
 	if (*sgOptions.Graphics.showHealthValues)
 		DrawFlaskValues(out, { mainPanel.position.x + 134, mainPanel.position.y + 28 }, MyPlayer->_pHitPoints >> 6, MyPlayer->_pMaxHP >> 6);

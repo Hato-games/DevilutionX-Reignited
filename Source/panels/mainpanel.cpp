@@ -82,12 +82,14 @@ void LoadMainPanel()
 	PanelButtonGrime = LoadOptionalClx("data\\dirtybuc.clx");
 	PanelButtonDownGrime = LoadOptionalClx("data\\dirtybucp.clx");
 
+	
 	RenderMainButton(*out, 0, _("char"), 0);
 	RenderMainButton(*out, 1, _("quests"), 1);
 	RenderMainButton(*out, 2, _("map"), 1);
 	RenderMainButton(*out, 3, _("menu"), 0);
 	RenderMainButton(*out, 4, _("inv"), 1);
 	RenderMainButton(*out, 5, _("spells"), 0);
+	
 	PanelButtonDown = SurfaceToClx(*out, NumButtonSprites);
 	out = std::nullopt;
 

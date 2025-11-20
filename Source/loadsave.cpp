@@ -294,20 +294,12 @@ void LoadItemData(LoadHelper &file, Item &item)
 	item._iRequest = file.NextBool8();
 	file.Skip(1); // Alignment
 	item.reignitedItem = file.NextBool8();
-	item._iUid = file.NextLE<int32_t>();
-	item._iFMinDam = file.NextLE<int32_t>();
-	item._iFMaxDam = file.NextLE<int32_t>();
-	item._iLMinDam = file.NextLE<int32_t>();
-	item._iLMaxDam = file.NextLE<int32_t>();
-	item._iPLEnAc = file.NextLE<int32_t>();
-	item._iPrePower = static_cast<item_effect_type>(file.NextLE<int8_t>());
-	item._iSufPower = static_cast<item_effect_type>(file.NextLE<int8_t>());
 
-	item.reignitedItem |= item._iMagical == ITEM_QUALITY_RARE;
 	if (item.reignitedItem)
 	{
 		item._iRarePower = static_cast<item_effect_type>(file.NextLE<int8_t>());
-		file.Skip(1); // For future use
+		file.Skip(4); // For future use
+
 		item._iRareNamePrefId = file.NextLE<int8_t>();
 		item._iRareNameSufId = file.NextLE<int8_t>();
 
@@ -316,7 +308,8 @@ void LoadItemData(LoadHelper &file, Item &item)
 		item._iRarePowerIndex = file.NextLE<int8_t>();
 
 		item._iPLCrit = file.NextLE<int8_t>();
-		item._iPLSpellPw = file.NextLE<int16_t>();
+		item._iPLSpellPowerBase = file.NextLE<int16_t>();
+		item._iPLSpellPower = file.NextLE<int16_t>();
 
 		item._iPrefValue1 = file.NextLE<int32_t>();
 		item._iPrefValue2 = file.NextLE<int32_t>();
@@ -330,16 +323,36 @@ void LoadItemData(LoadHelper &file, Item &item)
 		item._iVAdd3 = file.NextLE<int32_t>();
 		item._iVMult3 = file.NextLE<int32_t>();
 
-		file.Skip(2); // For future use
+		item._iBlockChanceBase = file.NextLE<int8_t>();
+		item._iBlockChance = file.NextLE<int8_t>();
+		item._iBlockStamina = file.NextLE<int8_t>();
+
+		item._iPLCritDmg = file.NextLE<int16_t>();
+
+		item._iPLDropChance = file.NextLE<int16_t>();
+
+		item._iFlagsRe = static_cast<ItemReignitedEffect>(file.NextLE<uint32_t>());
+		file.Skip(7); // For future use
 	}
+
+	item._iUid = file.NextLE<int32_t>();
+	item._iFMinDam = file.NextLE<int32_t>();
+	item._iFMaxDam = file.NextLE<int32_t>();
+	item._iLMinDam = file.NextLE<int32_t>();
+	item._iLMaxDam = file.NextLE<int32_t>();
+	item._iPLEnAc = file.NextLE<int32_t>();
+	item._iPrePower = static_cast<item_effect_type>(file.NextLE<int8_t>());
+	item._iSufPower = static_cast<item_effect_type>(file.NextLE<int8_t>());
+
+
 	file.Skip(2); // Alignment
 	item._iVAdd1 = file.NextLE<int32_t>();
 	item._iVMult1 = file.NextLE<int32_t>();
 	item._iVAdd2 = file.NextLE<int32_t>();
 	item._iVMult2 = file.NextLE<int32_t>();
-	item._iMinStr = file.NextLE<int8_t>();
+	item._iMinStr = file.NextLE<uint8_t>();
 	item._iMinMag = file.NextLE<uint8_t>();
-	item._iMinDex = file.NextLE<int8_t>();
+	item._iMinDex = file.NextLE<uint8_t>();
 	file.Skip(1); // Alignment
 	item._iStatFlag = file.NextBool32();
 	item.IDidx = static_cast<_item_indexes>(file.NextLE<int32_t>());
@@ -563,7 +576,8 @@ void LoadPlayer(LoadHelper& file, Player& player)
 	player._pIBonusToHit = file.NextLE<int32_t>();
 	player._pIBonusAC = file.NextLE<int32_t>();
 	player._pIBonusDamMod = file.NextLE<int32_t>();
-	file.Skip(4); // Alignment
+	file.Skip(2); // Alignment
+	player.pTownWarps = file.NextLE<uint16_t>();
 
 	player._pISpells = file.NextLE<uint64_t>();
 	player._pIFlags = static_cast<ItemSpecialEffect>(file.NextLE<int32_t>());
@@ -578,7 +592,18 @@ void LoadPlayer(LoadHelper& file, Player& player)
 	player._pILMinDam = file.NextLE<int32_t>();
 	player._pILMaxDam = file.NextLE<int32_t>();
 	player._pOilType = static_cast<item_misc_id>(file.NextLE<int32_t>());
-	player.pTownWarps = file.NextLE<uint8_t>();
+	if (player.pTownWarps == 0)
+	{
+		player.pTownWarps = file.NextLE<uint8_t>();
+		if (sgGameInitInfo.nDifficulty != DIFF_NORMAL)
+		{
+			player.pTownWarps = player.pTownWarps << (sgGameInitInfo.nDifficulty*3);
+		}
+	}
+	else
+	{
+		file.Skip(1); 
+	}
 	player.pDungMsgs = file.NextLE<uint8_t>();
 	player.pLvlLoad = file.NextLE<uint8_t>();
 
@@ -599,22 +624,39 @@ void LoadPlayer(LoadHelper& file, Player& player)
 	
 	player.wReflections = file.NextLE<uint16_t>();
 
-	player._pSkillActiveId = (SpellID)file.NextLE<int8_t>();
-	player._pSkillCooldown = file.NextLE<int32_t>();
-	player._pSkillDurationLeft = file.NextLE<int32_t>();
-	player._apocalipseCooldownLeft = file.NextLE<int16_t>();
-	player._teleportCooldownLeft = file.NextLE<int16_t>();
 	
-	file.Skip(14-13); // Available bytes
+	file.Skip(14); // Available bytes
 
 
 	player.pDiabloKillLevel = file.NextLE<uint32_t>();
 	sgGameInitInfo.nDifficulty = static_cast<_difficulty>(file.NextLE<uint32_t>());
 	player.pDamAcFlags = static_cast<ItemSpecialEffectHf>(file.NextLE<uint32_t>());
 
+	file.Skip(20); // Available bytes
+
+	
+	bool reignitedFlag = file.NextLE<int8_t>();
+
+	file.Skip(15); // Available bytes
+
+	player._pBlockChance = file.NextLE<int8_t>();
+	player._pBlockStaminaMax = file.NextLE<int16_t>();
+	player._pBlockStaminaCurrent = file.NextLE<int16_t>();
+
+
 	player._healPenaltyStacks = file.NextLE<int8_t>();
 	player._healPenaltyDurationLeft = file.NextLE<int16_t>();
-	file.Skip(20-3); // Available bytes
+	player._pElixirsConsumed = file.NextLE<int8_t>();
+
+	file.Skip(20); // Available bytes
+	player._pSkillActiveId = (SpellID)file.NextLE<int8_t>();
+	player._pSkillCooldown = file.NextLE<int32_t>();
+	player._pSkillDurationLeft = file.NextLE<int32_t>();
+	player._apocalipseCooldownLeft = file.NextLE<int16_t>();
+	player._teleportCooldownLeft = file.NextLE<int16_t>();
+	player._guardianCooldownLeft = file.NextLE<int16_t>();
+	player._pSkillDuration = file.NextLE<int32_t>();
+	file.Skip(14); // Available bytes
 
 	CalcPlrItemVals(player, false);
 
@@ -807,7 +849,9 @@ void LoadMissile(LoadHelper *file)
 	missile.var5 = file->NextLE<int32_t>();
 	missile.var6 = file->NextLE<int32_t>();
 	missile.var7 = file->NextLE<int32_t>();
-	missile.limitReached = file->NextBool32();
+	file->Skip(2); // Unused
+	missile.greedHealTriggered = file->NextBool8();
+	missile.limitReached = file->NextBool8();
 	missile.lastCollisionTargetHash = 0;
 	if (Missiles.size() < Missiles.max_size()) {
 		Missiles.push_back(missile);
@@ -1164,19 +1208,10 @@ void SaveItem(SaveHelper &file, const Item &item)
 	file.Skip(1); // Alignment
 
 	file.WriteLE<int8_t>(item.reignitedItem ? 1 : 0);
-	
-	file.WriteLE<int32_t>(item._iUid);
-	file.WriteLE<int32_t>(item._iFMinDam);
-	file.WriteLE<int32_t>(item._iFMaxDam);
-	file.WriteLE<int32_t>(item._iLMinDam);
-	file.WriteLE<int32_t>(item._iLMaxDam);
-	file.WriteLE<int32_t>(item._iPLEnAc);
-	file.WriteLE<int8_t>(item._iPrePower);
-	file.WriteLE<int8_t>(item._iSufPower);
 	if (item.reignitedItem)
 	{
 		file.WriteLE<int8_t>(item._iRarePower);
-		file.Skip(1); // For future use
+		file.Skip(4); // For future use
 		file.WriteLE<int8_t>(item._iRareNamePrefId);
 		file.WriteLE<int8_t>(item._iRareNameSufId);
 
@@ -1185,7 +1220,8 @@ void SaveItem(SaveHelper &file, const Item &item)
 		file.WriteLE<int8_t>(item._iRarePowerIndex);
 
 		file.WriteLE<int8_t>(item._iPLCrit);
-		file.WriteLE<int16_t>(item._iPLSpellPw);
+		file.WriteLE<int16_t>(item._iPLSpellPowerBase);
+		file.WriteLE<int16_t>(item._iPLSpellPower);
 
 		file.WriteLE<int32_t>(item._iPrefValue1);
 		file.WriteLE<int32_t>(item._iPrefValue2);
@@ -1199,16 +1235,35 @@ void SaveItem(SaveHelper &file, const Item &item)
 		file.WriteLE<int32_t>(item._iVAdd3);
 		file.WriteLE<int32_t>(item._iVMult3);
 
-		file.Skip(2); // For future use
+		file.WriteLE<int8_t>(item._iBlockChanceBase);
+		file.WriteLE<int8_t>(item._iBlockChance);
+		file.WriteLE<int8_t>(item._iBlockStamina);
+
+		file.WriteLE<int16_t>(item._iPLCritDmg);
+
+		file.WriteLE<int16_t>(item._iPLDropChance);
+
+		file.WriteLE<int32_t>(static_cast<uint32_t>(item._iFlagsRe));
+		file.Skip(7); // For future use
 	}
+
+	file.WriteLE<int32_t>(item._iUid);
+	file.WriteLE<int32_t>(item._iFMinDam);
+	file.WriteLE<int32_t>(item._iFMaxDam);
+	file.WriteLE<int32_t>(item._iLMinDam);
+	file.WriteLE<int32_t>(item._iLMaxDam);
+	file.WriteLE<int32_t>(item._iPLEnAc);
+	file.WriteLE<int8_t>(item._iPrePower);
+	file.WriteLE<int8_t>(item._iSufPower);
+
 	file.Skip(2); // Alignment
 	file.WriteLE<int32_t>(item._iVAdd1);
 	file.WriteLE<int32_t>(item._iVMult1);
 	file.WriteLE<int32_t>(item._iVAdd2);
 	file.WriteLE<int32_t>(item._iVMult2);
-	file.WriteLE<int8_t>(item._iMinStr);
+	file.WriteLE<uint8_t>(item._iMinStr);
 	file.WriteLE<uint8_t>(item._iMinMag);
-	file.WriteLE<int8_t>(item._iMinDex);
+	file.WriteLE<uint8_t>(item._iMinDex);
 	file.Skip(1); // Alignment
 	file.WriteLE<uint32_t>(item._iStatFlag ? 1 : 0);
 	file.WriteLE<int32_t>(idx);
@@ -1421,7 +1476,8 @@ void SavePlayer(SaveHelper &file, const Player &player)
 	file.WriteLE<int32_t>(player._pIBonusToHit);
 	file.WriteLE<int32_t>(player._pIBonusAC);
 	file.WriteLE<int32_t>(player._pIBonusDamMod);
-	file.Skip(4); // Alignment
+	file.Skip(2); // Alignment
+	file.WriteLE<uint16_t>(player.pTownWarps);
 
 	file.WriteLE<uint64_t>(player._pISpells);
 	file.WriteLE<int32_t>(static_cast<int32_t>(player._pIFlags));
@@ -1437,7 +1493,7 @@ void SavePlayer(SaveHelper &file, const Player &player)
 	file.WriteLE<int32_t>(player._pILMinDam);
 	file.WriteLE<int32_t>(player._pILMaxDam);
 	file.WriteLE<int32_t>(player._pOilType);
-	file.WriteLE<uint8_t>(player.pTownWarps);
+	file.Skip(1); //file.WriteLE<uint8_t>(player.pTownWarps);
 	file.WriteLE<uint8_t>(player.pDungMsgs);
 	file.WriteLE<uint8_t>(player.pLvlLoad);
 	if (gbIsHellfire)
@@ -1449,21 +1505,37 @@ void SavePlayer(SaveHelper &file, const Player &player)
 	file.WriteLE<uint16_t>(player.pManaShieldDur);//file.Skip(2); // Available bytes
 	file.WriteLE<uint16_t>(player.wReflections);
 
-	
-	file.WriteLE<uint8_t>((int8_t)player._pSkillActiveId);
-	file.WriteLE<int32_t>(player._pSkillCooldown);
-	file.WriteLE<int32_t>(player._pSkillDurationLeft);
-	file.WriteLE<int16_t>(player._apocalipseCooldownLeft);
-	file.WriteLE<int16_t>(player._teleportCooldownLeft);
-	file.Skip(14-13); // Available bytes
+
+	file.Skip(14); // Available bytes
 
 	file.WriteLE<uint32_t>(player.pDiabloKillLevel);
 	file.WriteLE<uint32_t>(sgGameInitInfo.nDifficulty);
 	file.WriteLE<uint32_t>(static_cast<uint32_t>(player.pDamAcFlags));
 
+	file.Skip(20); // Available bytes
+
+	//Reignited
+	file.WriteLE<int8_t>(1);//Reignited flag
+
+	file.Skip(15); // Available bytes
+
+	file.WriteLE<int8_t>(player._pBlockChance);
+	file.WriteLE<int16_t>(player._pBlockStaminaMax);
+	file.WriteLE<int16_t>(player._pBlockStaminaCurrent);
+
 	file.WriteLE<int8_t>(player._healPenaltyStacks);
 	file.WriteLE<int16_t>(player._healPenaltyDurationLeft);
-	file.Skip(20-3); // Available bytes
+	file.WriteLE<int8_t>(player._pElixirsConsumed);
+
+	file.Skip(20); // Available bytes
+	file.WriteLE<uint8_t>((int8_t)player._pSkillActiveId);
+	file.WriteLE<int32_t>(player._pSkillCooldown);
+	file.WriteLE<int32_t>(player._pSkillDurationLeft);
+	file.WriteLE<int16_t>(player._apocalipseCooldownLeft);
+	file.WriteLE<int16_t>(player._teleportCooldownLeft);
+	file.WriteLE<int16_t>(player._guardianCooldownLeft);
+	file.WriteLE<int32_t>(player._pSkillDuration);
+	file.Skip(14); // Available bytes
 
 	// Omit pointer _pNData
 	// Omit pointer _pWData
@@ -1625,7 +1697,10 @@ void SaveMissile(SaveHelper *file, const Missile &missile)
 	file->WriteLE<int32_t>(missile.var5);
 	file->WriteLE<int32_t>(missile.var6);
 	file->WriteLE<int32_t>(missile.var7);
-	file->WriteLE<uint32_t>(missile.limitReached ? 1 : 0);
+	file->Skip(2);//unused
+	file->WriteLE<uint8_t>(missile.greedHealTriggered ? 1 : 0);
+	file->WriteLE<uint8_t>(missile.limitReached ? 1 : 0);
+	
 }
 
 _object_id ConvertToHellfireObject(_object_id type)
@@ -1864,8 +1939,8 @@ void LoadAdditionalMissiles()
 	}
 }
 
-const int DiabloItemSaveSize = 368;
-const int HellfireItemSaveSize = 372;
+const int DiabloItemSaveSize = 368+66;
+const int HellfireItemSaveSize = 372+66;
 
 } // namespace
 
@@ -1927,8 +2002,7 @@ void RemoveInvalidItem(Item &item)
 		isInvalid = isInvalid || (item._itype == ItemType::Staff && GetSpellStaffLevel(item._iSpell) == -1);
 		isInvalid = isInvalid || (item._iMiscId == IMISC_BOOK && GetSpellBookLevel(item._iSpell) == -1);
 		isInvalid = isInvalid || item._iDamAcFlags != ItemSpecialEffectHf::None;
-		isInvalid = isInvalid || item._iPrePower > IPL_LASTDIABLO;
-		isInvalid = isInvalid || item._iSufPower > IPL_LASTDIABLO;
+		isInvalid = isInvalid || item.HasHellfireAffix();
 	}
 
 	if (isInvalid) {
@@ -2424,6 +2498,8 @@ void SaveHeroItems(SaveWriter &saveWriter, Player &player)
 		SaveItem(file, item);
 	for (const Item &item : player.SpdList)
 		SaveItem(file, item);
+
+	size_t itemCount2 = 2;
 }
 
 void SaveStash(SaveWriter &stashWriter)

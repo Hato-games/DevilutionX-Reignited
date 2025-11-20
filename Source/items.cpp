@@ -359,12 +359,27 @@ bool IsPrefixValidForItemType(int i, AffixItemType flgs, bool hellfireItem)
 {
 	AffixItemType itemTypes = ItemPrefixes[i].PLIType;
 
-	if (!hellfireItem) {
-		if (i > IPL_LASTDIABLO)
-			return false;
-
-		if (i >= 12 && i <= 20)
-			itemTypes &= ~AffixItemType::Staff;
+	if (!hellfireItem)
+	{
+		switch (ItemPrefixes[i].power.type)
+		{
+			case IPL_MULT_ARROWS:
+			case IPL_FIREBALL:
+			case IPL_FIRERES_CURSE:
+			case IPL_LIGHTRES_CURSE:
+			case IPL_MAGICRES_CURSE:
+			case IPL_DEVASTATION:
+			case IPL_DECAY:
+			case IPL_PERIL:
+			case IPL_JESTERS:
+			case IPL_CRYSTALLINE:
+			case IPL_DOPPELGANGER:
+			case IPL_ACDEMON:
+			case IPL_ACUNDEAD:
+			case IPL_MANATOLIFE:
+			case IPL_LIFETOMANA:
+					return false;
+		}
 	}
 
 	return HasAnyOf(flgs, itemTypes);
@@ -374,17 +389,10 @@ bool IsSuffixValidForItemType(int i, AffixItemType flgs, bool hellfireItem)
 {
 	AffixItemType itemTypes = ItemSuffixes[i].PLIType;
 
-	if (!hellfireItem) {
-		if (i > 94)
+	if (!hellfireItem)
+	{
+		if (ItemPrefixes[i].power.type == IPL_PERIL) // Peril
 			return false;
-
-		if ((i >= 0 && i <= 1)
-		    || (i >= 14 && i <= 15)
-		    || (i >= 21 && i <= 22)
-		    || (i >= 34 && i <= 36)
-		    || (i >= 41 && i <= 44)
-		    || (i >= 60 && i <= 63))
-			itemTypes &= ~AffixItemType::Staff;
 	}
 
 	return HasAnyOf(flgs, itemTypes);
@@ -725,6 +733,114 @@ int SaveItemPower(const Player &player, Item &item, ItemPower &power, int affixT
 
 	switch (power.type)
 	{
+	case IPL_GLUTTONY:
+		item._iFlagsRe |= ItemReignitedEffect::Gluttony;
+		item._iPLStr = 50;
+		item._iPLCritDmg = 100;
+		item._iPLDam = 100;
+
+		item._iDurability = DUR_INDESTRUCTIBLE;
+		item._iMaxDur = DUR_INDESTRUCTIBLE;
+		break;
+	case IPL_ENVY:
+		item._iFlagsRe |= ItemReignitedEffect::Envy;
+		item._iFlags |= ItemSpecialEffect::FastBlock;
+		item._iPLDam = 20;
+		item._iBlockStamina = -50;
+		item._iBlockChance += 25;
+
+		
+		item._iDurability = DUR_INDESTRUCTIBLE;
+		item._iMaxDur = DUR_INDESTRUCTIBLE;
+		break;
+	case IPL_LUST:
+		item._iFlagsRe |= ItemReignitedEffect::Lust;
+		item._iFlags |= ItemSpecialEffect::FastestAttack;
+		item._iPLEnAc = 100;
+		item._iPLDam = 50;
+
+		item._iDurability = DUR_INDESTRUCTIBLE;
+		item._iMaxDur = DUR_INDESTRUCTIBLE;
+		break;
+	case IPL_PRIDE:
+		item._iFlagsRe |= ItemReignitedEffect::Pride;
+		item._iPLMag = 50;
+		item._iPLSpellPower += 50;
+		item._iSplLvlAdd = 1;
+
+		item._iDurability = DUR_INDESTRUCTIBLE;
+		item._iMaxDur = DUR_INDESTRUCTIBLE;
+		break;
+	case IPL_WRATH:
+		item._iFlagsRe |= ItemReignitedEffect::Wrath;
+		item._iPLDex = 50;
+		item._iPLCrit = 20;
+		item._iPLDam = 50;
+		item._iPLToHit = 50;
+		item._iPLCritDmg = -50;
+
+		item._iDurability = DUR_INDESTRUCTIBLE;
+		item._iMaxDur = DUR_INDESTRUCTIBLE;
+		break;
+	case IPL_SLOTH:
+		item._iFlagsRe |= ItemReignitedEffect::Sloth;
+		item._iPLDam = -10;
+
+		item._iPLFR = 35;
+		item._iPLLR = 35;
+		item._iPLMR = 35;
+
+		item._iPLAC = 50;
+		item._iPLVit = 50;
+
+		item._iDurability = DUR_INDESTRUCTIBLE;
+		item._iMaxDur = DUR_INDESTRUCTIBLE;
+		break;
+	case IPL_GREED:
+		item._iFlagsRe |= ItemReignitedEffect::Greed;
+		item._iPLDropChance = 300;
+
+
+		item._iPLStr = 10;
+		item._iPLMag = 10;
+		item._iPLDex = 10;
+		item._iPLVit = 10;
+
+		item._iPLFR = 10;
+		item._iPLLR = 10;
+		item._iPLMR = 10;
+
+		item._iAC = 20;
+
+		item._iPLLight = -5; //-50%
+
+		item._iDurability = DUR_INDESTRUCTIBLE;
+		item._iMaxDur = DUR_INDESTRUCTIBLE;
+		break;
+	case IPL_DROPCHANCE_CURSE:
+		item._iPLDropChance -= r;
+		break;
+	case IPL_DROPCHANCE:
+		item._iPLDropChance += r;
+		break;
+	case IPL_BLOCK_CURSE:
+		item._iBlockChance -= r;
+		break;
+	case IPL_BLOCK:
+		item._iBlockChance += r;
+		break;
+	case IPL_STAMINA_CURSE:
+		item._iBlockStamina -= r;
+		break;
+	case IPL_STAMINA:
+		item._iBlockStamina += r;
+		break;
+	case IPL_CRITDMG_CURSE:
+		item._iPLCritDmg -= r;
+		break;
+	case IPL_CRITDMG:
+		item._iPLCritDmg += r;
+		break;
 	case IPL_CRITICAL:
 		item._iPLCrit += r;
 		break;
@@ -732,10 +848,10 @@ int SaveItemPower(const Player &player, Item &item, ItemPower &power, int affixT
 		item._iPLCrit -= r;
 		break;
 	case IPL_SPELLPOW:
-		item._iPLSpellPw += r;
+		item._iPLSpellPower += r;
 		break;
 	case IPL_SPELLPOW_CURSE:
-		item._iPLSpellPw -= r;
+		item._iPLSpellPower -= r;
 		break;
 	case IPL_TOHIT:
 		item._iPLToHit += r;
@@ -760,7 +876,7 @@ int SaveItemPower(const Player &player, Item &item, ItemPower &power, int affixT
 		break;
 	case IPL_TOHIT_DAMP_CURSE:
 		r2 = r;
-		r = CalculateToHitBonus(power.param1);
+		r = CalculateToHitBonus(-power.param1);
 		item._iPLDam -= r2;
 		item._iPLToHit += r;
 		break;
@@ -806,15 +922,16 @@ int SaveItemPower(const Player &player, Item &item, ItemPower &power, int affixT
 		item._iFlags |= ItemSpecialEffect::FireDamage;
 		item._iFMinDam = power.param1;
 		item._iFMaxDam = power.param2;
-		item._iLMinDam = 0;
-		item._iLMaxDam = 0;
+
+		r = power.param1;
+		r2 = power.param2;
 		break;
 	case IPL_LIGHTDAM:
 		item._iFlags |= ItemSpecialEffect::LightningDamage;
 		item._iLMinDam = power.param1;
 		item._iLMaxDam = power.param2;
-		item._iFMinDam = 0;
-		item._iFMaxDam = 0;
+		r = power.param1;
+		r2 = power.param2;
 		break;
 	case IPL_STR:
 		item._iPLStr += r;
@@ -905,19 +1022,15 @@ int SaveItemPower(const Player &player, Item &item, ItemPower &power, int affixT
 		item._iFlags |= ItemSpecialEffect::FireArrows;
 		r = power.param1;
 		r2 = power.param2;
-		item._iFMinDam = power.param1;
-		item._iFMaxDam = power.param2;
-		item._iLMinDam = 0;
-		item._iLMaxDam = 0;
+		item._iFMinDam += power.param1;
+		item._iFMaxDam += power.param2;
 		break;
 	case IPL_LIGHT_ARROWS:
 		item._iFlags |= ItemSpecialEffect::LightningArrows;
 		r = power.param1;
 		r2 = power.param2;
-		item._iLMinDam = power.param1;
-		item._iLMaxDam = power.param2;
-		item._iFMinDam = 0;
-		item._iFMaxDam = 0;
+		item._iLMinDam += power.param1;
+		item._iLMaxDam += power.param2;
 		break;
 	case IPL_FIREBALL:
 		item._iFlags |= (ItemSpecialEffect::LightningArrows | ItemSpecialEffect::FireArrows);
@@ -1300,12 +1413,15 @@ void GetItemPowerPrefixAndSuffix(int minlvl, int maxlvl, AffixItemType flgs, boo
 				allocateSuffix = true;
 		}
 	}
+	if (dungeonLevel > 0)
+	{
+		minlvl = minlvl * (100 - penalty);
+		minlvl = minlvl / 100;
 
-	minlvl = minlvl * (100 - penalty);
-	minlvl = minlvl / 100;
+		maxlvl = maxlvl * (100 - penalty);
+		maxlvl = maxlvl / 100;
+	}
 
-	maxlvl = maxlvl * (100 - penalty);
-	maxlvl = maxlvl / 100;
 
 	goe = GOE_ANY;
 	if (!onlygood && !FlipCoin(3))
@@ -1435,7 +1551,7 @@ void GetItemPower(const Player &player, Item &item, int minlvl, int maxlvl, Affi
 
 	    }
 		);
-	item.reignitedItem = true;
+	
 	CopyUtf8(item._iIName, GenerateMagicItemName(item._iName, pPrefix, pSufix, false), sizeof(item._iIName));
 	if (!StringInPanel(item._iIName)) {
 		CopyUtf8(item._iIName, GenerateMagicItemName(AllItemsList[item.IDidx].iSName, pPrefix, pSufix, false), sizeof(item._iIName));
@@ -1627,35 +1743,46 @@ _item_indexes RndTypeItems(ItemType itemType, int imid, int lvl)
 	});
 }
 
-_unique_items CheckUnique(Item &item, int lvl, int uper, bool recreate)
+_unique_items CheckUnique(Item &item, int lvl, int uper, bool recreate, _item_indexes idx)
 {
-	std::bitset<128> uok = {};
-
+	
 	if (GenerateRnd(100) > uper)
 		return UITEM_INVALID;
 
-	int numu = 0;
-	for (int j = 0; UniqueItems[j].UIItemId != UITYPE_INVALID; j++) {
+	std::vector<int> list;
+	
+	for (int j = 0; UniqueItems[j].UIItemId != UITYPE_INVALID; j++)
+	{
 		if (!IsUniqueAvailable(j))
 			break;
 		if (UniqueItems[j].UIItemId == AllItemsList[item.IDidx].iItemId
-		    && lvl >= UniqueItems[j].UIMinLvl
-		    && (recreate || !UniqueItemFlags[j] || gbIsMultiplayer)) {
-			uok[j] = true;
-			numu++;
+		    && lvl >= UniqueItems[j].UIMinLvl)
+		{
+			list.push_back(j);
 		}
 	}
 
-	if (numu == 0)
+	if (list.size() == 0)
+	{
 		return UITEM_INVALID;
+	}
 
-	DiscardRandomValues(1);
-	uint8_t itemData = 0;
-	while (numu > 0) {
-		if (uok[itemData])
-			numu--;
-		if (numu > 0)
-			itemData = (itemData + 1) % 128;
+	uint8_t itemData = list[GenerateRnd(list.size())];
+
+	if (!gbIsMultiplayer)
+	{
+		for(int i=list.size()-1; i >= 0;i--)
+		{
+			if (!recreate && UniqueItemFlags[list[i]])
+			{
+				list.erase(list.begin()+i);
+			}
+		}
+
+		if (list.size() > 0)
+		{
+			itemData = list[GenerateRnd(list.size())];
+		}
 	}
 
 	return (_unique_items)itemData;
@@ -1719,24 +1846,37 @@ void SetupAllItems(const Player &player, Item &item, _item_indexes idx, uint32_t
 	else if (uper == 1)
 		item._iCreateInfo |= CF_UPER1;
 
-	if (item._iMiscId != IMISC_UNIQUE) {
-		int iblvl = GetItemBLevel(lvl, item._iMiscId, onlygood, uper == 15);
-		if (iblvl != -1) {
-			_unique_items uid = CheckUnique(item, iblvl, uper, recreate);
-			if (uid == UITEM_INVALID) {
-				GetItemBonus(player, item, iblvl / 2, iblvl, onlygood, true, true);
-			} else {
-				GetUniqueItem(player, item, uid);
-			}
+	if (item._iMiscId != IMISC_UNIQUE)
+	{
+
+		if (idx >= 222)
+		{
+			int index = idx - 222;
+			_unique_items uid = (_unique_items)(109 + index);
+			GetUniqueItem(player, item, uid);
 		}
-		if (item._iMagical != ITEM_QUALITY_UNIQUE)
-			ItemRndDur(item);
+		else
+		{
+			int iblvl = GetItemBLevel(lvl, item._iMiscId, onlygood, uper == 15);
+			if (iblvl != -1) {
+				_unique_items uid = CheckUnique(item, iblvl, uper, recreate, idx);
+				if (uid == UITEM_INVALID) {
+					GetItemBonus(player, item, iblvl / 2, iblvl, onlygood, true, true);
+				} else {
+					GetUniqueItem(player, item, uid);
+				}
+			}
+			if (item._iMagical != ITEM_QUALITY_UNIQUE)
+				ItemRndDur(item);
+		}
+
 	} else {
 		if (item._iLoc != ILOC_UNEQUIPABLE) {
 			if (iseed > 109 || AllItemsList[static_cast<size_t>(idx)].iItemId != UniqueItems[iseed].UIItemId) {
 				item.clear();
 				return;
 			}
+			//TODO:
 
 			GetUniqueItem(player, item, (_unique_items)iseed); // uid is stored in iseed for uniques
 		}
@@ -1744,25 +1884,6 @@ void SetupAllItems(const Player &player, Item &item, _item_indexes idx, uint32_t
 	SetupItem(item);
 }
 
-void SetupBaseItem(Point position, _item_indexes idx, bool onlygood, bool sendmsg, bool delta, bool spawn = false)
-{
-	if (ActiveItemCount >= MAXITEMS)
-		return;
-
-	int ii = AllocateItem();
-	auto &item = Items[ii];
-	GetSuperItemSpace(position, ii);
-	int curlv = ItemsGetCurrlevel();
-
-	SetupAllItems(*MyPlayer, item, idx, AdvanceRndSeed(), 2 * curlv, 1, onlygood, false, delta);
-
-	if (sendmsg)
-		NetSendCmdPItem(false, CMD_DROPITEM, item.position, item);
-	if (delta)
-		DeltaAddItem(ii);
-	if (spawn)
-		NetSendCmdPItem(false, CMD_SPAWNITEM, item.position, item);
-}
 
 void SetupAllUseful(Item &item, int iseed, int lvl)
 {
@@ -1965,6 +2086,9 @@ void PrintItemOil(char iDidx)
 		AddPanelString(_("restore all life and mana"));
 		AddPanelString(_("(works only in arenas)"));
 		break;
+	case IMISC_ELIPOTENTIAL:
+		AddPanelString(_("increase 3 random attributes"));
+		break;
 	}
 }
 
@@ -2057,7 +2181,8 @@ void PrintItemMisc(const Item &item)
 	const bool isOil = (item._iMiscId >= IMISC_USEFIRST && item._iMiscId <= IMISC_USELAST)
 	    || (item._iMiscId > IMISC_OILFIRST && item._iMiscId < IMISC_OILLAST)
 	    || (item._iMiscId > IMISC_RUNEFIRST && item._iMiscId < IMISC_RUNELAST)
-	    || item._iMiscId == IMISC_ARENAPOT;
+	    || item._iMiscId == IMISC_ARENAPOT
+		|| item._iMiscId == IMISC_ELIPOTENTIAL;
 	const bool isCastOnTarget = (item._iMiscId == IMISC_SCROLLT && item._iSpell != SpellID::Flash)
 	    || (item._iMiscId == IMISC_SCROLL && IsAnyOf(item._iSpell, SpellID::TownPortal, SpellID::Identify));
 
@@ -2175,7 +2300,7 @@ void SpawnOnePremium(Item &premiumItem, int plvl, const Player &player)
 	dexterity += dexterity / 5;
 	magic += magic / 5;
 
-	plvl = clamp(plvl, 1, 25 + sgGameInitInfo.nDifficulty*10);
+	plvl = clamp(plvl, 4, 25 + sgGameInitInfo.nDifficulty*10);
 
 	int maxCount = 150;
 	const bool unlimited = !gbIsHellfire; // TODO: This could lead to an infinite loop if a suitable item can never be generated
@@ -2259,6 +2384,19 @@ bool WitchItemOk(const Player &player, const ItemData &item)
 	if (item.iSpell == SpellID::HealOther && !gbIsMultiplayer)
 		return false;
 
+	switch (item.iMiscId)
+	{
+		case IMISC_MANA:
+		case IMISC_FULLMANA:
+		case IMISC_FULLHEAL:
+	    case IMISC_HEAL:
+	    case IMISC_ELIXSTR:
+	    case IMISC_ELIXMAG:
+	    case IMISC_ELIXDEX:
+	    case IMISC_ELIXVIT:
+			return false;
+	}
+
 	return true;
 }
 
@@ -2282,16 +2420,16 @@ bool HealerItemOk(const Player &player, const ItemData &item)
 	if (item.iMiscId == IMISC_SCROLLT)
 		return item.iSpell == SpellID::HealOther && gbIsMultiplayer;
 
-	if (!gbIsMultiplayer) {
-		if (item.iMiscId == IMISC_ELIXSTR)
-			return !gbIsHellfire || player._pBaseStr < player.GetMaximumAttributeValue(CharacterAttribute::Strength);
-		if (item.iMiscId == IMISC_ELIXMAG)
-			return !gbIsHellfire || player._pBaseMag < player.GetMaximumAttributeValue(CharacterAttribute::Magic);
-		if (item.iMiscId == IMISC_ELIXDEX)
-			return !gbIsHellfire || player._pBaseDex < player.GetMaximumAttributeValue(CharacterAttribute::Dexterity);
-		if (item.iMiscId == IMISC_ELIXVIT)
-			return !gbIsHellfire || player._pBaseVit < player.GetMaximumAttributeValue(CharacterAttribute::Vitality);
+	switch(item.iMiscId)
+	{
+		case IMISC_ELIXSTR:
+		case IMISC_ELIXMAG:
+		case IMISC_ELIXDEX:
+		case IMISC_ELIXVIT:
+				return false;
 	}
+
+	
 
 	if (item.iMiscId == IMISC_REJUV)
 		return true;
@@ -2680,7 +2818,7 @@ uint8_t GetOutlineColor(const Item &item, bool checkReq)
 
 bool IsUniqueAvailable(int i)
 {
-	return gbIsHellfire || i <= 89;
+	return gbIsHellfire || i <= 89 || i >= 109;
 }
 
 void InitItemGFX()
@@ -2754,6 +2892,7 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 	int bcrit = 0;
 	int bspellpow = 0;
 	ItemSpecialEffect iflgs = ItemSpecialEffect::None; // item_special_effect flags
+	ItemReignitedEffect iflgsRe = ItemReignitedEffect::None; // item_special_effect flags
 
 	ItemSpecialEffectHf pDamAcFlags = ItemSpecialEffectHf::None;
 
@@ -2785,6 +2924,13 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 	int lmin = 0; // minimum lightning damage
 	int lmax = 0; // maximum lightning damage
 
+	int bchance = 0;//block chance
+	int blkStamina = 0; // block stamina
+
+	int critdmg = 0;
+
+	int dropCh = 0;
+
 	for (auto &item : player.InvBody) {
 		if (!item.isEmpty() && item._iStatFlag) {
 
@@ -2800,7 +2946,14 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 				bdam += item._iPLDam;
 				btohit += item._iPLToHit;
 				bcrit += item._iPLCrit;
-				bspellpow += item._iPLSpellPw;
+				critdmg += item._iPLCritDmg;
+
+				bchance += item._iBlockChance;
+				blkStamina += item._iBlockStamina;
+
+				bspellpow += item._iPLSpellPower;
+				dropCh += item._iPLDropChance;
+
 				if (item._iPLAC != 0) {
 					int tmpac = item._iAC;
 					tmpac *= item._iPLAC;
@@ -2810,6 +2963,7 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 					bac += tmpac;
 				}
 				iflgs |= item._iFlags;
+				iflgsRe |= item._iFlagsRe;
 				pDamAcFlags |= item._iDamAcFlags;
 				sadd += item._iPLStr;
 				madd += item._iPLMag;
@@ -2829,6 +2983,10 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 				fmax += item._iFMaxDam;
 				lmin += item._iLMinDam;
 				lmax += item._iLMaxDam;
+			}
+			else
+			{
+				bspellpow += item._iPLSpellPowerBase;
 			}
 		}
 	}
@@ -2862,6 +3020,13 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 		vadd -= 2 * player._pLevel;
 	}
 
+	
+	if (HasAnyOf(player._pIFlagsRe, ItemReignitedEffect::Lust))
+	{
+		int value = 5 + (tac + bac) / 20;
+		ghit += value;
+	}
+
 	player._pIMinDam = mind;
 	player._pIMaxDam = maxd;
 	player._pIAC = tac;
@@ -2869,9 +3034,11 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 	player._pIBonusToHit = btohit;
 	player._pIBonusAC = bac;
 	player._pIFlags = iflgs;
+	player._pIFlagsRe = iflgsRe;
 	player.pDamAcFlags = pDamAcFlags;
 	player._pIBonusDamMod = dmod;
 	player._pIGetHit = ghit;
+	player._pDropChance = dropCh;
 
 	lrad = clamp(lrad, 2, 15);
 
@@ -2973,10 +3140,58 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 	cr = clamp(cr, 1, 100);
 	player._pCriticalChance = cr;
 
+	critdmg += 200;//200 is base
+	critdmg = clamp(critdmg, 120, 999);
+	player._pCriticalDamage = critdmg;
 
-
-	player._pSpellPower = player._pMagic / 2 + player._pLevel / 5 + bspellpow;
 	
+
+
+	if (player._pClass == HeroClass::Sorcerer && player.InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Staff)
+	{
+		int spellBase = player.InvBody[INVLOC_HAND_LEFT]._iPLSpellPowerBase;
+
+		int multiplier = player._pMagic / 5;
+
+		spellBase = spellBase * multiplier;
+		spellBase = spellBase / 100;
+		bspellpow += spellBase;
+	}
+
+	player._pSpellPower = player._pMagic / 4 + player._pLevel / 5 + bspellpow;
+
+	if (player.InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Shield)
+	{
+		int blockChance = 5 + PlayersData[static_cast<std::uint8_t>(player._pClass)].blockBonus + bchance;
+
+		player._pBlockChance = clamp(blockChance, 5, 95);
+	}
+	else
+	{
+		player._pBlockChance = 0;
+	}
+
+	int blockStamina = player._pLevel*5 + player._pStrength*25;
+	if (player._pClass == HeroClass::Warrior)
+	{
+		blockStamina += player._pStrength*10;
+	}
+
+	blockStamina = blockStamina * (100 + blkStamina);
+	blockStamina = blockStamina / 100;
+
+	blockStamina = 750 + blockStamina;
+	player._pBlockStaminaMax = clamp(blockStamina, 100, 99999);
+
+	if (player._pBlockStaminaCurrent > player._pBlockStaminaMax)
+	{
+		player._pBlockStaminaCurrent = player._pBlockStaminaMax;
+	}
+	//blkStamina
+	if(!HasAnyOf(player._pIFlagsRe , ItemReignitedEffect::Sloth))
+	{
+		player.healBuffer = 0;
+	}
 
 	player._pBlockFlag = false;
 	if (player._pClass == HeroClass::Monk) {
@@ -3154,6 +3369,14 @@ void InitializeItem(Item &item, _item_indexes itemData)
 	item._iSufPower = IPL_INVALID;
 	item._iRarePower = IPL_INVALID;
 	item._iMagical = ITEM_QUALITY_NORMAL;
+
+	
+	item._iPLSpellPowerBase = pAllItem.iSpellPower;
+	item._iPLSpellPower = item._iPLSpellPowerBase;
+
+	item._iBlockChanceBase = pAllItem.iBlockChance;
+	item._iBlockChance = item._iBlockChanceBase;
+
 	item.IDidx = static_cast<_item_indexes>(itemData);
 	if (gbIsHellfire)
 		item.dwBuff |= CF_HELLFIRE;
@@ -3278,7 +3501,7 @@ void CreatePlrItems(Player &player)
 	}
 
 	Item &goldItem = player.InvList[player._pNumInv];
-	MakeGoldStack(goldItem, 100);
+	MakeGoldStack(goldItem, 250);
 
 	player._pNumInv++;
 	player.InvGrid[30] = player._pNumInv;
@@ -3381,6 +3604,13 @@ void GetItemAttrs(Item &item, _item_indexes itemData, int lvl)
 	item._iMinStr = baseItemData.iMinStr;
 	item._iMinMag = baseItemData.iMinMag;
 	item._iMinDex = baseItemData.iMinDex;
+
+	item._iPLSpellPowerBase = baseItemData.iSpellPower;
+	item._iPLSpellPower = item._iPLSpellPowerBase;
+
+	item._iBlockChanceBase = baseItemData.iBlockChance;
+	item._iBlockChance = item._iBlockChanceBase;
+
 	item.IDidx = itemData;
 	if (gbIsHellfire)
 		item.dwBuff |= CF_HELLFIRE;
@@ -3440,6 +3670,7 @@ Item *SpawnUnique(_unique_items uid, Point position, std::optional<int> level /*
 	std::underlying_type_t<_item_indexes> idx = 0;
 	while (AllItemsList[idx].iItemId != UniqueItems[uid].UIItemId)
 		idx++;
+
 
 	if (sgGameInitInfo.nDifficulty == DIFF_NORMAL) {
 		GetItemAttrs(item, static_cast<_item_indexes>(idx), curlv);
@@ -3540,6 +3771,26 @@ void CreateRndUseful(Point position, bool sendmsg)
 	SetupAllUseful(item, AdvanceRndSeed(), curlv);
 	if (sendmsg)
 		NetSendCmdPItem(false, CMD_DROPITEM, item.position, item);
+}
+
+void SetupBaseItem(Point position, _item_indexes idx, bool onlygood, bool sendmsg, bool delta, bool spawn)
+{
+	if (ActiveItemCount >= MAXITEMS)
+		return;
+
+	int ii = AllocateItem();
+	auto &item = Items[ii];
+	GetSuperItemSpace(position, ii);
+	int curlv = ItemsGetCurrlevel();
+
+	SetupAllItems(*MyPlayer, item, idx, AdvanceRndSeed(), 2 * curlv, 1, onlygood, false, delta);
+
+	if (sendmsg)
+		NetSendCmdPItem(false, CMD_DROPITEM, item.position, item);
+	if (delta)
+		DeltaAddItem(ii);
+	if (spawn)
+		NetSendCmdPItem(false, CMD_SPAWNITEM, item.position, item);
 }
 
 void CreateTypeItem(Point position, bool onlygood, ItemType itemType, int imisc, bool sendmsg, bool delta, bool spawn)
@@ -3909,24 +4160,86 @@ bool DoOil(Player &player, int cii)
 	return true;
 }
 
+std::vector<std::string> PrintSinItemPower(ItemReignitedEffect flags)
+{
+	std::vector<std::string> list;
+	if (HasAnyOf(flags, ItemReignitedEffect::Gluttony))
+	{
+		list.push_back("Devours everything");
+		list.push_back("Hit steal life");
+		list.push_back("+50 Strength");
+		list.push_back("+100% Critical damage");
+		list.push_back("+100% Damage");
+
+	}
+	else if (HasAnyOf(flags, ItemReignitedEffect::Envy))
+	{
+		list.push_back("Every rose has thorns");
+		list.push_back("Fast block");
+		list.push_back("+20% damage");
+		list.push_back("-50% block stamina");
+		list.push_back("+25% block chance");
+	}
+	else if (HasAnyOf(flags, ItemReignitedEffect::Lust))
+	{
+		list.push_back("Till death do us part");
+		list.push_back("Shatters enemy armor");
+		list.push_back("Fastest attack");
+		list.push_back("+50% damage");
+	}
+	else if (HasAnyOf(flags, ItemReignitedEffect::Pride))
+	{
+		list.push_back("Power subdues everything");
+		list.push_back("Increases spell level by 1");
+		list.push_back("+50 Magic");
+		list.push_back("+50% Spell power");
+	}
+	else if (HasAnyOf(flags, ItemReignitedEffect::Wrath))
+	{
+		list.push_back("Leave nothing behind");
+		list.push_back("+50 Dexterity");
+		list.push_back("+20% Critical chance");
+		list.push_back("+50% To hit and DMG");
+		list.push_back("-50% Critical damage");
+	}
+	else if (HasAnyOf(flags, ItemReignitedEffect::Sloth))
+	{
+		list.push_back("Everything takes time");
+		list.push_back("+50% Armor");
+		list.push_back("+35% All resistances");
+		list.push_back("+50 Vitality");
+		list.push_back("-10% Damage");
+	}
+	else if (HasAnyOf(flags, ItemReignitedEffect::Greed)) {
+		list.push_back("Finders keepers losers weepers");
+		list.push_back("+300% item drop");
+		list.push_back("+10 all attributes");
+		list.push_back("+10% all resistances");
+		list.push_back("+20 armor");
+		list.push_back("-50% light radius");
+	}
+	return list;
+}
+
 [[nodiscard]] StringOrView PrintItemPower(char plidx, const Item &item, int affixType)
 {
-	if (item.reignitedItem)
+	if (item.reignitedItem && item._iMagical != ITEM_QUALITY_UNIQUE)
 	{
 		return PrintItemPowerReignited(plidx, item, affixType);
 	}
 	switch (plidx) {
+
 	case IPL_TOHIT:
 	case IPL_TOHIT_CURSE:
 	{
-		return fmt::format(fmt::runtime(_("{:+d}% to hit")), item._iPLToHit, item._iPLToHit/4);
+		return fmt::format(fmt::runtime(_("{:+d}% to hit")), item._iPLToHit);
 	}
 	case IPL_DAMP:
 	case IPL_DAMP_CURSE:
 		return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% damage")), item._iPLDam);
 	case IPL_TOHIT_DAMP:
 	case IPL_TOHIT_DAMP_CURSE:
-		return fmt::format(fmt::runtime(_("{:+d}% to hit and {:+d}% dmg")), item._iPLToHit, item._iPLToHit / 4, item._iPLDam);
+		return fmt::format(fmt::runtime(_("{:+d}% to hit and {:+d}% dmg")), item._iPLToHit, item._iPLDam);
 	case IPL_ACP:
 	case IPL_ACP_CURSE:
 		return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% armor")), item._iPLAC);
@@ -4135,38 +4448,63 @@ bool DoOil(Player &player, int cii)
 
 	switch (plidx)
 	{
-	case IPL_CRITICAL:
-		    return fmt::format(fmt::runtime(_("+{:d}% critical")), val1);
+		case IPL_GLUTTONY:
+		    return fmt::format(fmt::runtime(_("Devours everything")));
+		case IPL_DROPCHANCE:
+				return fmt::format(fmt::runtime(_("+{:d}% item drop")), val1);
+		case IPL_DROPCHANCE_CURSE:
+				return fmt::format(fmt::runtime(_("-{:d}% item drop")), val1);
+		case IPL_BLOCK:
+				return fmt::format(fmt::runtime(_("+{:d}% block chance")), val1);
+	    case IPL_BLOCK_CURSE:
+				return fmt::format(fmt::runtime(_("-{:d}% block chance")), val1);
+		case IPL_STAMINA:
+				return fmt::format(fmt::runtime(_("+{:d}% block stamina")), val1);
+		case IPL_STAMINA_CURSE:
+				return fmt::format(fmt::runtime(_("-{:d}% block stamina")), val1);
+		case IPL_CRITDMG:
+				return fmt::format(fmt::runtime(_("+{:d}% critical damage")), val1);
+		case IPL_CRITDMG_CURSE:
+				return fmt::format(fmt::runtime(_("-{:d}% critical damage")), val1);
+		case IPL_CRITICAL:
+		    return fmt::format(fmt::runtime(_("+{:d}% critical chance")), val1);
 		case IPL_CRITICAL_CURSE:
-		    return fmt::format(fmt::runtime(_("-{:d}% critical")), val1);
+		    return fmt::format(fmt::runtime(_("-{:d}% critical chance")), val1);
 	    case IPL_SPELLPOW:
 		    return fmt::format(fmt::runtime(_("+{:d}% spell power")), val1);
 	    case IPL_SPELLPOW_CURSE:
 		    return fmt::format(fmt::runtime(_("-{:d}% spell power")), val1);
-		case IPL_TOHIT:
+	    case IPL_TOHIT:
+		    return fmt::format(fmt::runtime(_("+{:d}% to hit")), val1);
 	case IPL_TOHIT_CURSE:
-		    return fmt::format(fmt::runtime(_("{:+d}% to hit")), val1);
-		case IPL_DAMP:
+		    return fmt::format(fmt::runtime(_("{:d}% to hit")), val1);
+	case IPL_DAMP:
+		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "+{:d}% damage")), val1);
 		case IPL_DAMP_CURSE:
-		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% damage")), val1);
-		case IPL_TOHIT_DAMP:
+		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:d}% damage")), val1);
+	    case IPL_TOHIT_DAMP:
+		    return fmt::format(fmt::runtime(_("+{:d}% to hit and +{:d}% dmg")), val1, val2);
 	    case IPL_TOHIT_DAMP_CURSE:
-		    return fmt::format(fmt::runtime(_("{:+d}% to hit and {:+d}% dmg")), val1, val2);
-		case IPL_ACP:
+		    return fmt::format(fmt::runtime(_("-{:d}% to hit and {:d}% dmg")), val1, val2);
+	    case IPL_ACP:
+		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "+{:d}% armor")), val1);
 		case IPL_ACP_CURSE:
-		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:+d}% armor")), val1);
+		    return fmt::format(fmt::runtime(_(/*xgettext:no-c-format*/ "{:d}% armor")), val1);
 	    case IPL_SETAC:
 	    case IPL_AC_CURSE:
 		    return fmt::format(fmt::runtime(_("armor class: {:d}")), val1);
 	    case IPL_FIRERES:
+		    return fmt::format(fmt::runtime(_("Resist Fire: +{:d}%")), val1);
 	    case IPL_FIRERES_CURSE:
-		    return fmt::format(fmt::runtime(_("Resist Fire: {:+d}%")), val1);
+		    return fmt::format(fmt::runtime(_("Resist Fire: {:d}%")), val1);
 	    case IPL_LIGHTRES:
+		    return fmt::format(fmt::runtime(_("Resist Lightning: +{:d}%")), val1);
 	    case IPL_LIGHTRES_CURSE:
-		    return fmt::format(fmt::runtime(_("Resist Lightning: {:+d}%")), val1);
+		    return fmt::format(fmt::runtime(_("Resist Lightning: {:d}%")), val1);
 	    case IPL_MAGICRES:
+		    return fmt::format(fmt::runtime(_("Resist Magic: +{:d}%")), val1);
 	    case IPL_MAGICRES_CURSE:
-		    return fmt::format(fmt::runtime(_("Resist Magic: {:+d}%")), val1);
+		    return fmt::format(fmt::runtime(_("Resist Magic: {:d}%")), val1);
 	    case IPL_ALLRES:
 		    return fmt::format(fmt::runtime(_("Resist All: {:+d}%")), val1);
 	    case IPL_SPLLVLADD:
@@ -4181,43 +4519,51 @@ bool DoOil(Player &player, int cii)
 	    case IPL_SPELL:
 		    return fmt::format(fmt::runtime(ngettext("{:d} {:s} charge", "{:d} {:s} charges", val1)), val1, pgettext("spell", GetSpellData(item._iSpell).sNameText));
 	    case IPL_FIREDAM:
-		    if (val1 == val2)
+		    if (val1 == val2 || val2 == 0)
 			return fmt::format(fmt::runtime(_("Fire hit damage: {:d}")), val1);
 		    else
 			return fmt::format(fmt::runtime(_("Fire hit damage: {:d}-{:d}")), val1, val2);
 	    case IPL_LIGHTDAM:
-		    if (val1 == val2)
+		    if (val1 == val2 || val2 == 0)
 			return fmt::format(fmt::runtime(_("Lightning hit damage: {:d}")), val1);
 		    else
 			return fmt::format(fmt::runtime(_("Lightning hit damage: {:d}-{:d}")), val1, val2);
 	    case IPL_STR:
+		    return fmt::format(fmt::runtime(_("+{:d} to strength")), val1);
 	    case IPL_STR_CURSE:
-		    return fmt::format(fmt::runtime(_("{:+d} to strength")), val1);
+		    return fmt::format(fmt::runtime(_("-{:d} to strength")), val1);
 	    case IPL_MAG:
+		    return fmt::format(fmt::runtime(_("+{:d} to magic")), val1);
 	    case IPL_MAG_CURSE:
-		    return fmt::format(fmt::runtime(_("{:+d} to magic")), val1);
+		    return fmt::format(fmt::runtime(_("-{:d} to magic")), val1);
 	    case IPL_DEX:
+		    return fmt::format(fmt::runtime(_("+{:d} to dexterity")), val1);
 	    case IPL_DEX_CURSE:
-		    return fmt::format(fmt::runtime(_("{:+d} to dexterity")), val1);
+		    return fmt::format(fmt::runtime(_("-{:d} to dexterity")), val1);
 	    case IPL_VIT:
+		    return fmt::format(fmt::runtime(_("+{:d} to vitality")), val1);
 	    case IPL_VIT_CURSE:
-		    return fmt::format(fmt::runtime(_("{:+d} to vitality")), val1);
+		    return fmt::format(fmt::runtime(_("-{:d} to vitality")), val1);
 	    case IPL_ATTRIBS:
+		    return fmt::format(fmt::runtime(_("+{:d} to all attributes")), val1);
 	    case IPL_ATTRIBS_CURSE:
-		    return fmt::format(fmt::runtime(_("{:+d} to all attributes")), val1);
+		    return fmt::format(fmt::runtime(_("-{:d} to all attributes")), val1);
 	    case IPL_GETHIT_CURSE:
+		    return fmt::format(fmt::runtime(_("+{:d} damage from enemies")), val1);
 	    case IPL_GETHIT:
-		    return fmt::format(fmt::runtime(_("{:+d} damage from enemies")), val1);
+		    return fmt::format(fmt::runtime(_("-{:d} damage from enemies")), val1);
 	    case IPL_LIFE:
+		    return fmt::format(fmt::runtime(_("Hit Points: +{:d}")), val1);
 	    case IPL_LIFE_CURSE:
-		    return fmt::format(fmt::runtime(_("Hit Points: {:+d}")), val1);
+		    return fmt::format(fmt::runtime(_("Hit Points: -{:d}")), val1);
 	    case IPL_MANA:
+		    return fmt::format(fmt::runtime(_("Mana: +{:d}")), val1);
 	    case IPL_MANA_CURSE:
-		    return fmt::format(fmt::runtime(_("Mana: {:+d}")), val1);
+		    return fmt::format(fmt::runtime(_("Mana: -{:d}")), val1);
 	    case IPL_DUR:
-		    return fmt::format(fmt::runtime(_("Increased durability: {:+d}")), val1);
+		    return fmt::format(fmt::runtime(_("Increased durability: +{:d}")), val1);
 	    case IPL_DUR_CURSE:
-		    return fmt::format(fmt::runtime(_("Decreased durability: {:+d}")), val1);
+		    return fmt::format(fmt::runtime(_("Decreased durability: -{:d}")), val1);
 	    case IPL_INDESTRUCTIBLE:
 		    return _("Indestructible");
 	    case IPL_LIGHT:
@@ -4415,13 +4761,26 @@ void DrawUniqueInfo(const Surface &out)
 			    else
 				texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "damage: {:d}-{:d}  Dur: {:d}/{:d}")), curruitem._iMinDam, curruitem._iMaxDam, curruitem._iDurability, curruitem._iMaxDur));
 		    }
+
+			if (curruitem._iPLSpellPowerBase > 0)
+			{
+			    texts.push_back(fmt::format(fmt::runtime(_("Spell power: +{:d}%")), curruitem._iPLSpellPowerBase));
+			}
+
+
 	}
 
-	if (curruitem._iClass == ICLASS_ARMOR) {
+	if (curruitem._iClass == ICLASS_ARMOR)
+	{
 		    if (curruitem._iMaxDur == DUR_INDESTRUCTIBLE)
 			    texts.push_back(fmt::format(fmt::runtime(_("armor: {:d}  Indestructible")), curruitem._iAC));
 		    else
 			    texts.push_back(fmt::format(fmt::runtime(_(/* TRANSLATORS: Dur: is durability */ "armor: {:d}  Dur: {:d}/{:d}")), curruitem._iAC, curruitem._iDurability, curruitem._iMaxDur));
+
+			if (curruitem._iBlockChanceBase > 0)
+			{
+			    texts.push_back(fmt::format(fmt::runtime(_("Block chance: +{:d}%")), curruitem._iBlockChanceBase));
+		    }
 	}
 
 	if (curruitem._iMiscId == IMISC_STAFF && curruitem._iMaxCharges != 0) {
@@ -4471,15 +4830,24 @@ void DrawUniqueInfo(const Surface &out)
 
 			if (curruitem._iIdentified)
 			{
-			    const UniqueItem &uitem = UniqueItems[curruitem._iUid];
 
-			    assert(uitem.UINumPL <= sizeof(uitem.powers) / sizeof(*uitem.powers));
-			    for (const auto &power : uitem.powers) {
-				    if (power.type == IPL_INVALID)
-					    break;
+				if (curruitem._iFlagsRe != ItemReignitedEffect::None)
+				{
+					std::vector<std::string> uniquetexts = PrintSinItemPower(curruitem._iFlagsRe);
+				    texts.insert(texts.end(), uniquetexts.begin(), uniquetexts.end());
+				}
+				else
+				{
+					const UniqueItem &uitem = UniqueItems[curruitem._iUid];
+					assert(uitem.UINumPL <= sizeof(uitem.powers) / sizeof(*uitem.powers));
+					for (const auto &power : uitem.powers) {
+						if (power.type == IPL_INVALID)
+							break;
 
-				    texts.push_back(PrintItemPower(power.type, curruitem).str().data());
-			    }
+						texts.push_back(PrintItemPower(power.type, curruitem).str().data());
+					}
+				}
+
 		    }
 			else
 			{
@@ -4559,11 +4927,25 @@ void PrintItemDur(const Item &item)
 		if (item._iMagical != ITEM_QUALITY_NORMAL)
 			AddPanelString(_("Not Identified"));
 	}
-	if (item._iClass == ICLASS_ARMOR) {
+	if (item._iClass == ICLASS_ARMOR)
+	{
+		std::string str = fmt::format(fmt::runtime(_("armor: {:d}", item._iAC)));
+
+		if (item._iBlockChanceBase > 0)
+		{
+			str += fmt::format(fmt::runtime(_(" Block: {:d}%")), item._iBlockChanceBase);
+		}
 		if (item._iMaxDur == DUR_INDESTRUCTIBLE)
-			AddPanelString(fmt::format(fmt::runtime(_("armor: {:d}  Indestructible")), item._iAC));
+		{
+			str += " Indestructible";
+		}
 		else
-			AddPanelString(fmt::format(fmt::runtime(_("armor: {:d}  Dur: {:d}/{:d}")), item._iAC, item._iDurability, item._iMaxDur));
+		{
+			str += fmt::format(fmt::runtime(_(" Dur: {:d}/{:d}")), item._iDurability, item._iMaxDur);
+		}
+
+		AddPanelString(str);
+
 		if (item._iMagical != ITEM_QUALITY_NORMAL)
 			AddPanelString(_("Not Identified"));
 		if (item._iMiscId == IMISC_STAFF && item._iMaxCharges > 0) {
@@ -4610,10 +4992,10 @@ void UseItem(size_t pnum, item_misc_id mid, SpellID spellID, int spellFrom)
 		}
 		break;
 	case IMISC_ELIXSTR:
-		ModifyPlrStr(player, 1);
+		ModifyPlrStr(player, 1, true);
 		break;
 	case IMISC_ELIXMAG:
-		ModifyPlrMag(player, 1);
+		ModifyPlrMag(player, 1, true);
 		if (gbIsHellfire) {
 			player.RestoreFullMana();
 			player.AddHealPenaltyStack();
@@ -4623,10 +5005,10 @@ void UseItem(size_t pnum, item_misc_id mid, SpellID spellID, int spellFrom)
 		}
 		break;
 	case IMISC_ELIXDEX:
-		ModifyPlrDex(player, 1);
+		ModifyPlrDex(player, 1, true);
 		break;
 	case IMISC_ELIXVIT:
-		ModifyPlrVit(player, 1);
+		ModifyPlrVit(player, 1, true);
 		if (gbIsHellfire) {
 			player.RestoreFullLife();
 			player.AddHealPenaltyStack();
@@ -4718,10 +5100,8 @@ void UseItem(size_t pnum, item_misc_id mid, SpellID spellID, int spellFrom)
 		NewCursor(CURSOR_OIL);
 		break;
 	case IMISC_SPECELIX:
-		ModifyPlrStr(player, 3);
-		ModifyPlrMag(player, 3);
-		ModifyPlrDex(player, 3);
-		ModifyPlrVit(player, 3);
+	case IMISC_ELIPOTENTIAL:
+		UseSpecElixir(player);
 		break;
 	case IMISC_RUNEF:
 		prepareSpellID = SpellID::RuneOfFire;
@@ -4815,6 +5195,10 @@ void SpawnPremium(const Player &player)
 		for (int i = 0; i < maxItems; i++) {
 			if (premiumitems[i].isEmpty()) {
 				int plvl = premiumlevel + (gbIsHellfire ? premiumLvlAddHellfire[i] : premiumlvladd[i]);
+				if (plvl < 2)
+				{
+					plvl = 2;
+				}
 				SpawnOnePremium(premiumitems[i], plvl, player);
 			}
 		}
@@ -4888,7 +5272,7 @@ void SpawnWitch(int lvl)
 		}
 
 		int plvl = MyPlayer->_pLevel;
-		plvl = clamp(plvl, 1, 25 + sgGameInitInfo.nDifficulty * 10);
+		plvl = clamp(plvl, 2, 25 + sgGameInitInfo.nDifficulty * 10);
 
 		bool allowedItem = true;
 		do
@@ -5108,7 +5492,7 @@ void MakeStackableStack(Item &item, int stacks, item_misc_id id)
 	switch (id)
 	{
 		case item_misc_id::IMISC_HEAL:
-			index = IDI_HEAL;
+		    index = IDI_HEAL;
 			break;
 	    case item_misc_id::IMISC_MANA:
 		    index = IDI_MANA;
@@ -5695,15 +6079,57 @@ int Item::GetReforgeCost()
 {
 	int lvl = GetItemLevel();	
 
-	int value = lvl * 5000;
+	int value = lvl * 3500;
 	if (_iPrePower != IPL_INVALID && _iSufPower != IPL_INVALID)
 	{
-		value *= 3;
+		value = lvl * 10000;
 	}
 
 	return value;
 }
 
+bool Item::HasHellfireAffix()
+{
+	switch (_iPrePower) {
+	case IPL_MULT_ARROWS:
+	case IPL_FIREBALL:
+	case IPL_FIRERES_CURSE:
+	case IPL_LIGHTRES_CURSE:
+	case IPL_MAGICRES_CURSE:
+	case IPL_DEVASTATION:
+	case IPL_DECAY:
+	case IPL_PERIL:
+	case IPL_JESTERS:
+	case IPL_CRYSTALLINE:
+	case IPL_DOPPELGANGER:
+	case IPL_ACDEMON:
+	case IPL_ACUNDEAD:
+	case IPL_MANATOLIFE:
+	case IPL_LIFETOMANA:
+		return true;
+	}
+
+	switch (_iSufPower) {
+	case IPL_MULT_ARROWS:
+	case IPL_FIREBALL:
+	case IPL_FIRERES_CURSE:
+	case IPL_LIGHTRES_CURSE:
+	case IPL_MAGICRES_CURSE:
+	case IPL_DEVASTATION:
+	case IPL_DECAY:
+	case IPL_PERIL:
+	case IPL_JESTERS:
+	case IPL_CRYSTALLINE:
+	case IPL_DOPPELGANGER:
+	case IPL_ACDEMON:
+	case IPL_ACUNDEAD:
+	case IPL_MANATOLIFE:
+	case IPL_LIFETOMANA:
+		return true;
+	}
+
+	return false;
+}
 bool Item::IsStackable() const
 {
 	switch (_iMiscId)
@@ -5713,7 +6139,7 @@ bool Item::IsStackable() const
 		case item_misc_id::IMISC_FULLHEAL:
 		case item_misc_id::IMISC_FULLMANA:
 		case item_misc_id::IMISC_REJUV:
-		case item_misc_id::IMISC_FULLREJUV:
+	    case item_misc_id::IMISC_FULLREJUV:
 			return true;
 	}
 	return false;
@@ -5744,8 +6170,8 @@ void Item::AddAffix(Player& player, bool hellfireItem)
 	bool onlygood = false;
 
 	int lvl = GetItemLevel();
-	int minlvl = clamp(lvl / 2, 1, 20);
-	int maxlvl = clamp(lvl * 5, 1, 60);
+	int minlvl = clamp(lvl / 4, 1, 20);
+	int maxlvl = clamp(lvl * 2, 1, 60);
 	uint32_t currentSeed = GetLCGEngineState();
 
 	AffixItemType flgs;

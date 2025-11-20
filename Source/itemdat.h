@@ -74,7 +74,7 @@ enum _item_indexes : int16_t { // TODO defines all indexes in AllItemsList
 	IDI_SORCERER_DIABLO,
 	IDI_ARENAPOT,
 
-	IDI_LAST = 220,//TODO:
+	IDI_LAST = 228,
 
 	IDI_NONE = -1,
 };
@@ -327,6 +327,15 @@ enum unique_base_item : int8_t {
 	UITYPE_LGTFORGE,
 	UITYPE_LAZSTAFF,
 	UITYPE_BOVINE,
+
+	UITYPE_GLUTTONY,
+	UITYPE_ENVY,
+	UITYPE_LUST,
+	UITYPE_PRIDE,
+	UITYPE_WRATH,
+	UITYPE_SLOTH,
+	UITYPE_GREED,
+
 	UITYPE_INVALID = -1,
 };
 
@@ -362,6 +371,18 @@ enum class ItemSpecialEffect : uint32_t {
 	// clang-format on
 };
 use_enum_as_flags(ItemSpecialEffect);
+enum class ItemReignitedEffect : uint32_t {
+	// clang-format on
+	None = 0,
+	Gluttony = 1 << 1,
+	Envy = 1 << 2,
+	Lust = 1 << 3,
+	Pride = 1 << 4,
+	Wrath = 1 << 5,
+	Sloth = 1 << 6,
+	Greed = 1 << 7,
+};
+use_enum_as_flags(ItemReignitedEffect);
 
 enum class ItemSpecialEffectHf : uint8_t {
 	// clang-format off
@@ -434,6 +455,7 @@ enum item_misc_id : int8_t {
 	IMISC_AURIC,
 	IMISC_NOTE,
 	IMISC_ARENAPOT,
+	IMISC_ELIPOTENTIAL,
 	IMISC_INVALID = -1,
 };
 
@@ -459,7 +481,10 @@ struct ItemData {
 	enum item_misc_id iMiscId;
 	SpellID iSpell;
 	bool iUsable;
-	uint16_t iValue;
+	uint32_t iValue;
+
+	int16_t iSpellPower;
+	int16_t iBlockChance;
 };
 
 enum item_effect_type : int8_t {
@@ -548,6 +573,27 @@ enum item_effect_type : int8_t {
 	IPL_ACUNDEAD,
 	IPL_MANATOLIFE,
 	IPL_LIFETOMANA,
+
+	IPL_CRITDMG_CURSE,
+	IPL_CRITDMG,
+
+	IPL_STAMINA_CURSE,
+	IPL_STAMINA,
+
+	IPL_BLOCK_CURSE,
+	IPL_BLOCK,
+
+	IPL_DROPCHANCE_CURSE,
+	IPL_DROPCHANCE,
+
+	IPL_GLUTTONY,
+	IPL_ENVY,
+	IPL_LUST,
+	IPL_PRIDE,
+	IPL_WRATH,
+	IPL_SLOTH,
+	IPL_GREED,
+
 	IPL_INVALID = -1,
 };
 

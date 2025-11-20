@@ -227,6 +227,7 @@ struct SpellCastInfo {
 
 struct Player {
 
+	int GetElixirConsumeLimit() const;
 	void AddHealPenaltyStack();
 	int GetHealPenalty();
 	std::pair<int, int> GetDamage() const;
@@ -235,6 +236,10 @@ struct Player {
 	void EnableSkill(SpellID sn);
 	void DisableSkill();
 	int GetSpellPower() const;
+	int GetCriticalDamage() const;
+
+	void restoreHp(int value);
+	void applyGreed(int type);
 
 	int regenTickCurrent = 0;
 
@@ -252,7 +257,7 @@ struct Player {
 
 	int _pNumInv;
 	int _pStrength;
-	int _pBaseStr;
+	int _pBaseStr;	
 	int _pMagic;
 	int _pBaseMag;
 	int _pDexterity;
@@ -298,16 +303,27 @@ struct Player {
 	int _pGold;
 	int _pCriticalChance;
 	int _pSpellPower;
+	int _pCriticalDamage;
+
+	int _pDropChance;
 
 	SpellID _pSkillActiveId = SpellID::Null;
 	int _pSkillCooldown = 0;
 	int _pSkillDurationLeft = 0;
+	int _pSkillDuration = 0;
 
 	short _apocalipseCooldownLeft = 0;
 	short _teleportCooldownLeft = 0;
+	short _guardianCooldownLeft = 0;
 
 	char _healPenaltyStacks = 0;
 	short _healPenaltyDurationLeft = 0;
+
+	char _pElixirsConsumed = 0;
+
+	char _pBlockChance = 0;
+	short _pBlockStaminaMax = 0;
+	short _pBlockStaminaCurrent = 0;
 	/**
 	 * @brief Contains Information for current Animation
 	 */
@@ -322,6 +338,7 @@ struct Player {
 	int8_t progressToNextGameTickWhenPreviewWasSet;
 	/** @brief Bitmask using item_special_effect */
 	ItemSpecialEffect _pIFlags;
+	ItemReignitedEffect _pIFlagsRe;
 	/**
 	 * @brief Contains Data (Sprites) for the different Animations
 	 */
@@ -391,7 +408,7 @@ struct Player {
 	bool _pSLvlVisited[NUMLEVELS]; // only 10 used
 
 	item_misc_id _pOilType;
-	uint8_t pTownWarps;
+	uint16_t pTownWarps;
 	uint8_t pDungMsgs;
 	uint8_t pLvlLoad;
 	bool pManaShield;
@@ -401,6 +418,7 @@ struct Player {
 	uint8_t pDiabloKillLevel;
 	uint16_t wReflections;
 	ItemSpecialEffectHf pDamAcFlags;
+	int healBuffer = 0;//Used for sloth
 
 	void CalcScrolls();
 
@@ -537,10 +555,7 @@ struct Player {
 	 */
 	int GetMeleeToHit() const
 	{
-		int hper = _pLevel + _pDexterity / 2 + _pIBonusToHit + BaseHitChance;
-		if (_pClass == HeroClass::Warrior)
-			hper += 20;
-		return hper;
+		return GetWeaponToHit();
 	}
 
 	/**
@@ -558,19 +573,36 @@ struct Player {
 
 	int GetWeaponToHit() const
 	{
-		return InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow ? GetRangedToHit() : GetMeleeToHit();
+		int hper = BaseHitChance + _pLevel + _pDexterity/3 + _pIBonusToHit;
+
+		switch (_pClass)
+		{
+			case HeroClass::Warrior:
+			{
+			if (InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Sword || InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Axe || InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Mace)
+				{
+					hper += 25;
+				}
+			}
+				break;
+			case HeroClass::Rogue:
+			{
+				if (InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Bow)
+				{
+					hper += 25;
+				}
+			}
+				break;
+		}
+
+		return hper;
 	}
 	/**
 	 * @brief Return player's ranged to hit value
 	 */
-	int GetRangedToHit() const
+	int GetRangedToHit() const 
 	{
-		int hper = _pLevel + _pDexterity + _pIBonusToHit + BaseHitChance;
-		if (_pClass == HeroClass::Rogue)
-			hper += 20;
-		else if (_pClass == HeroClass::Warrior || _pClass == HeroClass::Bard)
-			hper += 10;
-		return hper;
+		return GetWeaponToHit();
 	}
 
 	int GetRangedPiercingToHit() const
@@ -599,13 +631,8 @@ struct Player {
 	 * @brief Return block chance
 	 * @param useLevel - indicate if player's level should be added to block chance (the only case where it isn't is blocking a trap)
 	 */
-	int GetBlockChance(bool useLevel = true) const
-	{
-		int blkper = _pDexterity + _pBaseToBlk;
-		if (useLevel)
-			blkper += _pLevel * 2;
-		return blkper;
-	}
+	int GetBlockChance() const;
+	int GetBlockChanceBase() const;
 
 	/**
 	 * @brief Return reciprocal of the factor for calculating damage absorbed by mana due to Mana Shield.
@@ -868,10 +895,11 @@ void SyncPlrAnim(Player &player);
 void SyncInitPlrPos(Player &player);
 void SyncInitPlr(Player &player);
 void CheckStats(Player &player);
-void ModifyPlrStr(Player &player, int l);
-void ModifyPlrMag(Player &player, int l);
-void ModifyPlrDex(Player &player, int l);
-void ModifyPlrVit(Player &player, int l);
+void ModifyPlrStr(Player &player, int l, bool elixir=false);
+void ModifyPlrMag(Player &player, int l, bool elixir = false);
+void ModifyPlrDex(Player &player, int l, bool elixir = false);
+void ModifyPlrVit(Player &player, int l, bool elixir = false);
+void UseSpecElixir(Player &player);
 void SetPlayerHitPoints(Player &player, int val);
 void SetPlrStr(Player &player, int v);
 void SetPlrMag(Player &player, int v);

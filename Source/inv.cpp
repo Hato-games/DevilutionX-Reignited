@@ -524,20 +524,31 @@ void CheckInvPaste(Player &player, Point cursorPosition)
 			if (player.InvGrid[ii] > 0)
 			{
 				int invIndex = player.InvGrid[ii] - 1;
-				int stacks = player.InvList[invIndex]._iStacks;
-				int newStacks = player.HoldItem._iStacks + stacks;
-				if (newStacks <= 16)
-				{
-					player.InvList[invIndex]._iStacks = newStacks;
-					player.HoldItem.clear();
 
+				if (player.HoldItem._iMiscId == player.InvList[invIndex]._iMiscId)
+				{
+					int stacks = player.InvList[invIndex]._iStacks;
+					int newStacks = player.HoldItem._iStacks + stacks;
+					if (newStacks <= 16)
+					{
+						player.InvList[invIndex]._iStacks = newStacks;
+						player.HoldItem.clear();
+
+					}
+					else
+					{
+						newStacks = 16 - stacks;
+						player.HoldItem._iStacks -= newStacks;
+						player.InvList[invIndex]._iStacks = 16;
+					}
 				}
 				else
 				{
-					newStacks = 16 - stacks;
-					player.HoldItem._iStacks -= newStacks;
-					player.InvList[invIndex]._iStacks = 16;
+					Item item = player.InvList[invIndex].pop();
+					player.InvList[invIndex] = player.HoldItem.pop();
+					player.HoldItem = item;
 				}
+
 
 			}
 			else
@@ -2369,6 +2380,41 @@ bool UseInvItem(int cii)
 	}
 
 	if (item->_iMiscId == IMISC_ARENAPOT && !player.isOnArenaLevel()) {
+		player.Say(HeroSpeech::ThatWontWorkHere);
+		return true;
+	}
+
+	switch (item->_iMiscId)
+	{
+		case item_misc_id::IMISC_HEAL:
+		case item_misc_id::IMISC_MANA:
+		case item_misc_id::IMISC_FULLHEAL:
+		case item_misc_id::IMISC_FULLMANA:
+		case item_misc_id::IMISC_REJUV:
+		case item_misc_id::IMISC_FULLREJUV:
+		{
+			if (player.GetHealPenalty() >= 100)
+			{
+				player.Say(HeroSpeech::ICantDoThat);
+				return true;
+			}
+		}
+			break;
+		case IMISC_ELIXSTR:
+		case IMISC_ELIXMAG:
+		case IMISC_ELIXDEX:
+		case IMISC_ELIXVIT:
+		case IMISC_SPECELIX:
+	    case IMISC_ELIPOTENTIAL:
+			if (player._pElixirsConsumed >= player.GetElixirConsumeLimit())
+			{
+				player.Say(HeroSpeech::ICantDoThat);
+				return true;
+			}
+		break;
+	}
+	if (item->_iMiscId == IMISC_ARENAPOT && !player.isOnArenaLevel())
+	{
 		player.Say(HeroSpeech::ThatWontWorkHere);
 		return true;
 	}

@@ -1758,6 +1758,12 @@ void UpdateBurningCrossDamage(Object &cross)
 		return;
 
 	int dam = damage[leveltype - 1];
+	if (HasAnyOf(myPlayer._pIFlagsRe, ItemReignitedEffect::Greed)) {
+		int value = (myPlayer._pHitPoints * 100) / myPlayer._pMaxHP;
+
+		dam = dam * (100 + value / 2);
+		dam = dam / 100;
+	}
 	if (myPlayer._pSkillActiveId == SpellID::NobleSpirit) {
 		int dmgRed = 25 + myPlayer._pLevel / 2;
 		dam = dam * (100 - dmgRed);
@@ -2353,11 +2359,14 @@ void OperatePedestal(Player &player, Object &pedestal, bool sendmsg)
 	}
 }
 
-void OperateShrineMysterious(Player &player)
+void OperateShrineMysterious(Player &player, Point spawnPosition)
 {
 	if (&player != MyPlayer)
 		return;
 
+	SetupBaseItem(spawnPosition, (_item_indexes)221, true, false, true);//TODO:Spec elixir doesnt work?
+
+	/*
 	ModifyPlrStr(player, -1);
 	ModifyPlrMag(player, -1);
 	ModifyPlrDex(player, -1);
@@ -2381,6 +2390,7 @@ void OperateShrineMysterious(Player &player)
 	CheckStats(player);
 	CalcPlrInv(player, true);
 	RedrawEverything();
+	*/
 
 	InitDiabloMsg(EMSG_SHRINE_MYSTERIOUS);
 }
@@ -2395,38 +2405,47 @@ void OperateShrineHidden(Player &player)
 		if (!item.isEmpty())
 			cnt++;
 	}
-	if (cnt > 0) {
-		for (auto &item : player.InvBody) {
+	if (cnt > 0)
+	{
+		for (auto &item : player.InvBody)
+		{
 			if (!item.isEmpty()
 			    && item._iMaxDur != DUR_INDESTRUCTIBLE
-			    && item._iMaxDur != 0) {
-				item._iDurability += 10;
-				item._iMaxDur += 10;
-				if (item._iDurability > item._iMaxDur)
-					item._iDurability = item._iMaxDur;
+			    && item._iMaxDur != 0)
+			{
+				item._iDurability += item._iMaxDur;//TODO:Bug
 			}
 		}
-		while (true) {
+
+		while (true)
+		{
 			cnt = 0;
-			for (auto &item : player.InvBody) {
+			for (auto &item : player.InvBody)
+			{
 				if (!item.isEmpty() && item._iMaxDur != DUR_INDESTRUCTIBLE && item._iMaxDur != 0) {
 					cnt++;
 				}
 			}
+
 			if (cnt == 0)
+			{
 				break;
+			}
 			int r = GenerateRnd(NUM_INVLOC);
 			if (player.InvBody[r].isEmpty() || player.InvBody[r]._iMaxDur == DUR_INDESTRUCTIBLE || player.InvBody[r]._iMaxDur == 0)
+			{
 				continue;
+			}
 
-			player.InvBody[r]._iDurability -= 20;
-			player.InvBody[r]._iMaxDur -= 20;
-			if (player.InvBody[r]._iDurability <= 0)
-				player.InvBody[r]._iDurability = 1;
-			if (player.InvBody[r]._iMaxDur <= 0)
-				player.InvBody[r]._iMaxDur = 1;
+			if (player.InvBody[r]._iDurability > 5)
+			{
+				player.InvBody[r]._iDurability = 5;
+			}
+
+
 			break;
 		}
+
 	}
 
 	InitDiabloMsg(EMSG_SHRINE_HIDDEN);
@@ -2551,28 +2570,45 @@ void OperateShrineEnchanted(Player &player)
 	uint64_t spell = 1;
 	uint8_t maxSpells = gbIsHellfire ? MAX_SPELLS : 37;
 	uint64_t spells = player._pMemSpells;
-	for (uint16_t j = 0; j < maxSpells; j++) {
+
+	int maxedSpells = 0;
+
+	for (uint16_t j = 0; j < maxSpells; j++)
+	{
 		if ((spell & spells) != 0)
+		{
 			cnt++;
+			if (player._pSplLvl[j] < MaxSpellLevel)
+			{
+				maxedSpells++;
+			}
+		}
 		spell *= 2;
 	}
-	if (cnt > 1) {
+
+	if (cnt > 2 && maxedSpells < cnt-1)
+	{
 		int spellToReduce;
 		do {
 			spellToReduce = GenerateRnd(maxSpells) + 1;
 		} while ((player._pMemSpells & GetSpellBitmask(static_cast<SpellID>(spellToReduce))) == 0);
 
-		spell = 1;
-		for (uint8_t j = static_cast<uint8_t>(SpellID::Firebolt); j < maxSpells; j++) {
-			if ((player._pMemSpells & spell) != 0 && player._pSplLvl[j] < MaxSpellLevel && j != spellToReduce) {
-				uint8_t newSpellLevel = static_cast<uint8_t>(player._pSplLvl[j] + 1);
-				player._pSplLvl[j] = newSpellLevel;
-				NetSendCmdParam2(true, CMD_CHANGE_SPELL_LEVEL, j, newSpellLevel);
-			}
-			spell *= 2;
+		for (uint8_t j = 0; j < 2; j++)
+		{
+			int spellToIncrease = -1;
+			do
+			{
+				spellToIncrease = GenerateRnd(maxSpells) + 1;
+			} while ((player._pMemSpells & GetSpellBitmask(static_cast<SpellID>(spellToIncrease))) < MaxSpellLevel && spellToIncrease != spellToReduce);
+
+			uint8_t newSpellLevel = static_cast<uint8_t>(player._pSplLvl[spellToIncrease] + 1);
+			player._pSplLvl[spellToIncrease] = newSpellLevel;
+			NetSendCmdParam2(true, CMD_CHANGE_SPELL_LEVEL, j, newSpellLevel);
+			
 		}
 
-		if (player._pSplLvl[spellToReduce] > 0) {
+		if (player._pSplLvl[spellToReduce] > 0)
+		{
 			uint8_t newSpellLevel = static_cast<uint8_t>(player._pSplLvl[spellToReduce] - 1);
 			player._pSplLvl[spellToReduce] = newSpellLevel;
 			NetSendCmdParam2(true, CMD_CHANGE_SPELL_LEVEL, spellToReduce, newSpellLevel);
@@ -2631,6 +2667,7 @@ void OperateShrineCostOfWisdom(Player &player, SpellID spellId, diablo_message m
 		}
 	}
 
+	/*
 	uint32_t t = player._pMaxManaBase / 10;
 	int v1 = player._pMana - player._pManaBase;
 	int v2 = player._pMaxMana - player._pMaxManaBase;
@@ -2646,6 +2683,9 @@ void OperateShrineCostOfWisdom(Player &player, SpellID spellId, diablo_message m
 		player._pMaxMana = v2;
 		player._pMaxManaBase = 0;
 	}
+	*/
+	player._pManaBase = 0;
+	player._pMana = 0;
 
 	RedrawEverything();
 
@@ -2688,17 +2728,21 @@ void OperateShrineEldritch(Player &player)
 			// Reinitializing the item zeroes out the seed, we save and restore here to avoid triggering false
 			// positives on duplicated item checks (e.g. when picking up the item).
 			auto seed = item._iSeed;
+			int stacks = item._iStacks;
 			InitializeItem(item, ItemMiscIdIdx(IMISC_REJUV));
 			item._iSeed = seed;
 			item._iStatFlag = true;
+			item._iStacks = stacks;
 			continue;
 		}
 		if (IsAnyOf(item._iMiscId, IMISC_FULLHEAL, IMISC_FULLMANA)) {
 			// As above.
 			auto seed = item._iSeed;
+			int stacks = item._iStacks;
 			InitializeItem(item, ItemMiscIdIdx(IMISC_FULLREJUV));
 			item._iSeed = seed;
 			item._iStatFlag = true;
+			item._iStacks = stacks;
 			continue;
 		}
 	}
@@ -2708,15 +2752,19 @@ void OperateShrineEldritch(Player &player)
 	InitDiabloMsg(EMSG_SHRINE_ELDRITCH);
 }
 
-void OperateShrineEerie(Player &player)
+void OperateShrineEerie(Player &player, Point spawnPosition)
 {
 	if (&player != MyPlayer)
 		return;
 
+	SetupBaseItem(spawnPosition, (_item_indexes)88, true, false, true);
+
+	/*
 	ModifyPlrMag(player, 2);
 	CheckStats(player);
 	CalcPlrInv(player, true);
 	RedrawEverything();
+	*/
 
 	InitDiabloMsg(EMSG_SHRINE_EERIE);
 }
@@ -2798,41 +2846,50 @@ void OperateShrineSpooky(const Player &player)
 	InitDiabloMsg(EMSG_SHRINE_SPOOKY2);
 }
 
-void OperateShrineAbandoned(Player &player)
+void OperateShrineAbandoned(Player &player, Point spawnPosition)
 {
 	if (&player != MyPlayer)
 		return;
 
+	SetupBaseItem(spawnPosition, (_item_indexes)89, true, false, true);
+	/*
 	ModifyPlrDex(player, 2);
 	CheckStats(player);
 	CalcPlrInv(player, true);
 	RedrawEverything();
+	*/
 
 	InitDiabloMsg(EMSG_SHRINE_ABANDONED);
 }
 
-void OperateShrineCreepy(Player &player)
+void OperateShrineCreepy(Player &player, Point spawnPosition)
 {
 	if (&player != MyPlayer)
 		return;
 
+	SetupBaseItem(spawnPosition, (_item_indexes)87, true, false, true);
+	/*
 	ModifyPlrStr(player, 2);
 	CheckStats(player);
 	CalcPlrInv(player, true);
 	RedrawEverything();
+	*/
 
 	InitDiabloMsg(EMSG_SHRINE_CREEPY);
 }
 
-void OperateShrineQuiet(Player &player)
+void OperateShrineQuiet(Player &player, Point spawnPosition)
 {
 	if (&player != MyPlayer)
 		return;
 
+	SetupBaseItem(spawnPosition, (_item_indexes)90, true, false, true);
+	/*
 	ModifyPlrVit(player, 2);
 	CheckStats(player);
 	CalcPlrInv(player, true);
 	RedrawEverything();
+	*/
 
 	InitDiabloMsg(EMSG_SHRINE_QUIET);
 }
@@ -2868,11 +2925,27 @@ void OperateShrineGlimmering(Player &player)
 
 void OperateShrineTainted(const Player &player)
 {
-	if (&player == MyPlayer) {
+	if (&player == MyPlayer)
+	{
+		Player &myPlayer = *MyPlayer;
+
+		myPlayer._pHitPoints = 1 << 6;
+		myPlayer._pHPBase = 1 << 6;
+		myPlayer._pMana = 0;
+		myPlayer._pManaBase = 0;
+
 		InitDiabloMsg(EMSG_SHRINE_TAINTED1);
 		return;
 	}
 
+	Player &myPlayer = *MyPlayer;
+
+	myPlayer._pHitPoints = myPlayer._pMaxHP;
+	myPlayer._pHPBase = myPlayer._pMaxHPBase;
+	myPlayer._pMana = myPlayer._pMaxMana;
+	myPlayer._pManaBase = myPlayer._pMaxManaBase;
+
+	/*
 	int r = GenerateRnd(4);
 
 	int v1 = r == 0 ? 1 : -1;
@@ -2890,6 +2963,7 @@ void OperateShrineTainted(const Player &player)
 	CheckStats(myPlayer);
 	CalcPlrInv(myPlayer, true);
 	RedrawEverything();
+	*/
 
 	InitDiabloMsg(EMSG_SHRINE_TAINTED2);
 }
@@ -3112,7 +3186,7 @@ void OperateShrine(Player &player, Object &shrine, _sfx_id sType)
 
 	switch (shrine._oVar1) {
 	case ShrineMysterious:
-		OperateShrineMysterious(player);
+		OperateShrineMysterious(player, shrine.position);
 		break;
 	case ShrineHidden:
 		OperateShrineHidden(player);
@@ -3149,7 +3223,7 @@ void OperateShrine(Player &player, Object &shrine, _sfx_id sType)
 		OperateShrineEldritch(player);
 		break;
 	case ShrineEerie:
-		OperateShrineEerie(player);
+		OperateShrineEerie(player, shrine.position);
 		break;
 	case ShrineDivine:
 		OperateShrineDivine(player, shrine.position);
@@ -3167,13 +3241,13 @@ void OperateShrine(Player &player, Object &shrine, _sfx_id sType)
 		OperateShrineSpooky(player);
 		break;
 	case ShrineAbandoned:
-		OperateShrineAbandoned(player);
+		OperateShrineAbandoned(player, shrine.position);
 		break;
 	case ShrineCreepy:
-		OperateShrineCreepy(player);
+		OperateShrineCreepy(player, shrine.position);
 		break;
 	case ShrineQuiet:
-		OperateShrineQuiet(player);
+		OperateShrineQuiet(player, shrine.position);
 		break;
 	case ShrineSecluded:
 		OperateShrineSecluded(player);
@@ -3390,37 +3464,21 @@ bool OperateFountains(Player &player, Object &fountain)
 	case OBJ_TEARFTN: {
 		if (fountain._oSelFlag == 0)
 			break;
+
 		PlaySfxLoc(LS_FOUNTAIN, fountain.position);
 		fountain._oSelFlag = 0;
+
 		if (&player != MyPlayer)
 			return false;
 
 		unsigned randomValue = (fountain._oRndSeed >> 16) % 12;
-		unsigned fromStat = randomValue / 3;
-		unsigned toStat = randomValue % 3;
-		if (toStat >= fromStat)
-			toStat++;
+		unsigned stat = randomValue / 3;
 
-		std::pair<unsigned, int> alterations[] = { { fromStat, -1 }, { toStat, 1 } };
-		for (auto alteration : alterations) {
-			switch (alteration.first) {
-			case 0:
-				ModifyPlrStr(player, alteration.second);
-				break;
-			case 1:
-				ModifyPlrMag(player, alteration.second);
-				break;
-			case 2:
-				ModifyPlrDex(player, alteration.second);
-				break;
-			case 3:
-				ModifyPlrVit(player, alteration.second);
-				break;
-			}
-		}
+		
+		SetupBaseItem(fountain.position, (_item_indexes)(87+stat), true, false, true);
 
-		CheckStats(player);
 		applied = true;
+
 		if (&player == MyPlayer)
 			NetSendCmdLoc(MyPlayerId, false, CMD_OPERATEOBJ, fountain.position);
 	} break;

@@ -134,6 +134,8 @@ void PackPlayer(PlayerPack &packed, const Player &player)
 	packed.pManaBase = SDL_SwapLE32(player._pManaBase);
 	packed.pMaxManaBase = SDL_SwapLE32(player._pMaxManaBase);
 	packed.pMemSpells = SDL_SwapLE64(player._pMemSpells);
+	packed.pTownWarpsNew = player.pTownWarps;
+	packed.pElixirsConsumed = player._pElixirsConsumed;
 
 	for (int i = 0; i < 37; i++) // Should be MAX_SPELLS but set to 37 to make save games compatible
 		packed.pSplLvl[i] = player._pSplLvl[i];
@@ -319,6 +321,12 @@ void UnPackPlayer(const PlayerPack &packed, Player &player)
 	player._pBaseVit = std::min<uint8_t>(packed.pBaseVit, player.GetMaximumAttributeValue(CharacterAttribute::Vitality));
 	player._pVitality = player._pBaseVit;
 	player._pStatPts = packed.pStatPts;
+	player.pTownWarps = packed.pTownWarpsNew;
+	if (packed.pTownWarpsNew == 0)
+	{
+		player.pTownWarps = packed.pTownWarps;
+	}
+	player._pElixirsConsumed = packed.pElixirsConsumed;
 
 	player._pExperience = SDL_SwapLE32(packed.pExperience);
 	player._pGold = SDL_SwapLE32(packed.pGold);

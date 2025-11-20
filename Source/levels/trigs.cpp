@@ -79,11 +79,11 @@ bool IsWarpOpen(dungeon_type type)
 
 	Player &myPlayer = *MyPlayer;
 
-	if (type == DTYPE_CATACOMBS && (myPlayer.pTownWarps & 1) != 0)
+	if (type == DTYPE_CATACOMBS && (myPlayer.pTownWarps & (1 << (sgGameInitInfo.nDifficulty * 3 + 0))) != 0)
 		return true;
-	if (type == DTYPE_CAVES && (myPlayer.pTownWarps & 2) != 0)
+	if (type == DTYPE_CAVES && (myPlayer.pTownWarps & (1 << (sgGameInitInfo.nDifficulty * 3 + 1))) != 0)
 		return true;
-	if (type == DTYPE_HELL && (myPlayer.pTownWarps & 4) != 0)
+	if (type == DTYPE_HELL && (myPlayer.pTownWarps & (1 << (sgGameInitInfo.nDifficulty * 3 + 2))) != 0)
 		return true;
 
 	if (gbIsHellfire) {

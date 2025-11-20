@@ -178,6 +178,7 @@ struct Player;
 
 struct Item {
 
+	bool HasHellfireAffix();
 	bool IsStackable() const;
 	int GetItemBaseLevel();
 	int GetItemLevel();
@@ -209,6 +210,7 @@ struct Item {
 	uint8_t _iMaxDam = 0;
 	int16_t _iAC = 0;
 	ItemSpecialEffect _iFlags = ItemSpecialEffect::None;
+	ItemReignitedEffect _iFlagsRe = ItemReignitedEffect::None;
 	item_misc_id _iMiscId = IMISC_NONE;
 	SpellID _iSpell = SpellID::Null;
 	_item_indexes IDidx = IDI_NONE;
@@ -234,7 +236,16 @@ struct Item {
 	int8_t _iSplLvlAdd = 0;
 
 	int8_t _iPLCrit = 0;
-	int16_t _iPLSpellPw = 0;
+
+	int8_t _iBlockChanceBase = 0;
+	int8_t _iBlockChance = 0;
+	int8_t _iBlockStamina = 0;
+
+	int16_t _iPLCritDmg = 0;
+	
+	int16_t _iPLSpellPowerBase = 0;
+	int16_t _iPLSpellPower = 0;
+	int16_t _iPLDropChance = 0;
 	bool _iRequest = false;
 	/** Unique item ID, used as an index into UniqueItemList */
 	int _iUid = 0;
@@ -251,14 +262,14 @@ struct Item {
 	int _iVMult2 = 0;
 	int _iVAdd3 = 0;
 	int _iVMult3 = 0;
-	int8_t _iMinStr = 0;
+	uint8_t _iMinStr = 0;
 	uint8_t _iMinMag = 0;
-	int8_t _iMinDex = 0;
+	uint8_t _iMinDex = 0;
 	bool _iStatFlag = false;
 	ItemSpecialEffectHf _iDamAcFlags = ItemSpecialEffectHf::None;
 	uint32_t dwBuff = 0;
 
-	bool reignitedItem = false;
+	bool reignitedItem = true;
 	enum item_effect_type _iRarePower = IPL_INVALID;
 	uint8_t _iRareNamePrefId = 0;
 	uint8_t _iRareNameSufId = 0;
@@ -549,6 +560,7 @@ Item *SpawnUnique(_unique_items uid, Point position, std::optional<int> level = 
 void SpawnItem(Monster &monster, Point position, bool sendmsg, bool spawn = false, bool allowUnique=true);
 void CreateRndItem(Point position, bool onlygood, bool sendmsg, bool delta);
 void CreateRndUseful(Point position, bool sendmsg);
+void SetupBaseItem(Point position, _item_indexes idx, bool onlygood, bool sendmsg, bool delta, bool spawn = false);
 void CreateTypeItem(Point position, bool onlygood, ItemType itemType, int imisc, bool sendmsg, bool delta, bool spawn = false);
 void RecreateItem(const Player &player, Item &item, _item_indexes idx, uint16_t icreateinfo, uint32_t iseed, int ivalue, bool isHellfire);
 void RecreateEar(Item &item, uint16_t ic, uint32_t iseed, uint8_t bCursval, string_view heroName);
@@ -569,6 +581,7 @@ void CheckIdentify(Player &player, int cii);
 void DoRepair(Player &player, int cii);
 void DoRecharge(Player &player, int cii);
 bool DoOil(Player &player, int cii);
+std::vector<std::string> PrintSinItemPower(ItemReignitedEffect flags);
 [[nodiscard]] StringOrView PrintItemPower(char plidx, const Item &item, int affixType = -1);
 [[nodiscard]] StringOrView PrintItemPowerReignited(char plidx, const Item &item, int affixType);
 void DrawUniqueInfo(const Surface &out);

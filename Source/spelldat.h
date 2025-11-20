@@ -212,6 +212,9 @@ enum class MissileID : int8_t {
 	Deadeye,
 	Aetherize,
 
+	LightFireArrow,
+	WrathArrow,
+
 	Null = -1,
 	// clang-format on
 };
@@ -236,9 +239,9 @@ struct SpellData {
 	SpellDataFlags flags;
 	int8_t sBookLvl;
 	int8_t sStaffLvl;
-	uint8_t minInt;
+	uint16_t minInt;
 	MissileID sMissiles[2];
-	uint8_t sManaAdj;
+	int8_t sManaAdj;
 	uint8_t sMinMana;
 	uint8_t sStaffMin;
 	uint8_t sStaffMax;
