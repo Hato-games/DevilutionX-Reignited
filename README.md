@@ -10,7 +10,7 @@
 
 # What is Reignited
 
-Reignited is a mod based on the devilutionX project.
+Reignited is a mod based on the [devilutionX project](https://github.com/diasurgical/DevilutionX).
 It's made primarily to balance and refresh gameplay by modifying or adding mechanics, but without too big an impact on the original gameplay.
 Reignited is made purely for the base version of the game. It probably works with Hellfire, but it wasn't tested for it and bugs can happen.
 It's available only for Windows 64-bit. To play on other platforms, it's possible to download the source and compile it following the devilutionX guides. For this, the Reignited branch should be picked.
@@ -38,7 +38,7 @@ It's available only for Windows 64-bit. To play on other platforms, it's possibl
 
 Note: You'll need access to the data from the original game. If you don't have an original CD then you can [buy Diablo from GoG.com](https://www.gog.com/game/diablo).
 
-Download the latest [DevilutionX release](https://github.com/diasurgical/devilutionX/releases/latest) and extract the contents to a location of your choosing or [build from source](#building-from-source).
+Download the latest [DevilutionX release](https://github.com/Hato-games/DevilutionX-Reignited/releases/latest) and extract the contents to a location of your choosing or [build from source](#building-from-source).
 
 - Copy `DIABDAT.MPQ` from the CD or GOG-installation (or [extract it from the GoG installer](https://github.com/diasurgical/devilutionX/wiki/Extracting-the-.MPQs-from-the-GoG-installer)) to the Reignited folder.
 
