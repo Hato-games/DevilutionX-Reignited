@@ -843,12 +843,11 @@ bool PlrHitPlr(Player &attacker, Player &target)
 	dam += (dam * attacker._pIBonusDam) / 100;
 	dam += attacker._pIBonusDamMod + attacker._pDamageMod;
 
-	//TODO: Update critical damage
-	if (attacker._pClass == HeroClass::Warrior || attacker._pClass == HeroClass::Barbarian) {
-		if (GenerateRnd(100) < attacker._pLevel) {
-			dam *= 2;
-		}
+	if (GenerateRnd(100) < attacker._pCriticalChance)
+	{		
+		dam *= 2;
 	}
+	
 	int skdam = dam << 6;
 	if (HasAnyOf(attacker._pIFlags, ItemSpecialEffect::RandomStealLife)) {
 		int tac = GenerateRnd(skdam / 8);
@@ -1887,7 +1886,14 @@ bool Player::isWalking() const
 
 int Player::GetManaShieldAbsorb()
 {
-	return 60 + _pSplLvl[static_cast<int8_t>(SpellID::ManaShield)];
+	int value = 40 + _pSplLvl[static_cast<int8_t>(SpellID::ManaShield)] + GetBlockChance() / 2;
+
+	if (value > 90)
+	{
+		value = 90;
+	}
+
+	return value;
 }
 
 void Player::RestorePartialLife()
@@ -2263,6 +2269,8 @@ void LoadPlrGFX(Player &player, player_graphic graphic)
 		if (leveltype == DTYPE_TOWN)
 			return;
 		if (!player._pBlockFlag)
+			return;
+		if (player.UsesTwohandBlock())
 			return;
 		szCel = "bl";
 		break;
@@ -2769,7 +2777,9 @@ void StartPlrBlock(Player &player, Direction dir)
 		skippedAnimationFrames = (player._pBFrames - 2); // ISPL_FASTBLOCK means we cancel the animation if frame 2 was shown
 	}
 
-	NewPlrAnim(player, player_graphic::Block, dir, AnimationDistributionFlags::SkipsDelayOfLastFrame, skippedAnimationFrames);
+	if (!player.UsesTwohandBlock()) {
+		NewPlrAnim(player, player_graphic::Block, dir, AnimationDistributionFlags::SkipsDelayOfLastFrame, skippedAnimationFrames);
+	}
 
 	player._pmode = PM_BLOCK;
 	FixPlayerLocation(player, dir);
@@ -4110,6 +4120,35 @@ int Player::GetBlockChanceBase() const
 	int blockChanceMin = 5 + PlayersData[static_cast<std::uint8_t>(InspectPlayer->_pClass)].blockBonus + InvBody[INVLOC_HAND_RIGHT]._iBlockChanceBase;
 	
 	return blockChanceMin;
+}
+
+void Player::ChangeBlockStamina(int value)
+{
+	if (UsesTwohandBlock())
+	{
+		value = value * 1.5f;
+	}
+	_pBlockStaminaCurrent -= value;
+
+	if (_pBlockStaminaCurrent < 0)
+	{
+		_pBlockStaminaCurrent = 0;
+	}
+}
+bool Player::UsesTwohandBlock()
+{
+
+	if (((InvBody[INVLOC_HAND_LEFT]._iLoc == ILOC_TWOHAND && InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Sword)
+		|| (InvBody[INVLOC_HAND_LEFT]._iLoc == ILOC_TWOHAND && InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Axe)
+	    || (InvBody[INVLOC_HAND_LEFT]._iLoc == ILOC_TWOHAND && InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Mace)
+	    || (InvBody[INVLOC_HAND_LEFT]._iLoc == ILOC_TWOHAND && InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Staff))
+		&& InvBody[INVLOC_HAND_LEFT]._iStatFlag)
+	{
+		return true;
+	}
+	
+
+	return false;
 }
 
 void Player::restoreHp(int value)

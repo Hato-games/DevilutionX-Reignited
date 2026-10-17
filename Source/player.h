@@ -633,6 +633,8 @@ struct Player {
 	 */
 	int GetBlockChance() const;
 	int GetBlockChanceBase() const;
+	void ChangeBlockStamina(int value);
+	bool UsesTwohandBlock();
 
 	/**
 	 * @brief Return reciprocal of the factor for calculating damage absorbed by mana due to Mana Shield.

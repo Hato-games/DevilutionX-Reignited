@@ -3160,7 +3160,8 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 
 	player._pSpellPower = player._pMagic / 4 + player._pLevel / 5 + bspellpow;
 
-	if (player.InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Shield)
+	if ((player.InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Shield || player.InvBody[INVLOC_HAND_LEFT]._itype == ItemType::Shield)
+	    || player.UsesTwohandBlock())
 	{
 		int blockChance = 5 + PlayersData[static_cast<std::uint8_t>(player._pClass)].blockBonus + bchance;
 
@@ -3210,6 +3211,11 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 		if (player.InvBody[INVLOC_HAND_RIGHT]._iClass == ICLASS_WEAPON && player.GetItemLocation(player.InvBody[INVLOC_HAND_RIGHT]) != ILOC_TWOHAND && player.InvBody[INVLOC_HAND_LEFT].isEmpty())
 			player._pBlockFlag = true;
 	}
+	
+	if (player.UsesTwohandBlock())
+	{
+		player._pBlockFlag = true;
+	}
 
 	ItemType weaponItemType = ItemType::None;
 	bool holdsShield = false;
@@ -3232,6 +3238,10 @@ void CalcPlrItemVals(Player &player, bool loadgfx)
 	if (player.InvBody[INVLOC_HAND_RIGHT]._itype == ItemType::Shield && player.InvBody[INVLOC_HAND_RIGHT]._iStatFlag) {
 		player._pBlockFlag = true;
 		holdsShield = true;
+	}
+
+	if (player.UsesTwohandBlock()) {
+		holdsShield = false;
 	}
 
 	PlayerWeaponGraphic animWeaponId = holdsShield ? PlayerWeaponGraphic::UnarmedShield : PlayerWeaponGraphic::Unarmed;
@@ -4782,6 +4792,10 @@ void DrawUniqueInfo(const Surface &out)
 			    texts.push_back(fmt::format(fmt::runtime(_("Block chance: +{:d}%")), curruitem._iBlockChanceBase));
 		    }
 	}
+	else if (curruitem._iBlockChanceBase > 0) {
+		texts.push_back(fmt::format(fmt::runtime(_("Block chance: +{:d}%")), curruitem._iBlockChanceBase));
+	}
+
 
 	if (curruitem._iMiscId == IMISC_STAFF && curruitem._iMaxCharges != 0) {
 		    texts.push_back(fmt::format(fmt::runtime(_("Charges: {:d}/{:d}")), curruitem._iCharges, curruitem._iMaxCharges));
