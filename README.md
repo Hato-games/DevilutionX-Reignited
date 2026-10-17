@@ -15,23 +15,37 @@ It's made primarily to balance and refresh gameplay by modifying or adding mecha
 Reignited is made purely for the base version of the game. It probably works with Hellfire, but it wasn't tested for it and bugs can happen.
 It's available only for Windows 64-bit. To play on other platforms, it's possible to download the source and compile it following the devilutionX guides. For this, the Reignited branch should be picked.
 
+
+
+
 # What's different in Reignited?
+
+<img width="639" src="images/stats.png">
 
 - new character stats like critical chance, spell damage, block chance, or physical resist.
 - each character has a higher cap on base stats, but with limits on how many elixirs can be consumed.
 - added penalty for using potions too often. A potion used within 5 seconds has 25% reduced effectiveness. The effect stacks.
 - potion flasks also stack :)
-- to enter higher difficulties it is now mandatory to finish lower difficulty.
 - added resistance penalties on higher difficulties.
 - monsters also get critical chance and physical resist.
+- to enter higher difficulties it is now mandatory to finish lower difficulty.
 - replaced character skills with combat-oriented ones.
 - rebalance of magic. Damage formula for spells changed, making magic and spell level the main stats to calculate spell damage, duration, etc.
 - rebalance of weapons. Damage formula for all weapon types was changed. Base stats increase weapon damage by a percent, instead of adding only a flat bonus.
 - new item tiers. Similar to how D2 did it, new tiers of items can be found on higher difficulties. Overall stats of items were adjusted to this. Also added new armors for mages.
 - new item affixes for new stats. Some existing ones were adjusted to the new stats.
+
+<img width="542" src="images/rare.png">
+
 - added Rare items. Rare items have 3 affixes, always at least 1 prefix and 1 suffix. The 3rd affix is random. Chance to drop a rare item is very low.
+
+<img width="542" src="images/reforge.png">
+
 - Griswold learned to reforge items. It allows magic items to get an additional affix and upgrade a magic item to a rare item, for a price.
 - removed any permanent stat-decrease effects in the game. Black Death or shrines can't reduce stats. It's not fun to get HP reduced only because a warrior got hit by a zombie.
+
+<img width="542" src="images/unique.png">
+
 - The Dark Lord got buffed and gained new spells in his arsenal. He also rewards the player with items (some can drop only in that fight) that can be picked up within 60 seconds after defeating him.
 
 # How to Install
